@@ -1,34 +1,58 @@
 import "react-native-get-random-values";
-import { Link, Stack } from "expo-router";
-import { StyleSheet } from "react-native";
-
-import { ThemedText } from "@/components/ThemedText";
+import { Link, router, Stack } from "expo-router";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { useEffect } from "react";
 import { BackgroundTaskRunner } from "@/components/utils/LocalWebView";
 import { getCryptoOpsFn } from "@/components/utils/cryptoOps";
 import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
+import {
+  checkTables,
+  CheckTablesReturnSig,
+} from "@/components/utils/db/checkTables";
+import Button from "@/components/common/Button";
+import { ARCLogo } from "@/components/deco/ARCLogo";
+import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
+import { useActiveUser } from "@/stores/activeUser";
 
 export default function Main() {
   const cryptoOpsApi = useCryptoOpsQueue();
+  const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   useEffect(() => {
-    console.log("Main mounted");
-    const promises = [];
-    for (let i = 0; i < 5; i++) {
-      promises.push(cryptoOpsApi.performOperation("generateSymmetricKey"));
-    }
+    const activeUserApiState = useActiveUser.getState();
+    checkTables()
+      .then((res: CheckTablesReturnSig) => {
+        if (res.status === "success" && res.isEmpty) {
+          activeUserApiState.setActiveUser({
+            hasChecked: true,
+            isLoggedIn: false,
+            userId: null,
+          });
+          router.replace("/NewAccountMain/page");
+        } else if (res.status === "success" && !res.isEmpty && res.userId) {
+          activeUserApiState.setActiveUser({
+            hasChecked: true,
+            isLoggedIn: true,
+            userId: res.userId,
+          });
+        }
+      })
+      .catch((e) => {
+        ////XLF
+        console.log("Something really bad happened", e);
+      });
   }, []);
 
   return (
     <>
-      <CryptoWorkers></CryptoWorkers>
-      <Stack.Screen options={{ title: "Oops! 2" }} />
       <ThemedView style={styles.container}>
-        <ThemedText type="title">whyyyy.</ThemedText>
-        <Link href="/home" style={styles.link}>
-          <ThemedText type="link">Go to home screen hehe</ThemedText>
-        </Link>
+        <ARCLogoMini style={{ width: 60, height: 60 }}></ARCLogoMini>
+        <ActivityIndicator
+          style={{ marginTop: "5%" }}
+          color={globalStyle.color}
+        ></ActivityIndicator>
       </ThemedView>
     </>
   );
