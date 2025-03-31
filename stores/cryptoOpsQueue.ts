@@ -142,9 +142,11 @@ const useCryptoOpsQueue = create<cryptoOpsQueue>((set, get) => ({
   enqueue: (op: ICryptoOp) => set((state) => ({ queue: [...state.queue, op] })),
   dequeue: (response: ICryptoOpResponse) => {
     const { queue, responsePromises } = get();
+    console.log("Dequeueing response", response);
     const opPromise = responsePromises[response.requestId];
     if (opPromise) {
       opPromise.resolve(response);
+      console.log("Resolved promise for requestId", response.requestId);
       get().removeResponsePromise(response.requestId);
     } else {
       console.error("No promise found for requestId", response.requestId);
@@ -155,6 +157,7 @@ const useCryptoOpsQueue = create<cryptoOpsQueue>((set, get) => ({
   performOperation: (type: CryptoOpType, args: any) => {
     const requestId = v4();
     const op: ICryptoOp = { requestId, type, args };
+    console.log("Performing operation", op);
     const promise = new Promise<ICryptoOpResponse>((resolve, reject) => {
       get().addResponsePromise(requestId, resolve, reject);
     });
