@@ -51,15 +51,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    top: 0,
     alignItems: "center",
     justifyContent: "center",
     paddingLeft: 20,
     paddingRight: 20,
-    paddingTop: "auto",
+    paddingTop: 20,
     paddingBottom: "auto",
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
   },
 });

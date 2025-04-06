@@ -73,6 +73,10 @@ export default function RootLayout() {
             name="downloadRecoveryCodes/page"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="setAccountPin/page"
+            options={{ headerShown: false }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </View>

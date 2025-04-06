@@ -7,6 +7,7 @@ import {
   Text as RNText,
   TouchableHighlight,
   ViewStyle,
+  TextInput as RNTextInput,
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { FadeIn, FadeOut } from "react-native-reanimated";
@@ -16,26 +17,30 @@ type ButtonProps = {
   color?: string;
   backgroundColor?: string;
   borderColor?: string;
+  placeholder?: string;
+  keyboardType?: "default" | "email-address" | "numeric" | "visible-password";
   onClick: () => void;
   fontSize?: number;
   textAlign: "left" | "right" | "center";
   textAlignVertical: "center" | "top" | "bottom";
 };
 
-function Text({
+function TextInput({
   borderColor,
   backgroundColor,
-  label,
+  placeholder,
   style,
   color,
   fontSize,
   textAlign,
   textAlignVertical,
+  keyboardType,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
-    <RNText
+    <RNTextInput
+      placeholder={placeholder ? placeholder : ""}
       style={{
         textAlign: textAlign ? textAlign : "center",
         textAlignVertical: textAlignVertical ? textAlignVertical : "center",
@@ -44,17 +49,18 @@ function Text({
           ? fontSize
           : globalStyles.globalStyle.largeMobileFont,
         fontFamily: "OxaniumRegular",
-        backgroundColor: backgroundColor ? backgroundColor : "transparent",
-        borderColor: borderColor ? borderColor : "#00000000",
+        backgroundColor: backgroundColor
+          ? backgroundColor
+          : globalStyles.globalStyle.color + "20",
+        borderColor: borderColor ? borderColor : globalStyles.globalStyle.color,
         borderWidth: 1,
         borderRadius: globalStyles.globalStyle.borderRadius,
         paddingLeft: textAlign === "left" ? 10 : 0,
         paddingRight: textAlign === "right" ? 10 : 0,
         ...style,
       }}
-    >
-      {label}
-    </RNText>
+      keyboardType={keyboardType ? keyboardType : "default"}
+    ></RNTextInput>
   );
 }
-export default Text;
+export default TextInput;

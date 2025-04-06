@@ -13,8 +13,9 @@ const SvgComponent = (props: SvgProps) => {
   const colorActual = props.color ? props.color : globalStyle.color;
   return (
     <Svg
-      width={41}
-      height={83}
+      width={props.style?.width ? props.style?.width : 41}
+      height={props.style?.height ? props.style?.height : 83}
+      style={props.style}
       viewBox="0 0 41 83"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
