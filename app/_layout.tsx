@@ -13,6 +13,7 @@ import { View } from "react-native";
 import "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
+import CreateNewAccountData from "@/components/functional/CreateNewAccountData";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -46,6 +47,7 @@ export default function RootLayout() {
           backgroundColor: globalStyle.pageBackgroundColors[0],
         }}
       >
+        <CreateNewAccountData></CreateNewAccountData>
         <View style={{ width: 0, height: 0 }}>
           <CryptoWorkers></CryptoWorkers>
         </View>
@@ -65,6 +67,10 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen
             name="NewAccountMain/page"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="downloadRecoveryCodes/page"
             options={{ headerShown: false }}
           />
         </Stack>

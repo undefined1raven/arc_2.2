@@ -18,12 +18,11 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useActiveUser } from "@/stores/activeUser";
 
 export default function Main() {
-  const cryptoOpsApi = useCryptoOpsQueue();
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   useEffect(() => {
     const activeUserApiState = useActiveUser.getState();
     checkTables()
-      .then((res: CheckTablesReturnSig) => {
+      .then(async (res: CheckTablesReturnSig) => {
         if (res.status === "success" && res.isEmpty) {
           activeUserApiState.setActiveUser({
             hasChecked: true,

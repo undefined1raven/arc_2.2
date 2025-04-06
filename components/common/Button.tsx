@@ -17,6 +17,7 @@ type ButtonProps = {
   backgroundColor?: string;
   borderColor?: string;
   onClick: () => void;
+  fontSize?: number;
 };
 
 function Button({
@@ -26,6 +27,7 @@ function Button({
   style,
   color,
   onClick,
+  fontSize,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
@@ -52,7 +54,9 @@ function Button({
           textAlign: "center",
           textAlignVertical: "center",
           color: color ? color : globalStyles.globalStyle.textColor,
-          fontSize: globalStyles.globalStyle.largeMobileFont,
+          fontSize: fontSize
+            ? fontSize
+            : globalStyles.globalStyle.largeMobileFont,
           fontFamily: "OxaniumRegular",
         }}
       >
