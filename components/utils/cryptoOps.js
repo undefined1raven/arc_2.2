@@ -1,6 +1,23 @@
 function getCryptoOpsFn(args) {
   return `
 
+function stringToCharCodeArray(str) {
+    let stringActual = str;
+    if (str === undefined) {
+      throw new Error("stringToCharCodeArray: str is undefined");
+    } else {
+      if (typeof str !== "string") {
+        stringActual = str.toString();
+      }
+    }
+    const charCodeArray = [];
+    for (let i = 0; i < stringActual.length; i++) {
+      charCodeArray.push(stringActual.charCodeAt(i));
+    }
+    return charCodeArray;
+  }
+
+
   function sendMessage(message) {
   window.ReactNativeWebView.postMessage(message);
 }
@@ -387,7 +404,14 @@ derive an AES-KW key using PBKDF2.
 
     async function wrapKey(args) {
       const password = args.password;
-      const keyToWrap = args.key;
+      const importedKey = await importCryptoKey({
+        jwkKeyData: args.jwkKeyData,
+        keyType: args.keyType,
+      });
+      if (!importedKey?.payload?.key) {
+        return returnErrorResponse("Error importing key");
+      }
+      const key = importedKey.payload.key;
       const hashedPassword = await digestMessage(password);
       // get the key encryption key
       const keyMaterial = await getKeyMaterial(hashedPassword);
@@ -396,7 +420,7 @@ derive an AES-KW key using PBKDF2.
       const iv = window.crypto.getRandomValues(new Uint8Array(16));
       let keyFormat = args.keyType === "private" ? "jwk" : "raw";
       return window.crypto.subtle
-        .wrapKey(keyFormat, keyToWrap, wrappingKey, {
+        .wrapKey(keyFormat, key, wrappingKey, {
           name: "AES-CBC",
           iv: iv,
         })
@@ -447,8 +471,19 @@ derive an AES-KW key using PBKDF2.
         .catch((e) => {
           return returnErrorResponse(e);
         })
-        .then((key) => {
-          return { status: "success", payload: { key: key } };
+        .then(async (key) => {
+          const exportCryptoKeyResponse = await exportCryptoKey(key);
+          if(exportCryptoKeyResponse.status === "error") {
+            return returnErrorResponse("Error exporting unwrapped key");
+          }
+          const exportedKey = exportCryptoKeyResponse.payload.jwk;
+          try{
+            const parsedKey = JSON.parse(exportedKey);
+            return { status: "success", payload: { key: parsedKey } };
+            }
+          catch(e) {
+            return returnErrorResponse(e);
+          }
         });
     }
 

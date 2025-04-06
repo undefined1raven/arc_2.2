@@ -11,18 +11,29 @@ import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { checkTables } from "@/components/utils/db/checkTables";
 import Button from "@/components/common/Button";
 import { ARCLogo } from "@/components/deco/ARCLogo";
-import createNewAccountBasics from "@/components/utils/createNewAccountInfo";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
+import { useNewUserData } from "@/stores/newUserData";
 
 export default function Main() {
+  const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   return (
     <>
       <ThemedView style={styles.container}>
         <ARCLogo style={{ width: 200, height: 100 }}></ARCLogo>
-        <Button onClick={() => {}} style={styles.button} label="Login"></Button>
+        <Button
+          fontSize={globalStyle.largeMobileFont}
+          onClick={() => {
+            const newUserDataApi = useNewUserData.getState();
+            console.log("New User Data API", newUserDataApi.recoveryCodes);
+          }}
+          style={styles.button}
+          label="Login"
+        ></Button>
         <Button
           onClick={() => {
-            createNewAccountBasics();
+            router.push("/downloadRecoveryCodes/page");
           }}
+          fontSize={globalStyle.largeMobileFont}
           style={styles.button}
           label="Create Account"
         ></Button>
