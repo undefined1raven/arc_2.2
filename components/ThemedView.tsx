@@ -1,6 +1,10 @@
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { View, type ViewProps } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
@@ -14,9 +18,10 @@ export function ThemedView({
   ...otherProps
 }: ThemedViewProps) {
   const globalStyle = useGlobalStyleStore();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[style]} {...otherProps}>
+    <SafeAreaView style={{ top: insets.top, ...style }} {...otherProps}>
       <>
         <LinearGradient
           colors={globalStyle.globalStyle.pageBackgroundColors}
@@ -24,14 +29,14 @@ export function ThemedView({
           end={{ x: 0.3, y: 0.7 }}
           style={{
             position: "absolute",
-            top: 0,
+            top: "-20%",
             left: 0,
             width: "120%",
-            height: "120%",
+            height: "150%",
           }}
         ></LinearGradient>
         {otherProps.children}
       </>
-    </View>
+    </SafeAreaView>
   );
 }

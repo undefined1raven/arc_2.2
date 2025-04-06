@@ -1,6 +1,6 @@
 import { ANDROID_RIPPLE_TRANSPARENCY } from "@/constants/colors";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useEffect, useState } from "react";
+import { Children, useEffect, useState } from "react";
 import {
   Pressable,
   StyleProp,
@@ -18,6 +18,7 @@ type ButtonProps = {
   borderColor?: string;
   onClick: () => void;
   fontSize?: number;
+  textStyle?: StyleProp<ViewStyle>;
 };
 
 function Button({
@@ -28,6 +29,10 @@ function Button({
   color,
   onClick,
   fontSize,
+  textAlign,
+  textAlignVertical,
+  children,
+  textStyle,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
@@ -47,21 +52,28 @@ function Button({
         ...style,
       }}
     >
-      <Text
-        style={{
-          width: "100%",
-          height: "100%",
-          textAlign: "center",
-          textAlignVertical: "center",
-          color: color ? color : globalStyles.globalStyle.textColor,
-          fontSize: fontSize
-            ? fontSize
-            : globalStyles.globalStyle.largeMobileFont,
-          fontFamily: "OxaniumRegular",
-        }}
-      >
-        {label}
-      </Text>
+      <>
+        <Text
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            textAlign: textAlign ? textAlign : "center",
+            textAlignVertical: textAlignVertical ? textAlignVertical : "center",
+            color: color ? color : globalStyles.globalStyle.textColor,
+            fontSize: fontSize
+              ? fontSize
+              : globalStyles.globalStyle.largeMobileFont,
+            fontFamily: "OxaniumRegular",
+            paddingLeft: textAlign === "left" ? 10 : 0,
+            paddingRight: textAlign === "right" ? 10 : 0,
+            ...textStyle,
+          }}
+        >
+          {label}
+        </Text>
+        {children}
+      </>
     </Pressable>
   );
 }
