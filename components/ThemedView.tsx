@@ -1,5 +1,10 @@
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { View, type ViewProps } from "react-native";
+import {
+  Keyboard,
+  TouchableWithoutFeedback,
+  View,
+  type ViewProps,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   SafeAreaView,
@@ -21,22 +26,31 @@ export function ThemedView({
   const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={{ top: insets.top, ...style }} {...otherProps}>
-      <>
-        <LinearGradient
-          colors={globalStyle.globalStyle.pageBackgroundColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.3, y: 0.7 }}
-          style={{
-            position: "absolute",
-            top: "-20%",
-            left: 0,
-            width: "120%",
-            height: "150%",
-          }}
-        ></LinearGradient>
-        {otherProps.children}
-      </>
-    </SafeAreaView>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+      onPressIn={() => {
+        Keyboard.dismiss();
+      }}
+    >
+      <SafeAreaView style={{ top: insets.top, ...style }} {...otherProps}>
+        <>
+          <LinearGradient
+            colors={globalStyle.globalStyle.pageBackgroundColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.3, y: 0.7 }}
+            style={{
+              position: "absolute",
+              top: "-20%",
+              left: 0,
+              width: "120%",
+              height: "150%",
+            }}
+          ></LinearGradient>
+          {otherProps.children}
+        </>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
