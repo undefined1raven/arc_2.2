@@ -3,12 +3,6 @@ import { Link, router, Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/ThemedView";
-import { useEffect } from "react";
-import { BackgroundTaskRunner } from "@/components/utils/LocalWebView";
-import { getCryptoOpsFn } from "@/components/utils/cryptoOps";
-import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
-import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
-import { checkTables } from "@/components/utils/db/checkTables";
 import Button from "@/components/common/Button";
 import { ARCLogo } from "@/components/deco/ARCLogo";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
