@@ -23,6 +23,7 @@ type ButtonProps = {
   fontSize?: number;
   textAlign: "left" | "right" | "center";
   textAlignVertical: "center" | "top" | "bottom";
+  secureTextEntry?: boolean;
 };
 
 function TextInput({
@@ -35,11 +36,13 @@ function TextInput({
   textAlign,
   textAlignVertical,
   keyboardType,
+  secureTextEntry,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
     <RNTextInput
+      selectionColor={globalStyles.globalStyle.color + "30"}
       placeholder={placeholder ? placeholder : ""}
       style={{
         textAlign: textAlign ? textAlign : "center",
@@ -59,6 +62,7 @@ function TextInput({
         paddingRight: textAlign === "right" ? 10 : 0,
         ...style,
       }}
+      secureTextEntry={secureTextEntry ? secureTextEntry : false}
       keyboardType={keyboardType ? keyboardType : "default"}
     ></RNTextInput>
   );
