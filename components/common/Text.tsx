@@ -7,6 +7,8 @@ import {
   Text as RNText,
   TouchableHighlight,
   ViewStyle,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { FadeIn, FadeOut } from "react-native-reanimated";
@@ -35,26 +37,35 @@ function Text({
   const globalStyles = useGlobalStyleStore();
 
   return (
-    <RNText
-      style={{
-        textAlign: textAlign ? textAlign : "center",
-        textAlignVertical: textAlignVertical ? textAlignVertical : "center",
-        color: color ? color : globalStyles.globalStyle.textColor,
-        fontSize: fontSize
-          ? fontSize
-          : globalStyles.globalStyle.largeMobileFont,
-        fontFamily: "OxaniumRegular",
-        backgroundColor: backgroundColor ? backgroundColor : "transparent",
-        borderColor: borderColor ? borderColor : "#00000000",
-        borderWidth: 1,
-        borderRadius: globalStyles.globalStyle.borderRadius,
-        paddingLeft: textAlign === "left" ? 10 : 0,
-        paddingRight: textAlign === "right" ? 10 : 0,
-        ...style,
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+      onPressIn={() => {
+        Keyboard.dismiss();
       }}
     >
-      {label}
-    </RNText>
+      <RNText
+        style={{
+          textAlign: textAlign ? textAlign : "center",
+          textAlignVertical: textAlignVertical ? textAlignVertical : "center",
+          color: color ? color : globalStyles.globalStyle.textColor,
+          fontSize: fontSize
+            ? fontSize
+            : globalStyles.globalStyle.largeMobileFont,
+          fontFamily: "OxaniumRegular",
+          backgroundColor: backgroundColor ? backgroundColor : "transparent",
+          borderColor: borderColor ? borderColor : "#00000000",
+          borderWidth: 1,
+          borderRadius: globalStyles.globalStyle.borderRadius,
+          paddingLeft: textAlign === "left" ? 10 : 0,
+          paddingRight: textAlign === "right" ? 10 : 0,
+          ...style,
+        }}
+      >
+        {label}
+      </RNText>
+    </TouchableWithoutFeedback>
   );
 }
 export default Text;

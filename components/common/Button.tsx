@@ -2,6 +2,7 @@ import { ANDROID_RIPPLE_TRANSPARENCY } from "@/constants/colors";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { Children, useEffect, useState } from "react";
 import {
+  Keyboard,
   Pressable,
   StyleProp,
   Text,
@@ -38,7 +39,10 @@ function Button({
 
   return (
     <Pressable
-      onPress={onClick}
+      onPress={() => {
+        onClick();
+        Keyboard.dismiss();
+      }}
       android_ripple={{
         color:
           globalStyles.globalStyle.androidRippleColor +

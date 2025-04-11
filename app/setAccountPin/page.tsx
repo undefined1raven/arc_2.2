@@ -29,6 +29,7 @@ import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
 import TextInput from "@/components/common/TextInput";
+import { CheckBox } from "@/components/common/CheckBox";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -37,6 +38,9 @@ export default function Main() {
   return (
     <TouchableWithoutFeedback
       onPress={() => {
+        Keyboard.dismiss();
+      }}
+      onPressIn={() => {
         Keyboard.dismiss();
       }}
     >
@@ -163,15 +167,46 @@ export default function Main() {
                   </Button>
                 </Animated.View>
                 <Animated.View
-                  style={{ width: "100%", height: 60, backgroundColor: "red" }}
+                  style={{
+                    width: "100%",
+                    height: 60,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                  }}
                 >
                   <Animated.View
                     style={{
-                      width: 60,
-                      height: "100%",
-                      backgroundColor: "blue",
+                      width: 50,
+                      height: "90%",
                     }}
-                  ></Animated.View>
+                  >
+                    <CheckBox
+                      checked={false}
+                      checkedColor={globalStyle.color + "AA"}
+                      uncheckedColor={globalStyle.color + "10"}
+                      onChange={() => {}}
+                      style={{ width: "100%", height: "100%" }}
+                    ></CheckBox>
+                  </Animated.View>
+                  <Animated.View
+                    style={{
+                      flexGrow: 1,
+                      height: "100%",
+                    }}
+                  >
+                    <Text
+                      textAlign="left"
+                      label="Use biometric authentication"
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        marginBottom: 5,
+                        paddingLeft: 10,
+                      }}
+                    ></Text>
+                  </Animated.View>
                 </Animated.View>
               </>
             )}
