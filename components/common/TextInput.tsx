@@ -19,7 +19,7 @@ type ButtonProps = {
   borderColor?: string;
   placeholder?: string;
   keyboardType?: "default" | "email-address" | "numeric" | "visible-password";
-  onClick: () => void;
+  onChange: () => void;
   fontSize?: number;
   textAlign: "left" | "right" | "center";
   textAlignVertical: "center" | "top" | "bottom";
@@ -37,11 +37,13 @@ function TextInput({
   textAlignVertical,
   keyboardType,
   secureTextEntry,
+  onChange,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
     <RNTextInput
+      onChange={onChange}
       selectionColor={globalStyles.globalStyle.color + "30"}
       placeholder={placeholder ? placeholder : ""}
       style={{

@@ -37,10 +37,11 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   return Promise.all(promiseArray)
     .then(() => {
       return db
-        .getFirstAsync("SELECT id FROM users;")
+        .getFirstAsync("SELECT * FROM users;")
         .then((firstUser) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
+          console.log("firstUser", firstUser);
           return {
             status: "success",
             error: null,

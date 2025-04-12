@@ -11,6 +11,7 @@ function CheckBox({
   checkedColor,
   uncheckedBorderColor,
   checkedBorderColor,
+  hitSlop,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -20,12 +21,14 @@ function CheckBox({
   checkedColor?: string;
   uncheckedBorderColor?: string;
   checkedBorderColor?: string;
+  hitSlop?: number;
 }) {
   const globalStyles = useGlobalStyleStore();
   const [checkedState, setCheckedState] = useState(checked);
 
   return (
     <Pressable
+      hitSlop={hitSlop ? hitSlop : 2}
       onPress={() => {
         setCheckedState(!checkedState);
         onChange(!checkedState);

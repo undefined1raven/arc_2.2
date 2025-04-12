@@ -20,6 +20,7 @@ type ButtonProps = {
   onClick: () => void;
   fontSize?: number;
   textStyle?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 };
 
 function Button({
@@ -34,6 +35,7 @@ function Button({
   textAlignVertical,
   children,
   textStyle,
+  disabled,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
@@ -43,16 +45,24 @@ function Button({
         onClick();
         Keyboard.dismiss();
       }}
-      android_ripple={{
-        color:
-          globalStyles.globalStyle.androidRippleColor +
-          ANDROID_RIPPLE_TRANSPARENCY,
-      }}
+      android_ripple={
+        disabled
+          ? null
+          : {
+              color:
+                globalStyles.globalStyle.androidRippleColor +
+                ANDROID_RIPPLE_TRANSPARENCY,
+            }
+      }
       android_disableSound={true}
       style={{
         borderRadius: globalStyles.globalStyle.borderRadius,
         borderWidth: 1,
-        borderColor: borderColor ? borderColor : globalStyles.globalStyle.color,
+        borderColor: borderColor
+          ? borderColor
+          : disabled
+          ? globalStyles.globalStyle.colorInactive
+          : globalStyles.globalStyle.color,
         ...style,
       }}
     >
@@ -64,7 +74,11 @@ function Button({
             height: "100%",
             textAlign: textAlign ? textAlign : "center",
             textAlignVertical: textAlignVertical ? textAlignVertical : "center",
-            color: color ? color : globalStyles.globalStyle.textColor,
+            color: color
+              ? color
+              : disabled
+              ? globalStyles.globalStyle.textColorInactive
+              : globalStyles.globalStyle.textColor,
             fontSize: fontSize
               ? fontSize
               : globalStyles.globalStyle.largeMobileFont,
