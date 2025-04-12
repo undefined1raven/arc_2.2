@@ -3,6 +3,12 @@ const secureStoreKeyNames = {
     symmetricKey: "tempSymmetricKey",
     privateKey: "tempPrivateKey",
   },
+  accountConfig: {
+    useBiometricAuth: "useBiometricAuth",
+    pin: "pin",
+    activeSymmetricKey: "activeSymmetricKey",
+    activePrivateKey: "activePrivateKey",
+  },
 };
 
 const getSymmetricKey = (userId: string) => {

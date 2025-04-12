@@ -77,6 +77,11 @@ export default function RootLayout() {
             name="setAccountPin/page"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="localAccountAuth/localAccountAuth"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="home/home" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </View>

@@ -1,10 +1,7 @@
 import "react-native-get-random-values";
-import { Link, router, Stack } from "expo-router";
 import {
   ActivityIndicator,
-  FlatList,
   Keyboard,
-  Pressable,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
@@ -12,22 +9,13 @@ import {
 
 import { ThemedView } from "@/components/ThemedView";
 import Button from "@/components/common/Button";
-import { ARCLogo } from "@/components/deco/ARCLogo";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useNewUserData } from "@/stores/newUserData";
 import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import Text from "@/components/common/Text";
 import SimpleHeader from "@/components/common/SimpleHeader";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInUp,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import { DownloadDeco } from "@/components/deco/DownloadDeco";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
-import { saveFile } from "@/components/utils/fn/saveFile";
 import TextInput from "@/components/common/TextInput";
 import { CheckBox } from "@/components/common/CheckBox";
 import { useCallback, useEffect, useState } from "react";
@@ -109,6 +97,10 @@ export default function Main() {
               getPrivateKey(userId),
               privateKeyJwk
             );
+            await SecureStore.setItemAsync(
+              secureStoreKeyNames.accountConfig.useBiometricAuth,
+              "false"
+            );
             ///Redirect to home
             saveNewUser()
               .then(() => {
@@ -127,22 +119,30 @@ export default function Main() {
             );
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              JSON.stringify(res.payload),
-              {
-                requireAuthentication: true,
-                authenticationPrompt:
-                  "Authenticate to use your screen lock to unlock",
-              }
+              JSON.stringify(res.payload)
             )
-              .then((res) => {
+              .then(async () => {
                 ///Redirect to home
+                await SecureStore.setItemAsync(
+                  secureStoreKeyNames.accountConfig.useBiometricAuth,
+                  "true"
+                );
+                await SecureStore.setItemAsync(
+                  secureStoreKeyNames.accountConfig.pin,
+                  newPin,
+                  {
+                    requireAuthentication: true,
+                    authenticationPrompt:
+                      "Authenticate to use your screen lock to unlock",
+                  }
+                );
                 saveNewUser()
                   .then(() => {
                     console.log("Saved new user");
                   })
                   .catch((e) => {});
               })
-              .catch((err) => {
+              .catch(async (err) => {
                 setAuthAvailable(false);
                 basicSecureStoreSave(userId);
               });

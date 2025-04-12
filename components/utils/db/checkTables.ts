@@ -1,5 +1,6 @@
 import * as SQLite from "expo-sqlite";
-
+import * as SecureStore from "expo-secure-store";
+import { secureStoreKeyNames } from "../constants/secureStoreKeyNames";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
   error: null | string;
@@ -41,7 +42,6 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
         .then((firstUser) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
-          console.log("firstUser", firstUser);
           return {
             status: "success",
             error: null,
@@ -58,14 +58,30 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     });
 }
 
-async function checkTables(): Promise<CheckTablesReturnSig> {
+async function NukeLocalData() {
   const db = await SQLite.openDatabaseAsync("localCache");
-  // db.runAsync("DROP TABLE users");
-  // db.runAsync("DROP TABLE userData");
-  // db.runAsync("DROP TABLE arcChunks");
-  // db.runAsync("DROP TABLE tessChunks");
-  // db.runAsync("DROP TABLE sidChunks");
-  // db.runAsync("DROP TABLE sidGroups");
+  db.runAsync("DROP TABLE users");
+  db.runAsync("DROP TABLE userData");
+  db.runAsync("DROP TABLE arcChunks");
+  db.runAsync("DROP TABLE tessChunks");
+  db.runAsync("DROP TABLE sidChunks");
+  db.runAsync("DROP TABLE sidGroups");
+  SecureStore.deleteItemAsync(
+    secureStoreKeyNames.accountConfig.activePrivateKey
+  );
+  SecureStore.deleteItemAsync(
+    secureStoreKeyNames.accountConfig.activeSymmetricKey
+  );
+  SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.privateKey);
+  SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.symmetricKey);
+  SecureStore.deleteItemAsync(secureStoreKeyNames.accountConfig.pin);
+  SecureStore.deleteItemAsync(
+    secureStoreKeyNames.accountConfig.useBiometricAuth
+  );
+}
+
+async function checkTables(): Promise<CheckTablesReturnSig> {
+  // NukeLocalData();
 
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {

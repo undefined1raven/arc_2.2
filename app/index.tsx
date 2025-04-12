@@ -3,19 +3,14 @@ import { Link, router, Stack } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { useEffect } from "react";
-import { BackgroundTaskRunner } from "@/components/utils/LocalWebView";
-import { getCryptoOpsFn } from "@/components/utils/cryptoOps";
-import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
-import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import {
   checkTables,
   CheckTablesReturnSig,
 } from "@/components/utils/db/checkTables";
-import Button from "@/components/common/Button";
-import { ARCLogo } from "@/components/deco/ARCLogo";
 import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useActiveUser } from "@/stores/activeUser";
+import SimpleLoadingScreen from "@/components/common/SimpleLoadingScreen";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -31,11 +26,13 @@ export default function Main() {
           });
           router.replace("/NewAccountMain/page");
         } else if (res.status === "success" && !res.isEmpty && res.userId) {
+          ///PROPER AUTH CHECKS NEEDED HERE. NOT REQUIRED FOR LOCAL ACCOUNTS BUT NEEDED FOR REMOTE ACCOUNTS
           activeUserApiState.setActiveUser({
             hasChecked: true,
             isLoggedIn: true,
             userId: res.userId,
           });
+          router.replace("/localAccountAuth/localAccountAuth");
         }
       })
       .catch((e) => {
@@ -44,28 +41,5 @@ export default function Main() {
       });
   }, []);
 
-  return (
-    <>
-      <ThemedView style={styles.container}>
-        <ARCLogoMini style={{ width: 60, height: 60 }}></ARCLogoMini>
-        <ActivityIndicator
-          style={{ marginTop: "5%" }}
-          color={globalStyle.color}
-        ></ActivityIndicator>
-      </ThemedView>
-    </>
-  );
+  return <SimpleLoadingScreen></SimpleLoadingScreen>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

@@ -1,0 +1,270 @@
+import SimpleLoadingScreen from "@/components/common/SimpleLoadingScreen";
+import { ThemedView } from "@/components/ThemedView";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import {
+  getSymmetricKey,
+  secureStoreKeyNames,
+} from "@/components/utils/constants/secureStoreKeyNames";
+import Button from "@/components/common/Button";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { FingerprintDeco } from "@/components/deco/FingerprintDeco";
+import Text from "@/components/common/Text";
+import { useActiveUser } from "@/stores/activeUser";
+import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
+import { router, useGlobalSearchParams } from "expo-router";
+import TextInput from "@/components/common/TextInput";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
+function localAccountAuth() {
+  const activeUserApi = useActiveUser();
+  const cryptoOpsApi = useCryptoOpsQueue();
+  const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
+
+  ///Input state
+  const [inputPin, setInputPin] = useState("");
+
+  ///Flow state
+  const [readyForAuth, setReadyForAuth] = useState(false);
+  const [nativeAuthAvailable, setNativeAuthAvailable] = useState(false);
+  const [authViewMode, setAuthViewMode] = useState<"PIN" | "NATIVE">("PIN");
+
+  useEffect(() => {
+    ///Check if the user has enabled the screen lock method
+    const nativeAuthFlag = SecureStore.getItem(
+      secureStoreKeyNames.accountConfig.useBiometricAuth
+    );
+    if (nativeAuthFlag === "true") {
+      setNativeAuthAvailable(true);
+      setAuthViewMode("NATIVE");
+      setReadyForAuth(true);
+    }
+    nativeAuthChallenge();
+  }, []);
+
+  ///UI State
+  const [showNativeAuthRetryButton, setShowNativeAuthRetryButton] =
+    useState(false);
+
+  const unwrapKeyAndSetState = useCallback(
+    (pin: string, wrappedKeyArg: string) => {
+      try {
+        const wrappedKey = JSON.parse(wrappedKeyArg ? wrappedKeyArg : "{}");
+        cryptoOpsApi
+          .performOperation("unwrapKey", {
+            wrappedKey: wrappedKey.wrappedKey,
+            salt: wrappedKey.salt,
+            iv: wrappedKey.iv,
+            password: pin,
+          })
+          .then((unwrappedKey) => {
+            if (unwrappedKey.status === "success") {
+              SecureStore.setItemAsync(
+                secureStoreKeyNames.accountConfig.activeSymmetricKey,
+                JSON.stringify(unwrappedKey.payload.key)
+              )
+                .then(() => {
+                  router.replace("/home/home");
+                })
+                .catch((e) => {
+                  console.log("Error setting key", e);
+                });
+            }
+            console.log("Unwrapped key", typeof unwrappedKey.payload.key);
+          })
+          .catch((e) => {
+            console.log("Error unwrapping key", e);
+          });
+        console.log("Wrapped key", wrappedKey);
+      } catch (e) {
+        console.log("Error unwrapping key", e);
+      }
+    },
+    []
+  );
+
+  const nativeAuthChallenge = useCallback(() => {
+    const nativeAuthFlag = SecureStore.getItem(
+      secureStoreKeyNames.accountConfig.useBiometricAuth
+    );
+    if (nativeAuthFlag === "true") {
+      SecureStore.getItemAsync(secureStoreKeyNames.accountConfig.pin, {
+        requireAuthentication: true,
+        authenticationPrompt: "Authenticate to access your data",
+      })
+        .then((storedPin) => {
+          if (typeof storedPin === "string" && storedPin.length > 0) {
+            if (!activeUserApi.activeUser.userId) {
+              return;
+            }
+            SecureStore.getItemAsync(
+              getSymmetricKey(activeUserApi.activeUser.userId)
+            )
+              .then((res) => {
+                unwrapKeyAndSetState(storedPin, res ? res : "{}");
+              })
+              .catch((e) => {
+                console.log("Error in native auth", e);
+                setShowNativeAuthRetryButton(true);
+              });
+          }
+        })
+        .catch((e) => {
+          console.log("Error in native auth", e);
+          setShowNativeAuthRetryButton(true);
+        });
+    }
+  }, [
+    activeUserApi.activeUser.userId,
+    setShowNativeAuthRetryButton,
+    setAuthViewMode,
+    setNativeAuthAvailable,
+  ]);
+
+  return readyForAuth === false ? (
+    <SimpleLoadingScreen></SimpleLoadingScreen>
+  ) : (
+    <ThemedView style={{ ...styles.container }}>
+      {authViewMode === "PIN" ? (
+        <Animated.View style={{ ...styles.authViewStyle }}>
+          <Text
+            style={{ width: "90%", marginBottom: 5, paddingLeft: 0 }}
+            label="Enter your PIN"
+            textAlign="left"
+          ></Text>
+          <TextInput
+            onChange={(e) => {
+              setInputPin(e.nativeEvent.text);
+            }}
+            secureTextEntry={true}
+            textAlign="left"
+            placeholder="Enter your PIN"
+            style={{ width: "90%", height: "6.5%", marginBottom: 5 }}
+          ></TextInput>
+          <Text
+            label="Your PIN is required to decrypt your data"
+            fontSize={globalStyle.mediumMobileFont}
+            style={{ width: "90%", marginBottom: 20, paddingLeft: 0 }}
+            textAlign="left"
+          ></Text>
+          <Animated.View
+            style={{
+              width: "100%",
+              height: "6.5%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 20,
+            }}
+          >
+            <Button
+              onClick={() => {
+                if (inputPin.length > 0 && activeUserApi.activeUser.userId) {
+                  SecureStore.getItemAsync(
+                    getSymmetricKey(activeUserApi.activeUser.userId)
+                  )
+                    .then((res) => {
+                      unwrapKeyAndSetState(inputPin, res ? res : "{}");
+                    })
+                    .catch((e) => {
+                      console.log("Error in native auth", e);
+                    });
+                }
+              }}
+              label="Continue"
+              style={{ width: "90%", height: "100%" }}
+            ></Button>
+          </Animated.View>
+          {nativeAuthAvailable && (
+            <Animated.View
+              style={{
+                width: "100%",
+                height: "6.5%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Button
+                onClick={() => {
+                  nativeAuthChallenge();
+                }}
+                label="Retry with screen lock"
+                style={{ width: "90%", height: "100%" }}
+              ></Button>
+            </Animated.View>
+          )}
+        </Animated.View>
+      ) : (
+        <Animated.View
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FingerprintDeco
+            width={90}
+            height={"5.5%"}
+            style={{ marginBottom: 15 }}
+          ></FingerprintDeco>
+          <Text
+            style={{ marginBottom: 30 }}
+            label="Use biometrics to decrypt your data"
+          ></Text>
+          <Button
+            onClick={() => {
+              setAuthViewMode("PIN");
+            }}
+            label="Use your PIN instead"
+            style={{ width: "90%", height: "6.5%", marginBottom: 20 }}
+          ></Button>
+          {showNativeAuthRetryButton && (
+            <Animated.View
+              style={{
+                width: "100%",
+                height: "6.5%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Button
+                onClick={() => {
+                  nativeAuthChallenge();
+                }}
+                label="Retry screen lock"
+                style={{ width: "90%", height: "100%" }}
+              ></Button>
+            </Animated.View>
+          )}
+        </Animated.View>
+      )}
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: "auto",
+    paddingBottom: "auto",
+  },
+  authViewStyle: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+export default localAccountAuth;
