@@ -3,7 +3,8 @@ import { useNewUserData } from "@/stores/newUserData";
 import { v4 } from "uuid";
 import { defaultFeatureConfig } from "./config/defaultFeatureConfig";
 import { stringToCharCodeArray } from "./fn/charOps";
-
+import * as SecureStore from "expo-secure-store";
+import { version } from "react";
 function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
@@ -26,10 +27,10 @@ async function getNewRecoveryCodes(symmetricKeyData: string) {
     );
   }
 
-  const allKeyVariants: string[] = [];
-  Promise.allSettled(keyWrappingPromises)
+  return Promise.allSettled(keyWrappingPromises)
     .then(async (results) => {
       newUserDataApi.setRecoveryCodes(recoveryCodes);
+      const allKeyVariants: string[] = [];
       results.forEach(async (result, index) => {
         if (result.status === "fulfilled") {
           const wrappedSimKey = result.value.payload;
@@ -39,12 +40,11 @@ async function getNewRecoveryCodes(symmetricKeyData: string) {
           console.error("Failed to wrap key", result.reason);
         }
       });
+      return { RCKBackup: JSON.stringify(allKeyVariants) };
     })
     .catch((error) => {
       console.error("Error wrapping keys", error);
     });
-
-  return { RCKBackup: JSON.stringify(allKeyVariants) };
 }
 
 async function encryptFeatureConfigs(jwkKeyData: string) {
@@ -160,10 +160,13 @@ async function createNewAccountBasics() {
       newSymmetricKey.jwk
     );
 
+    await SecureStore.setItemAsync("tempSymmetricKey", newSymmetricKey.jwk);
+    await SecureStore.setItemAsync("tempPrivateKey", newKeyPair.privateKey);
     const userData = {
       id: userId,
       signupTime: signupTime,
       publicKey: newKeyPair.publicKey,
+      version: "0.0.1",
       ...RCKPartial,
       ...featureConfigPartials,
     };

@@ -102,7 +102,7 @@ export interface cryptoOpsQueue {
   performOperation: (
     type: CryptoOpType,
     args?: ICryptoOp["args"]
-  ) => Promise<ICryptoOpResponse>;
+  ) => Promise<ICryptoOpResponse["response"]>;
   addResponsePromise: (
     requestId: string,
     resolve: (response: ICryptoOpResponse) => void,
@@ -154,9 +154,11 @@ const useCryptoOpsQueue = create<cryptoOpsQueue>((set, get) => ({
   performOperation: (type: CryptoOpType, args: any) => {
     const requestId = v4();
     const op: ICryptoOp = { requestId, type, args };
-    const promise = new Promise<ICryptoOpResponse>((resolve, reject) => {
-      get().addResponsePromise(requestId, resolve, reject);
-    });
+    const promise = new Promise<ICryptoOpResponse["response"]>(
+      (resolve, reject) => {
+        get().addResponsePromise(requestId, resolve, reject);
+      }
+    );
     get().enqueue(op);
     return promise;
   },
