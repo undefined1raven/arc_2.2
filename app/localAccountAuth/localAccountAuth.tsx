@@ -45,9 +45,11 @@ function localAccountAuth() {
   ///UI State
   const [showNativeAuthRetryButton, setShowNativeAuthRetryButton] =
     useState(false);
+  const [isCheckingPin, setIsCheckingPin] = useState(false);
 
   const unwrapKeyAndSetState = useCallback(
     (pin: string, wrappedKeyArg: string) => {
+      setIsCheckingPin(true);
       try {
         const wrappedKey = JSON.parse(wrappedKeyArg ? wrappedKeyArg : "{}");
         cryptoOpsApi
@@ -59,6 +61,11 @@ function localAccountAuth() {
           })
           .then((unwrappedKey) => {
             if (unwrappedKey.status === "success") {
+              if (unwrappedKey.payload.key.status === "error") {
+                console.log("Error unwrapping key", unwrappedKey.payload.key);
+                setIsCheckingPin(false);
+                return;
+              }
               SecureStore.setItemAsync(
                 secureStoreKeyNames.accountConfig.activeSymmetricKey,
                 JSON.stringify(unwrappedKey.payload.key)
@@ -68,16 +75,19 @@ function localAccountAuth() {
                 })
                 .catch((e) => {
                   console.log("Error setting key", e);
+                  setIsCheckingPin(false);
                 });
+            } else {
+              setIsCheckingPin(false);
             }
-            console.log("Unwrapped key", typeof unwrappedKey.payload.key);
           })
           .catch((e) => {
             console.log("Error unwrapping key", e);
+            setIsCheckingPin(false);
           });
-        console.log("Wrapped key", wrappedKey);
       } catch (e) {
         console.log("Error unwrapping key", e);
+        setIsCheckingPin(false);
       }
     },
     []
@@ -88,6 +98,7 @@ function localAccountAuth() {
       secureStoreKeyNames.accountConfig.useBiometricAuth
     );
     if (nativeAuthFlag === "true") {
+      setIsCheckingPin(true);
       SecureStore.getItemAsync(secureStoreKeyNames.accountConfig.pin, {
         requireAuthentication: true,
         authenticationPrompt: "Authenticate to access your data",
@@ -105,12 +116,14 @@ function localAccountAuth() {
               })
               .catch((e) => {
                 console.log("Error in native auth", e);
+                setIsCheckingPin(false);
                 setShowNativeAuthRetryButton(true);
               });
           }
         })
         .catch((e) => {
           console.log("Error in native auth", e);
+          setIsCheckingPin(false);
           setShowNativeAuthRetryButton(true);
         });
     }
@@ -127,11 +140,28 @@ function localAccountAuth() {
     <ThemedView style={{ ...styles.container }}>
       {authViewMode === "PIN" ? (
         <Animated.View style={{ ...styles.authViewStyle }}>
-          <Text
-            style={{ width: "90%", marginBottom: 5, paddingLeft: 0 }}
-            label="Enter your PIN"
-            textAlign="left"
-          ></Text>
+          <Animated.View
+            style={{
+              width: "90%",
+              marginBottom: 5,
+              paddingLeft: 0,
+              display: "flex",
+              flexDirection: "row",
+            }}
+          >
+            <Text
+              label={isCheckingPin ? "Authenticating" : "Enter your PIN"}
+              textAlign="left"
+              style={{ paddingLeft: 0 }}
+            ></Text>
+            {isCheckingPin && (
+              <ActivityIndicator
+                size="small"
+                color={globalStyle.color}
+                style={{ marginLeft: 10 }}
+              ></ActivityIndicator>
+            )}
+          </Animated.View>
           <TextInput
             onChange={(e) => {
               setInputPin(e.nativeEvent.text);
@@ -139,6 +169,7 @@ function localAccountAuth() {
             secureTextEntry={true}
             textAlign="left"
             placeholder="Enter your PIN"
+            keyboardType="numeric"
             style={{ width: "90%", height: "6.5%", marginBottom: 5 }}
           ></TextInput>
           <Text
@@ -211,10 +242,24 @@ function localAccountAuth() {
             height={"5.5%"}
             style={{ marginBottom: 15 }}
           ></FingerprintDeco>
-          <Text
-            style={{ marginBottom: 30 }}
-            label="Use biometrics to decrypt your data"
-          ></Text>
+          <Animated.View
+            style={{ marginBottom: 30, display: "flex", flexDirection: "row" }}
+          >
+            <Text
+              label={
+                isCheckingPin
+                  ? "Authenticating"
+                  : "Use biometrics to decrypt your data"
+              }
+            ></Text>
+            {isCheckingPin && (
+              <ActivityIndicator
+                size="small"
+                color={globalStyle.color}
+                style={{ marginLeft: 10 }}
+              ></ActivityIndicator>
+            )}
+          </Animated.View>
           <Button
             onClick={() => {
               setAuthViewMode("PIN");
