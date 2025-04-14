@@ -8,7 +8,11 @@ import {
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import Button from "@/components/common/Button";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+} from "react-native-reanimated";
 import { FingerprintDeco } from "@/components/deco/FingerprintDeco";
 import Text from "@/components/common/Text";
 import { useActiveUser } from "@/stores/activeUser";

@@ -79,7 +79,10 @@ type TessStatusType = {
   deleted: boolean;
   version: "0.1.1";
   colors: {
-    [key in AvailableThemes]: { [key in keyof BasicColorsType]: ColorValueHex };
+    [key in AvailableThemes]: {
+      light: { [key in keyof BasicColorsType]: ColorValueHex };
+      dark: { [key in keyof BasicColorsType]: ColorValueHex };
+    };
   };
   completionEffect: number;
 };
@@ -88,7 +91,10 @@ type TessLabelType = {
   labelID: string;
   name: string;
   colors: {
-    [key in AvailableThemes]: { [key in keyof BasicColorsType]: ColorValueHex };
+    [key in AvailableThemes]: {
+      light: { [key in keyof BasicColorsType]: ColorValueHex };
+      dark: { [key in keyof BasicColorsType]: ColorValueHex };
+    };
   };
   deleted: boolean;
   version: "0.1.1";
@@ -98,7 +104,10 @@ export type DayClassifierType = {
   dayClassID: string;
   threshold: number;
   colors: {
-    [key in AvailableThemes]: { [key in keyof BasicColorsType]: ColorValueHex };
+    [key in AvailableThemes]: {
+      light: { [key in keyof BasicColorsType]: ColorValueHex };
+      dark: { [key in keyof BasicColorsType]: ColorValueHex };
+    };
   };
   label: string;
   version: "0.1.1";
