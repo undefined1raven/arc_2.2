@@ -81,6 +81,10 @@ export default function RootLayout() {
             name="localAccountAuth/localAccountAuth"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="login/localLogin/localLogin"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="home/home" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
