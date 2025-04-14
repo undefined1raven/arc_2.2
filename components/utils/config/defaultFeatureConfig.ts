@@ -165,13 +165,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          color: themeColors.cloudy.light.color,
-          textColor: themeColors.cloudy.light.textColor,
-        },
-        dark: {
-          color: themeColors.cloudy.dark.color,
-          textColor: themeColors.cloudy.dark.textColor,
+        cloudy: {
+          light: {
+            color: themeColors.cloudy.light.color,
+            textColor: themeColors.cloudy.light.textColor,
+          },
+          dark: {
+            color: themeColors.cloudy.dark.color,
+            textColor: themeColors.cloudy.dark.textColor,
+          },
         },
       },
     },
@@ -182,13 +184,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          color: themeColors.cloudy.light.successColor,
-          textColor: themeColors.cloudy.light.successTextColor,
-        },
-        dark: {
-          color: themeColors.cloudy.dark.successColor,
-          textColor: themeColors.cloudy.dark.successTextColor,
+        cloudy: {
+          light: {
+            color: themeColors.cloudy.light.successColor,
+            textColor: themeColors.cloudy.light.successTextColor,
+          },
+          dark: {
+            color: themeColors.cloudy.dark.successColor,
+            textColor: themeColors.cloudy.dark.successTextColor,
+          },
         },
       },
     },
@@ -200,13 +204,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          color: "#DBE03F",
-          textColor: "#846732",
-        },
-        dark: {
-          color: "#3C3E09",
-          textColor: "#3C3E09",
+        cloudy: {
+          light: {
+            color: "#DBE03F",
+            textColor: "#846732",
+          },
+          dark: {
+            color: "#3C3E09",
+            textColor: "#3C3E09",
+          },
         },
       },
     },
@@ -218,13 +224,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          color: themeColors.cloudy.light.errorColor,
-          textColor: themeColors.cloudy.light.errorTextColor,
-        },
-        dark: {
-          color: themeColors.cloudy.dark.errorColor,
-          textColor: themeColors.cloudy.dark.errorTextColor,
+        cloudy: {
+          light: {
+            color: themeColors.cloudy.light.errorColor,
+            textColor: themeColors.cloudy.light.errorTextColor,
+          },
+          dark: {
+            color: themeColors.cloudy.dark.errorColor,
+            textColor: themeColors.cloudy.dark.errorTextColor,
+          },
         },
       },
     },
@@ -235,13 +243,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          color: "#3D0861",
-          textColor: "#3D0861",
-        },
-        dark: {
-          color: "#BE79EC",
-          textColor: "#BE79EC",
+        cloudy: {
+          light: {
+            color: "#3D0861",
+            textColor: "#3D0861",
+          },
+          dark: {
+            color: "#BE79EC",
+            textColor: "#BE79EC",
+          },
         },
       },
     },
@@ -251,13 +261,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       labelID: "LID-000000-0000-0000-000001",
       name: "High Priority",
       colors: {
-        light: {
-          textColor: "#580055",
-          color: "#580055",
-        },
-        dark: {
-          textColor: "#C300BC",
-          color: "#C300BC",
+        cloudy: {
+          light: {
+            color: "#580055",
+            textColor: "#580055",
+          },
+          dark: {
+            color: "#C300BC",
+            textColor: "#C300BC",
+          },
         },
       },
       version: "0.1.1",
@@ -269,20 +281,18 @@ const tessDefaultConfig: FeatureConfigTessType = {
     {
       labelID: "LID-000000-0000-0000-000002",
       name: "Optional",
-      lightColor: "#757120",
-      textLightColor: "#757120",
-      darkColor: "#A19B16",
-      textDarkColor: "#A19B16",
       version: "0.1.1",
       deleted: false,
       colors: {
-        light: {
-          textColor: "#757120",
-          color: "#757120",
-        },
-        dark: {
-          textColor: "#A19B16",
-          color: "#A19B16",
+        cloudy: {
+          light: {
+            color: "#757120",
+            textColor: "#757120",
+          },
+          dark: {
+            color: "#A19B16",
+            textColor: "#A19B16",
+          },
         },
       },
       completionMultiplier: (score: number) => {
@@ -293,13 +303,15 @@ const tessDefaultConfig: FeatureConfigTessType = {
       labelID: "LID-000000-0000-0000-000003",
       name: "Normaal",
       colors: {
-        light: {
-          color: themeColors.cloudy.light.color,
-          textColor: themeColors.cloudy.light.textColor,
-        },
-        dark: {
-          color: themeColors.cloudy.dark.color,
-          textColor: themeColors.cloudy.dark.textColor,
+        cloudy: {
+          light: {
+            color: themeColors.cloudy.light.color,
+            textColor: themeColors.cloudy.light.textColor,
+          },
+          dark: {
+            color: themeColors.cloudy.dark.color,
+            textColor: themeColors.cloudy.dark.textColor,
+          },
         },
       },
       version: "0.1.1",

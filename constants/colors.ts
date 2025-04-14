@@ -48,7 +48,11 @@ type AvailableThemes =
   | "cutuSmarald"
   | "cerulRatonas"
   | "ravenPurp"
-  | "ravensPurp";
+  | "ravensPurp"
+  | "cloudy"
+  | "sangeRed"
+  | "paper"
+  | "monochromeGray";
 
 type Themes = {
   cloudy: ThemeColorsType;
