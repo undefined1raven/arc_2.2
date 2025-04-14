@@ -19,20 +19,38 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     "CREATE TABLE IF NOT EXISTS userData (userID TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, version TEXT NOT NULL, PRIMARY KEY (userID, key));"
   );
   promiseArray.push(userDataTablePromise);
+
+  //Time tracking chunks
   const arcChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS arcChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
   );
   promiseArray.push(arcChunksTablePromise);
+  const arcChunksDerivedDataTablePromise = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS timeTrackingDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
+  );
+  promiseArray.push(arcChunksDerivedDataTablePromise);
+
+  //Day planner chunks
   const tessChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS tessChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
   );
   promiseArray.push(tessChunksTablePromise);
-  const SIDChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS sidChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+  const tessChunksDerivedDataTablePromise = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS dayPlannerDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
   );
+  promiseArray.push(tessChunksDerivedDataTablePromise);
+
+  //Personal Diary chunks
+  const SIDChunksTablePromise = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+  );
+  const sidChunksDerivedDataTablePromise = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS personalDiaryDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
+  );
+  promiseArray.push(sidChunksDerivedDataTablePromise);
   promiseArray.push(SIDChunksTablePromise);
   const SIDGruopsChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS sidGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
   );
   promiseArray.push(SIDGruopsChunksTablePromise);
   return Promise.all(promiseArray)
@@ -62,10 +80,13 @@ async function NukeLocalData() {
   const db = await SQLite.openDatabaseAsync("localCache");
   db.runAsync("DROP TABLE users");
   db.runAsync("DROP TABLE userData");
-  db.runAsync("DROP TABLE arcChunks");
-  db.runAsync("DROP TABLE tessChunks");
-  db.runAsync("DROP TABLE sidChunks");
-  db.runAsync("DROP TABLE sidGroups");
+  db.runAsync("DROP TABLE timeTrackingChunks");
+  db.runAsync("DROP TABLE timeTrackingDerivedDataChunks");
+  db.runAsync("DROP TABLE dayPlannerDerivedDataChunks");
+  db.runAsync("DROP TABLE personalDiaryDerivedDataChunks");
+  db.runAsync("DROP TABLE dayPlannerChunks");
+  db.runAsync("DROP TABLE personalDiaryChunks");
+  db.runAsync("DROP TABLE personalDiaryGroups");
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.activePrivateKey
   );

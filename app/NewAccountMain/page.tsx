@@ -17,8 +17,7 @@ export default function Main() {
         <Button
           fontSize={globalStyle.largeMobileFont}
           onClick={() => {
-            const newUserDataApi = useNewUserData.getState();
-            console.log("New User Data API", newUserDataApi.recoveryCodes);
+            router.push("/login/localLogin/localLogin");
           }}
           style={styles.button}
           label="Login"
