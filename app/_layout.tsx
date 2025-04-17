@@ -14,6 +14,7 @@ import "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
 import CreateNewAccountData from "@/components/functional/CreateNewAccountData";
+import { SQLiteProvider } from "expo-sqlite";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -41,54 +42,56 @@ export default function RootLayout() {
 
   return (
     <>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: globalStyle.pageBackgroundColors[0],
-        }}
-      >
-        <CreateNewAccountData></CreateNewAccountData>
-        <View style={{ width: 0, height: 0 }}>
-          <CryptoWorkers></CryptoWorkers>
-        </View>
-        <LinearGradient
-          colors={globalStyle.pageBackgroundColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.3, y: 0.7 }}
+      <SQLiteProvider databaseName="localCache">
+        <View
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "120%",
-            height: "120%",
+            flex: 1,
+            backgroundColor: globalStyle.pageBackgroundColors[0],
           }}
-        ></LinearGradient>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="NewAccountMain/page"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="downloadRecoveryCodes/page"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="setAccountPin/page"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="localAccountAuth/localAccountAuth"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="login/localLogin/localLogin"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="home/home" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </View>
+        >
+          <CreateNewAccountData></CreateNewAccountData>
+          <View style={{ width: 0, height: 0 }}>
+            <CryptoWorkers></CryptoWorkers>
+          </View>
+          <LinearGradient
+            colors={globalStyle.pageBackgroundColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.3, y: 0.7 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "120%",
+              height: "120%",
+            }}
+          ></LinearGradient>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="NewAccountMain/page"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="downloadRecoveryCodes/page"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="setAccountPin/page"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="localAccountAuth/localAccountAuth"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="login/localLogin/localLogin"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen name="home/home" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </View>
+      </SQLiteProvider>
     </>
   );
 }
