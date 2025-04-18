@@ -1,9 +1,12 @@
 import { useNewUserData } from "@/stores/newUserData";
 import * as SQLite from "expo-sqlite";
-async function saveNewUser() {
+async function saveNewUser(PIKBackup: string) {
   const newUserDataApi = useNewUserData.getState();
   const newUserData = newUserDataApi.userData;
-
+  console.log(
+    "---------------------Saving new user data Pik",
+    PIKBackup ?? null
+  );
   const db = await SQLite.openDatabaseAsync("localCache");
   return db.runAsync(
     `INSERT INTO users (id, signupTime, publicKey, passwordHash, emailAddress, passkeys, PIKBackup, PSKBackup, RCKBackup, trustedDevices, oauthState, securityLogs, timeTrackingFeatureConfig, diaryFeatureConfig, dayPlannerFeatureConfig, version) VALUES (${"?, ".repeat(
@@ -16,7 +19,7 @@ async function saveNewUser() {
       newUserData?.passwordHash ?? null,
       newUserData?.emailAddress ?? null,
       newUserData?.passkeys ?? null,
-      newUserData?.PIKBackup ?? null,
+      PIKBackup ?? null,
       newUserData?.PSKBackup ?? null,
       newUserData?.RCKBackup ?? null,
       newUserData?.trustedDevices ?? null,
