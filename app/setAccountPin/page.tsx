@@ -27,6 +27,9 @@ import {
 } from "@/components/utils/constants/secureStoreKeyNames";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { saveNewUser } from "@/components/utils/db/saveNewUser";
+import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
+import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
+
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const newUserDataApi = useNewUserData();
@@ -89,9 +92,14 @@ export default function Main() {
               return;
             }
 
+            const wrappedSymKey = encodeWrappedSymkey(res.payload);
+            if (wrappedSymKey === null) {
+              console.error("Error encoding wrapped symmetric key");
+              return;
+            }
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              JSON.stringify(res.payload)
+              wrappedSymKey
             );
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
@@ -102,7 +110,7 @@ export default function Main() {
               "false"
             );
             ///Redirect to home
-            saveNewUser()
+            saveNewUser(wrappedSymKey)
               .then(() => {
                 console.log("Saved new user");
               })
@@ -117,9 +125,14 @@ export default function Main() {
               getPrivateKey(userId),
               privateKeyJwk
             );
+            const wrappedSymKey = encodeWrappedSymkey(res.payload);
+            if (wrappedSymKey === null) {
+              console.error("Error encoding wrapped symmetric key");
+              return;
+            }
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              JSON.stringify(res.payload)
+              wrappedSymKey
             )
               .then(async () => {
                 ///Redirect to home
@@ -136,11 +149,13 @@ export default function Main() {
                       "Authenticate to use your screen lock to unlock",
                   }
                 );
-                saveNewUser()
+                saveNewUser(wrappedSymKey)
                   .then(() => {
                     console.log("Saved new user");
                   })
-                  .catch((e) => {});
+                  .catch((e) => {
+                    console.log("Error saving new user", e);
+                  });
               })
               .catch(async (err) => {
                 setAuthAvailable(false);

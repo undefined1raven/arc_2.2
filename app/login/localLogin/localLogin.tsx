@@ -17,6 +17,7 @@ import {
   getPrivateKey,
   getSymmetricKey,
 } from "@/components/utils/constants/secureStoreKeyNames";
+import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -54,7 +55,16 @@ function LocalLogin() {
 
   function writeBackupToDB(wait?: boolean) {
     const userData = fileJson.userData;
-    console.log("XLF USER DATA ID", userData.id);
+
+    ////Legacy feature config
+    if (userData.arcFeatureConfig !== undefined) {
+      userData["timeTrackingFeatureConfig"] = userData.arcFeatureConfig;
+      delete userData.arcFeatureConfig;
+      userData["diaryFeatureConfig"] = userData.SIDFeatureConfig;
+      delete userData.SIDFeatureConfig;
+      userData["dayPlannerFeatureConfig"] = userData.tessFeatureConfig;
+      delete userData.tessFeatureConfig;
+    }
     const promiseArray = [];
     promiseArray.push(
       db.runAsync(
@@ -122,8 +132,9 @@ function LocalLogin() {
     promiseArray.push(
       SecureStore.setItemAsync(getPrivateKey(userData.id), fileJson.pk)
     );
+
     promiseArray.push(
-      SecureStore.setItemAsync(getSymmetricKey(userData.id), fileJson.symkey)
+      SecureStore.setItemAsync(getSymmetricKey(userData.id), userData.PIKBackup)
     );
 
     if (wait) {

@@ -8,11 +8,7 @@ import {
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import Button from "@/components/common/Button";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInUp,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { FingerprintDeco } from "@/components/deco/FingerprintDeco";
 import Text from "@/components/common/Text";
 import { useActiveUser } from "@/stores/activeUser";
@@ -20,6 +16,7 @@ import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { router, useGlobalSearchParams } from "expo-router";
 import TextInput from "@/components/common/TextInput";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
+import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
   const cryptoOpsApi = useCryptoOpsQueue();
@@ -41,8 +38,8 @@ function localAccountAuth() {
     if (nativeAuthFlag === "true") {
       setNativeAuthAvailable(true);
       setAuthViewMode("NATIVE");
-      setReadyForAuth(true);
     }
+    setReadyForAuth(true);
     nativeAuthChallenge();
   }, []);
 
@@ -55,12 +52,18 @@ function localAccountAuth() {
     (pin: string, wrappedKeyArg: string) => {
       setIsCheckingPin(true);
       try {
-        const wrappedKey = JSON.parse(wrappedKeyArg ? wrappedKeyArg : "{}");
+        console.log("Unwrapping key", wrappedKeyArg);
+        const decodedWrappedKey = decodeWrappedSymkey(wrappedKeyArg);
+        if (decodedWrappedKey === null) {
+          console.log("Error decoding wrapped key");
+          setIsCheckingPin(false);
+          return;
+        }
         cryptoOpsApi
           .performOperation("unwrapKey", {
-            wrappedKey: wrappedKey.wrappedKey,
-            salt: wrappedKey.salt,
-            iv: wrappedKey.iv,
+            wrappedKey: decodedWrappedKey.wrappedKey,
+            salt: decodedWrappedKey.salt,
+            iv: decodedWrappedKey.iv,
             password: pin,
           })
           .then((unwrappedKey) => {

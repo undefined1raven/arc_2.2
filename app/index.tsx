@@ -18,6 +18,7 @@ export default function Main() {
     const activeUserApiState = useActiveUser.getState();
     checkTables()
       .then(async (res: CheckTablesReturnSig) => {
+        console.log("XLF UID", res);
         if (res.status === "success" && res.isEmpty) {
           activeUserApiState.setActiveUser({
             hasChecked: true,
