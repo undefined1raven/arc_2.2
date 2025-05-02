@@ -12,7 +12,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await SQLite.openDatabaseAsync("localCache");
   var promiseArray: Promise<any>[] = [];
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, timeTrackingFeatureConfig TEXT NOT NULL, diaryFeatureConfig TEXT NOT NULL, dayPlannerFeatureConfig TEXT NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL);"
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -53,6 +53,13 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
   );
   promiseArray.push(SIDGruopsChunksTablePromise);
+
+  ////Feature config tables
+  const featureConfigChunks = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS featureConfigChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, type TEXT NOT NULL, version TEXT NOT NULL);"
+  );
+  promiseArray.push(featureConfigChunks);
+
   return Promise.all(promiseArray)
     .then(() => {
       return db
@@ -87,6 +94,7 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE dayPlannerChunks");
   db.runAsync("DROP TABLE personalDiaryChunks");
   db.runAsync("DROP TABLE personalDiaryGroups");
+  db.runAsync("DROP TABLE featureConfigChunks");
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.activePrivateKey
   );

@@ -1,6 +1,15 @@
 function getCryptoOpsFn(args) {
   return `
 
+
+function charCodeArrayToString(charCodeArray) {
+  let str = "";
+  for (let i = 0; i < charCodeArray.length; i++) {
+    str += String.fromCharCode(charCodeArray[i]);
+  }
+  return str;
+}
+
 function stringToCharCodeArray(str) {
     let stringActual = str;
     if (str === undefined) {
@@ -22,11 +31,11 @@ function stringToCharCodeArray(str) {
   window.ReactNativeWebView.postMessage(message);
 }
 
-      console.log("------Crypto Worker v1.2 active------", ${args});
+      console.log("------Crypto Worker v1.2 active------");
       function cryptoWorker(args) {
     console.log("------Crypto Worker v1.2 active from CW------");
     function returnErrorResponse(message) {
-      console.log(\`Error: \$\{message\} for args\`, JSON.stringify(args));
+      console.log(\`Error: \$\{message\} for args\` [redacted]);
       return {
         status: "error",
         payload: { message: message, providedArgs: args },
@@ -277,7 +286,7 @@ function stringToCharCodeArray(str) {
             };
           })
           .catch((e) => {
-            return returnErrorResponse(e);
+            return returnErrorResponse(e, ' ---- Catch 1');
           });
       }
     }
@@ -294,9 +303,6 @@ function stringToCharCodeArray(str) {
       if (parsedCharCodeData === null) {
         return returnErrorResponse("Error parsing char code data");
       }
-      const cipherFromCharCodes = str2ab(
-        charCodeArrayToString(parsedCharCodeData)
-      );
       if (args.keyType === "private") {
         const importPayload = await importCryptoKey({
           jwkKeyData: args.key,
@@ -316,37 +322,23 @@ function stringToCharCodeArray(str) {
             return returnErrorResponse(e);
           });
       } else if (args.keyType === "symmetric") {
+        const cipherAndIv = {cipher: charCodeArrayToString(parsedCharCodeData.cipher), iv: charCodeArrayToString(parsedCharCodeData.iv)};
+        const cipher = str2ab(cipherAndIv.cipher);
+        const iv = str2ab(cipherAndIv.iv);
         const importPayload = await importCryptoKey({
           jwkKeyData: args.key,
           keyType: "symmetric",
         });
-        var parsedCharCodeIvData = null;
-        try {
-          parsedCharCodeIvData = JSON.parse(args.iv);
-        } catch (e) {
-          return returnErrorResponse(e);
-        }
-        if (parsedCharCodeIvData === null) {
-          return returnErrorResponse("Error parsing IV char code");
-        }
-        const ivFromCharCodes = str2ab(
-          charCodeArrayToString(parsedCharCodeIvData)
-        );
 
         if (!importPayload?.payload?.key) {
           return returnErrorResponse("Error importing symmetric key");
         }
         const key = importPayload.payload.key;
-        if (args.iv === undefined) {
-          return returnErrorResponse(
-            "IV is required for symmetric key decryption"
-          );
-        }
         return await window.crypto.subtle
           .decrypt(
-            { name: "AES-GCM", iv: ivFromCharCodes },
+            { name: "AES-GCM", iv: iv },
             key,
-            cipherFromCharCodes
+            cipher
           )
           .then((decrypted) => {
             return {
