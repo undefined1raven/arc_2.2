@@ -17,6 +17,7 @@ import { router, useGlobalSearchParams } from "expo-router";
 import TextInput from "@/components/common/TextInput";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
+import { useSQLiteContext } from "expo-sqlite";
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
   const cryptoOpsApi = useCryptoOpsQueue();
@@ -30,6 +31,7 @@ function localAccountAuth() {
   const [nativeAuthAvailable, setNativeAuthAvailable] = useState(false);
   const [authViewMode, setAuthViewMode] = useState<"PIN" | "NATIVE">("PIN");
 
+  const db = useSQLiteContext();
   useEffect(() => {
     ///Check if the user has enabled the screen lock method
     const nativeAuthFlag = SecureStore.getItem(

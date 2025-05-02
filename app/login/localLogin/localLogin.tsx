@@ -77,14 +77,19 @@ function LocalLogin() {
 
     const arcData = fileJson.arcData;
     if (arcData !== null && typeof arcData?.length === "number") {
+      console.log("arcData", arcData?.length);
       arcData.forEach((chunk) => {
         promiseArray.push(
-          db.runAsync(
-            `INSERT OR REPLACE INTO timeTrackingChunks ${
-              getInsertStringFromObject(chunk).queryString
-            }`,
-            getInsertStringFromObject(chunk).values
-          )
+          db
+            .runAsync(
+              `INSERT OR REPLACE INTO timeTrackingChunks ${
+                getInsertStringFromObject(chunk).queryString
+              }`,
+              getInsertStringFromObject(chunk).values
+            )
+            .catch((e) => {
+              console.log("Error inserting arcData chunk", e);
+            })
         );
       });
     }
@@ -136,6 +141,8 @@ function LocalLogin() {
     promiseArray.push(
       SecureStore.setItemAsync(getSymmetricKey(userData.id), userData.PIKBackup)
     );
+
+    console.log("PAL-------", promiseArray.length);
 
     if (wait) {
       return Promise.all(promiseArray);
