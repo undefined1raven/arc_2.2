@@ -6,26 +6,52 @@ import { secureStoreKeyNames } from "@/components/utils/constants/secureStoreKey
 import { ARC_ChunksType } from "@/constants/CommonTypes";
 import { useActiveUser } from "./activeUser";
 import { useCryptoOpsQueue } from "./cryptoOpsQueue";
+import {
+  charCodeArrayToString,
+  stringToCharCodeArray,
+} from "@/components/utils/fn/charOps";
+import { chunkPrefixes } from "@/constants/chunkPrefixes";
 type TableNames =
   | "timeTrackingChunks"
   | "dayPlannerChunks"
-  | "personalDiaryChunks";
+  | "personalDiaryChunks"
+  | "personalDiaryGroups";
 
 interface DataRetrivalApi {
-  appendEntry: (tableName: TableNames, rowData: any) => void;
+  appendEntry: (
+    tableName: TableNames,
+    rowData: any,
+    chunkSize: number
+  ) => Promise<{
+    status: "error" | "success";
+    payload?: any;
+    error?: string;
+  }>;
+  getDataInTimeRange: (
+    tableName: TableNames,
+    from?: number | null | undefined,
+    until?: number | null | undefined
+  ) => Promise<{
+    status: "error" | "success";
+    payload?: any[];
+    error?: string;
+  }>;
 }
 
-const DataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
-  appendEntry: async (tableName, rowData) => {
+const allowedTableNames = [
+  "timeTrackingChunks",
+  "dayPlannerChunks",
+  "personalDiaryChunks",
+  "personalDiaryGroups",
+];
+
+const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
+  appendEntry: async (tableName, rowData, chunkSize): Promise<any> => {
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
       | null;
     const cryptoOpsApi = useCryptoOpsQueue.getState();
-    const allowedTableNames = [
-      "timeTrackingChunks",
-      "dayPlannerChunks",
-      "personalDiaryChunks",
-    ];
+
     if (activeUserId === null) {
       return { status: "error", error: "No active user" };
     }
@@ -44,7 +70,7 @@ const DataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "Invalid chunk data" };
     }
     const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activePrivateKey
+      secureStoreKeyNames.accountConfig.activeSymmetricKey
     );
     if (key === null) {
       return { status: "error", error: "No key found" };
@@ -57,6 +83,208 @@ const DataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (decryptionResults.status === "error") {
       return { status: "error", error: decryptionResults.payload };
     }
-    ////TO DO
+
+    function updateChunk(newChunk: ARC_ChunksType) {
+      return db
+        .runAsync(
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ?`,
+          [newChunk.encryptedContent, newChunk.tx, activeUserId]
+        )
+        .then((result) => {
+          return { status: "success", payload: result };
+        })
+        .catch((e) => {
+          return { status: "error", error: e };
+        });
+    }
+
+    function insertChunk(newChunk: ARC_ChunksType) {
+      return db
+        .runAsync(
+          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version) VALUES (${"?, ".repeat(
+            4
+          )} ?);`,
+          Object.values(newChunk)
+        )
+        .then((result) => {
+          return { status: "success", payload: result };
+        })
+        .catch((e) => {
+          return { status: "error", error: e };
+        });
+    }
+
+    try {
+      const decryptedStringData = charCodeArrayToString(
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+      );
+      try {
+        const parsedData = JSON.parse(decryptedStringData) as any[];
+        if (parsedData === null) {
+          return { status: "error", error: "Parsed data is null" };
+        }
+
+        if (typeof parsedData.length !== "number") {
+          return { status: "error", error: "Parsed data is not an array" };
+        }
+
+        if (parsedData.length + 1 > chunkSize) {
+          const newData = [rowData];
+          const encryptionResults = await cryptoOpsApi.performOperation(
+            "encrypt",
+            {
+              keyType: "symmetric",
+              key: key,
+              charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
+            }
+          );
+          if (encryptionResults.status === "error") {
+            return { status: "error", error: encryptionResults.payload };
+          }
+          const encryptedContent = {
+            cipher: encryptionResults.payload.cipher,
+            iv: encryptionResults.payload.iv,
+          };
+
+          const chunkIDPrefix = chunkPrefixes[tableName];
+
+          const newChunk = {
+            id: `${chunkIDPrefix}${v4()}`,
+            encryptedContent: JSON.stringify(encryptedContent),
+            userID: activeUserId,
+            tx: Date.now(),
+            version: "0.1.0",
+          };
+
+          await db.closeAsync();
+
+          // return insertChunk(newChunk);
+        } else {
+          const appendedData = [...parsedData, rowData];
+          const encryptionResults = await cryptoOpsApi.performOperation(
+            "encrypt",
+            {
+              keyType: "symmetric",
+              key: key,
+              charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
+            }
+          );
+          if (encryptionResults.status === "error") {
+            return { status: "error", error: encryptionResults.payload };
+          }
+          const encryptedContent = {
+            cipher: encryptionResults.payload.cipher,
+            iv: encryptionResults.payload.iv,
+          };
+
+          const previousContentLength = latestChunk.encryptedContent.length;
+
+          const updatedChunk = {
+            ...latestChunk,
+            encryptedContent: JSON.stringify(encryptedContent),
+            tx: Date.now(),
+          };
+
+          const newContentLength = updatedChunk.encryptedContent.length;
+
+          if (newContentLength <= previousContentLength) {
+            return {
+              status: "error",
+              error: "Content length is not increasing",
+            };
+          }
+
+          await db.closeAsync();
+          // return updateChunk(updatedChunk);
+        }
+      } catch (e) {
+        return { status: "error", error: "Failed to parse decrypted data" };
+      }
+    } catch (e) {
+      return {
+        status: "error",
+        error: "Failed to parse encoded decrypted data",
+      };
+    }
+
+    return null;
+  },
+  getDataInTimeRange: async (
+    tableName,
+    from,
+    until
+  ): Promise<{
+    status: "error" | "success";
+    payload?: any[];
+    error?: string;
+  }> => {
+    const activeUserId = useActiveUser.getState().activeUser.userId as
+      | string
+      | null;
+    const cryptoOpsApi = useCryptoOpsQueue.getState();
+
+    if (activeUserId === null) {
+      return { status: "error", error: "No active user" };
+    }
+    if (allowedTableNames.includes(tableName) === false) {
+      return { status: "error", error: "Invalid table name" };
+    }
+
+    const key = await SecureStore.getItemAsync(
+      secureStoreKeyNames.accountConfig.activeSymmetricKey
+    );
+    if (key === null) {
+      return { status: "error", error: "No key found" };
+    }
+
+    const db = await SQLite.openDatabaseAsync("localCache");
+
+    let txQuery = "tx > 0";
+    if (typeof from === "number") {
+      txQuery = `tx >= ${from}`;
+    }
+    if (typeof until === "number") {
+      txQuery += ` AND tx <= ${until}`;
+    }
+
+    const relevantChunks: ARC_ChunksType[] = await db.getAllAsync(
+      `SELECT * FROM ${tableName} WHERE userID = ? AND ${txQuery} ORDER BY tx DESC`,
+      [activeUserId]
+    );
+
+    const decryptionPromises = relevantChunks.map((chunk) => {
+      const encryptedContent = chunk.encryptedContent;
+      const decryptionPromise = cryptoOpsApi.performOperation("decrypt", {
+        keyType: "symmetric",
+        charCodeData: encryptedContent,
+        key: key,
+      });
+      return decryptionPromise;
+    });
+
+    return Promise.all(decryptionPromises)
+      .then((decryptionResults) => {
+        let data: any[] = [];
+        decryptionResults.map((result, index) => {
+          if (result.status === "error") {
+            return null;
+          }
+          const decryptedEncodedStringData =
+            "[" + result.payload.decrypted + "]";
+          const encodedArray = JSON.parse(
+            decryptedEncodedStringData
+          ) as number[];
+          const decodedStringData = charCodeArrayToString(encodedArray);
+          const parsedData = JSON.parse(decodedStringData) as any[];
+          data = [...data, ...parsedData];
+        });
+        return { status: "success", payload: data };
+      })
+      .catch((e) => {
+        console.log("Decryption error", e);
+        return { status: "error", error: e };
+      });
   },
 }));
+
+export { dataRetrivalApi };
