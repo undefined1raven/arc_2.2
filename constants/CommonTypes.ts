@@ -160,6 +160,15 @@ type UserData = {
 
 type localDBError = { code: string }; //currently uselessp
 
+type FeatureConfigChunkType = {
+  id: string;
+  userID: string;
+  encryptedContent: string;
+  tx: number;
+  version: "0.1.1";
+  type: "timeTracking" | "dayPlanner" | "personalDiary";
+};
+
 type ARC_ChunksType = {
   id: string;
   userID: string;
@@ -230,6 +239,7 @@ export type {
   SIDGroupType,
   SIDGroups_ChunksType,
   ARC_ChunksType,
+  FeatureConfigChunkType,
   FeatureConfigType,
   UserData,
   FeatureConfigArcType,

@@ -18,6 +18,8 @@ import TextInput from "@/components/common/TextInput";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { useSQLiteContext } from "expo-sqlite";
+import { useFeatureConfigs } from "@/stores/featureConfigs";
+
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
   const cryptoOpsApi = useCryptoOpsQueue();
@@ -80,7 +82,13 @@ function localAccountAuth() {
                 JSON.stringify(unwrappedKey.payload.key)
               )
                 .then(() => {
-                  router.replace("/home/home");
+                  useFeatureConfigs
+                    .getState()
+                    .decryptFeatureConfigs()
+                    .then(() => {
+                      router.replace("/home/home");
+                    })
+                    .catch((e) => {});
                 })
                 .catch((e) => {
                   console.log("Error setting key", e);
