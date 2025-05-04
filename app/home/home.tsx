@@ -1,8 +1,8 @@
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { ThemedView } from "@/components/ThemedView";
 import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useActiveUser } from "@/stores/activeUser";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
@@ -18,13 +18,18 @@ import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { dayPlannerChunkSize } from "@/components/utils/constants/chunking";
 import { StorageAccessFramework } from "expo-file-system";
 import * as FileSystem from "expo-file-system";
-
+import { useFeatureConfigs } from "@/stores/featureConfigs";
+import { FlashList } from "@shopify/flash-list";
+import Text from "@/components/common/Text";
 function Home() {
   const dataRetrivalApix = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const db = useSQLiteContext();
   const userAuthApi = useActiveUser();
   const cryptoOpsAPI = useCryptoOpsQueue();
+  const featureConfigApi = useFeatureConfigs();
+
+  const [listItems, setListItems] = useState<any[]>([]);
 
   // useEffect(() => {
   //   const userID = userAuthApi.activeUser.userId;
@@ -112,10 +117,46 @@ function Home() {
   //   //   });
   // }, []);
 
+  useEffect(() => {
+    if (featureConfigApi.timeTrackingFeatureConfig !== null) {
+      const tasks = featureConfigApi.timeTrackingFeatureConfig.filter(
+        (r) => r.type === "task"
+      );
+      setListItems(tasks);
+    }
+  }, [featureConfigApi.timeTrackingFeatureConfig]);
+
+  const getCatFromTask = useCallback((task: { categoryID: string }) => {
+    const cat = featureConfigApi.timeTrackingFeatureConfig.filter(
+      (r) =>
+        r.type === "taskCategory" &&
+        (r.itme.categoryID === task.categoryID || r.itme.id === task.categoryID)
+    );
+    if (cat.length > 0) {
+      return cat[0].itme.name;
+    } else {
+      return null;
+    }
+  }, []);
+
   return (
     <>
       <ThemedView style={styles.container}>
-        <ARCLogoMini style={{ width: 60, height: 60 }}></ARCLogoMini>
+        <ThemedView
+          style={{ width: "100%", height: "100%", backgroundColor: "#000" }}
+        >
+          <FlashList
+            style={{ width: "100%", height: "100%" }}
+            data={listItems}
+            renderItem={({ item }) => (
+              <Text
+                label={item.itme.name + " [" + getCatFromTask(item.itme) + "]"}
+                style={{ width: "100%", height: "100%" }}
+              ></Text>
+            )}
+            estimatedItemSize={100}
+          ></FlashList>
+        </ThemedView>
       </ThemedView>
     </>
   );
