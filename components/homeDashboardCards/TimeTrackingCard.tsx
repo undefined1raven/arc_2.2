@@ -28,6 +28,30 @@ function TimeTrackingCard() {
   const activeUserApi = useActiveUser();
   const [timeDisplayLabel, setTimeDisplayLabel] = useState("");
   const [activitySearchFilter, setActivitySearchFilter] = useState("");
+  const [activities, setActivities] = useState<any[]>([]);
+
+  useEffect(() => {
+    const filteredActivities =
+      featureConfigApi.timeTrackingFeatureConfig.filter((r) => {
+        const isTask = r.type === "task";
+        if (!isTask) {
+          return false;
+        }
+        if (activitySearchFilter.length > 0) {
+          const searchText = activitySearchFilter.toLowerCase();
+          const name = r.itme.name.toLowerCase();
+          const categoryName = getCategoryNameFromTaskObject(r).toLowerCase();
+          return (
+            isTask &&
+            (name.includes(searchText) || categoryName.includes(searchText))
+          );
+        } else {
+          return isTask;
+        }
+      });
+
+    setActivities(filteredActivities);
+  }, [activitySearchFilter]);
 
   useEffect(() => {
     if (hasPendingActivity !== null && hasPendingActivity !== false) {
@@ -163,6 +187,7 @@ function TimeTrackingCard() {
             }}
             style={{ marginTop: "5%", height: "35%", width: "90%" }}
             onClick={() => {
+              setActivitySearchFilter("");
               setIsPickingActivity(true);
             }}
             label="Pick activity"
@@ -211,6 +236,7 @@ function TimeTrackingCard() {
                   secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
                 )
               );
+              setActivitySearchFilter("");
               setHasPendingActivity(false);
               setIsPickingActivity(true);
             }}
@@ -243,24 +269,7 @@ function TimeTrackingCard() {
           style={{ height: "7%", width: "100%", marginBottom: 10 }}
         ></TextInput>
         <FlashList
-          data={featureConfigApi.timeTrackingFeatureConfig.filter((r) => {
-            const isTask = r.type === "task";
-            if (!isTask) {
-              return false;
-            }
-            if (activitySearchFilter.length > 0) {
-              const searchText = activitySearchFilter.toLowerCase();
-              const name = r.itme.name.toLowerCase();
-              const categoryName =
-                getCategoryNameFromTaskObject(r).toLowerCase();
-              return (
-                isTask &&
-                (name.includes(searchText) || categoryName.includes(searchText))
-              );
-            } else {
-              return isTask;
-            }
-          })}
+          data={activities}
           estimatedItemSize={55}
           renderItem={({ item }) => {
             return (
