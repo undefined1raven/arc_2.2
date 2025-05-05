@@ -30,7 +30,8 @@ interface DataRetrivalApi {
   getDataInTimeRange: (
     tableName: TableNames,
     from?: number | null | undefined,
-    until?: number | null | undefined
+    until?: number | null | undefined,
+    chunkLimit?: number | null | undefined
   ) => Promise<{
     status: "error" | "success";
     payload?: any[];
@@ -87,13 +88,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     function updateChunk(newChunk: ARC_ChunksType) {
       return db
         .runAsync(
-          `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ?`,
-          [newChunk.encryptedContent, newChunk.tx, activeUserId]
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
+          [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
         )
         .then((result) => {
+          db.closeAsync();
           return { status: "success", payload: result };
         })
         .catch((e) => {
+          db.closeAsync();
           return { status: "error", error: e };
         });
     }
@@ -156,9 +159,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             version: "0.1.0",
           };
 
-          await db.closeAsync();
-
-          // return insertChunk(newChunk);
+          return insertChunk(newChunk);
         } else {
           const appendedData = [...parsedData, rowData];
           const encryptionResults = await cryptoOpsApi.performOperation(
@@ -182,7 +183,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           const updatedChunk = {
             ...latestChunk,
             encryptedContent: JSON.stringify(encryptedContent),
-            tx: Date.now(),
           };
 
           const newContentLength = updatedChunk.encryptedContent.length;
@@ -194,8 +194,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             };
           }
 
-          await db.closeAsync();
-          // return updateChunk(updatedChunk);
+          return updateChunk(updatedChunk);
         }
       } catch (e) {
         return { status: "error", error: "Failed to parse decrypted data" };
@@ -206,13 +205,12 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         error: "Failed to parse encoded decrypted data",
       };
     }
-
-    return null;
   },
   getDataInTimeRange: async (
     tableName,
     from,
-    until
+    until,
+    chunkLimit
   ): Promise<{
     status: "error" | "success";
     payload?: any[];
@@ -247,8 +245,12 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       txQuery += ` AND tx <= ${until}`;
     }
 
+    let parsedChunkLimit = "";
+    if (typeof chunkLimit === "number") {
+      parsedChunkLimit = `LIMIT ${chunkLimit}`;
+    }
     const relevantChunks: ARC_ChunksType[] = await db.getAllAsync(
-      `SELECT * FROM ${tableName} WHERE userID = ? AND ${txQuery} ORDER BY tx DESC`,
+      `SELECT * FROM ${tableName} WHERE userID = ? AND ${txQuery} ORDER BY tx DESC ${parsedChunkLimit}`,
       [activeUserId]
     );
 

@@ -56,7 +56,6 @@ function localAccountAuth() {
     (pin: string, wrappedKeyArg: string) => {
       setIsCheckingPin(true);
       try {
-        console.log("Unwrapping key", wrappedKeyArg);
         const decodedWrappedKey = decodeWrappedSymkey(wrappedKeyArg);
         if (decodedWrappedKey === null) {
           console.log("Error decoding wrapped key");
