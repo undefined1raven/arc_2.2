@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "arc",
-    "slug": "arc",
-    "version": "1.0.0",
+    "name": "arcvv",
+    "slug": "arcvv",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -16,7 +16,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.midnightraven.arcvv"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f5acfa4e-8080-4905-bfcb-b715f993b0d2"
+      }
     }
   }
 }

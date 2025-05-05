@@ -60,7 +60,6 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
                 );
                 const decodedString = charCodeArrayToString(encodedArray);
                 const parsedData = JSON.parse(decodedString);
-                console.log("parsedData", parsedData.length);
                 const type = FCChunks[index].type;
                 switch (type) {
                   case "timeTracking":

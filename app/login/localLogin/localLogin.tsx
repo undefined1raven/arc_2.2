@@ -38,16 +38,16 @@ function LocalLogin() {
       const keys = Object.keys(fileJson);
       if (
         keys.indexOf("userData") === -1 ||
-        keys.indexOf("arcData") === -1 ||
-        keys.indexOf("SIDData") === -1 ||
-        keys.indexOf("tessData") === -1 ||
         keys.indexOf("pk") === -1 ||
+        keys.indexOf("timeTrackingChunks") === -1 ||
+        keys.indexOf("dayPlannerChunks") === -1 ||
+        keys.indexOf("personalDiaryChunks") === -1 ||
+        keys.indexOf("personalDiaryGroups") === -1 ||
         keys.indexOf("symkey") === -1
       ) {
         setShowError(true);
         return;
       }
-      const hasDoubleKeys = fileJson.userData.PIKBackup !== null;
       setHasFile(true);
       setIsLoadingFile(false);
     }
@@ -56,15 +56,6 @@ function LocalLogin() {
   function writeBackupToDB(wait?: boolean) {
     const userData = fileJson.userData;
 
-    ////Legacy feature config
-    if (userData.arcFeatureConfig !== undefined) {
-      userData["timeTrackingFeatureConfig"] = userData.arcFeatureConfig;
-      delete userData.arcFeatureConfig;
-      userData["diaryFeatureConfig"] = userData.SIDFeatureConfig;
-      delete userData.SIDFeatureConfig;
-      userData["dayPlannerFeatureConfig"] = userData.tessFeatureConfig;
-      delete userData.tessFeatureConfig;
-    }
     const promiseArray = [];
     promiseArray.push(
       db.runAsync(
@@ -75,9 +66,8 @@ function LocalLogin() {
       )
     );
 
-    const arcData = fileJson.arcData;
+    const arcData = fileJson.timeTrackingChunks;
     if (arcData !== null && typeof arcData?.length === "number") {
-      console.log("arcData", arcData?.length);
       arcData.forEach((chunk) => {
         promiseArray.push(
           db
@@ -93,7 +83,7 @@ function LocalLogin() {
         );
       });
     }
-    const tessData = fileJson.tessData;
+    const tessData = fileJson.dayPlannerChunks;
     if (tessData !== null && typeof tessData?.length === "number") {
       tessData.forEach((chunk) => {
         promiseArray.push(
@@ -106,7 +96,7 @@ function LocalLogin() {
         );
       });
     }
-    const SIDData = fileJson.SIDData;
+    const SIDData = fileJson.personalDiaryChunks;
     if (SIDData !== null && typeof SIDData?.length === "number") {
       SIDData.forEach((chunk) => {
         promiseArray.push(
@@ -120,12 +110,29 @@ function LocalLogin() {
       });
     }
 
-    const SIDGroups = fileJson.SIDGroups;
+    const SIDGroups = fileJson.personalDiaryGroups;
     if (SIDGroups !== null && typeof SIDGroups?.length === "number") {
       SIDGroups.forEach((chunk) => {
         promiseArray.push(
           db.runAsync(
             `INSERT OR REPLACE INTO personalDiaryGroups ${
+              getInsertStringFromObject(chunk).queryString
+            }`,
+            getInsertStringFromObject(chunk).values
+          )
+        );
+      });
+    }
+
+    const featureConfigChunks = fileJson.featureConfigChunks;
+    if (
+      featureConfigChunks !== null &&
+      typeof featureConfigChunks?.length === "number"
+    ) {
+      featureConfigChunks.forEach((chunk) => {
+        promiseArray.push(
+          db.runAsync(
+            `INSERT OR REPLACE INTO featureConfigChunks ${
               getInsertStringFromObject(chunk).queryString
             }`,
             getInsertStringFromObject(chunk).values
@@ -141,8 +148,6 @@ function LocalLogin() {
     promiseArray.push(
       SecureStore.setItemAsync(getSymmetricKey(userData.id), userData.PIKBackup)
     );
-
-    console.log("PAL-------", promiseArray.length);
 
     if (wait) {
       return Promise.all(promiseArray);
