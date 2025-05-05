@@ -16,8 +16,10 @@ import * as SecureStore from "expo-secure-store";
 import {
   getPrivateKey,
   getSymmetricKey,
+  secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
+import TextInput from "@/components/common/TextInput";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -31,6 +33,8 @@ function LocalLogin() {
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [showError, setShowError] = useState(false);
   const [hasFile, setHasFile] = useState(false);
+
+  const [pin, setpin] = useState("");
 
   useEffect(() => {
     if (fileJson !== null) {
@@ -193,8 +197,26 @@ function LocalLogin() {
           <Text label="xyz.arc.backup.txt"></Text>
         </Animated.View>
         <Button
-          onClick={() => {
+          onClick={async () => {
             if (hasFile) {
+              await SecureStore.setItemAsync(
+                secureStoreKeyNames.accountConfig.pin,
+                pin,
+                {
+                  requireAuthentication: true,
+                  authenticationPrompt:
+                    "Authenticate to use your screen lock to unlock",
+                }
+              )
+                .catch((e) => {
+                  console.log(e);
+                })
+                .then(async () => {
+                  await SecureStore.setItemAsync(
+                    secureStoreKeyNames.accountConfig.useBiometricAuth,
+                    "true"
+                  );
+                });
               writeBackupToDB(false);
             } else {
               setIsLoadingFile(true);
@@ -254,6 +276,15 @@ function LocalLogin() {
             ></Text>
           )}
         </Animated.View>
+        <TextInput
+          style={{ width: "80%", height: "6%" }}
+          keyboardType="numeric"
+          secureTextEntry={true}
+          onChange={(e) => {
+            const text = e.nativeEvent.text;
+            setpin(text);
+          }}
+        ></TextInput>
       </ThemedView>
     </>
   );

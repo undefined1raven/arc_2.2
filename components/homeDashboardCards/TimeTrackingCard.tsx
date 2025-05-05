@@ -52,6 +52,15 @@ function TimeTrackingCard() {
       startTime: startTime,
     };
 
+    setHasPendingActivity({
+      start: startTime,
+      name:
+        featureConfigApi.timeTrackingFeatureConfig.find(
+          (r) => r.itme.taskID === taskID
+        )?.itme.name || "Unknown",
+      taskID: taskID,
+    });
+
     SecureStore.setItemAsync(
       getUserDataKey(
         activeUserApi.activeUser.userId,
@@ -105,7 +114,7 @@ function TimeTrackingCard() {
         });
       }
     }
-  }, [isPickingActivity]);
+  }, []);
 
   const getCategoryNameFromTaskObject = useCallback(
     (taskObject) => {
@@ -202,6 +211,7 @@ function TimeTrackingCard() {
                   secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
                 )
               );
+              setHasPendingActivity(false);
               setIsPickingActivity(true);
             }}
           ></Button>
