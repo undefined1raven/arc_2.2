@@ -34,6 +34,8 @@ import { SearchIcon } from "../../deco/SearchIcon";
 import { layoutAnimationsDuration } from "@/constants/animations";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import TimeTrackingVisualization from "./TimeTrackingVisualization";
+import { EditDeco } from "@/components/deco/EditDeco";
+import { AddIcon } from "@/components/deco/AddIcon";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -139,6 +141,15 @@ function TimeTrackingCard() {
       : `${minutes}:${seconds}`;
   }, []);
 
+  const getDisplayTimeAMPM = useCallback((unixTime: number) => {
+    const date = new Date(unixTime);
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert to 12-hour format
+    return `${hours}:${minutes} ${ampm}`;
+  }, []);
+
   useEffect(() => {
     const activeUser = activeUserApi.activeUser.userId;
     if (!activeUser) {
@@ -223,64 +234,165 @@ function TimeTrackingCard() {
         </>
       )}
       {hasPendingActivity !== false && hasPendingActivity !== null && (
-        <>
-          {/* <Text
-            style={{ position: "absolute", left: 10, top: "35%" }}
-            label={hasPendingActivity.name}
-          ></Text>
-          <Text
-            style={{ position: "absolute", left: 10, top: "51%" }}
-            label={timeDisplayLabel}
-          ></Text> */}
+        <View
+          style={{
+            display: "flex",
+            flexGrow: 1,
+            width: "100%",
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "column",
+          }}
+        >
           <View
             style={{
-              width: "80%",
-              height: 30,
+              height: "23%",
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+              display: "flex",
+              flexDirection: "row",
+              paddingLeft: 5,
+              paddingRight: 5,
             }}
           >
-            <TimeTrackingVisualization
-              renderWidth={Dimensions.get("window").width * 0.8 - 10}
-            ></TimeTrackingVisualization>
+            <Text fontSize={23} label={hasPendingActivity.name}></Text>
+            <View
+              style={{
+                width: "40%",
+                height: "80%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row",
+                gap: 5,
+              }}
+            >
+              <Button
+                onClick={() => {}}
+                style={{
+                  width: "50%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <EditDeco height={"150%"}></EditDeco>
+              </Button>
+              <Button
+                onClick={() => {}}
+                style={{
+                  width: "50%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <AddIcon height={"60%"} width={"50%"}></AddIcon>
+              </Button>
+            </View>
           </View>
-          {/* <Button
-            label="Done"
+          <View
             style={{
-              position: "absolute",
-              height: "35%",
-              width: "20%",
-              right: 10,
+              height: "45%",
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
             }}
-            onClick={() => {
-              if (activeUserApi.activeUser.userId === null) {
-                console.error("No active user");
-                return;
-              }
-              const newTaskRow = {
-                start: hasPendingActivity.start,
-                taskID: hasPendingActivity.taskID,
-                end: Date.now(),
-              };
-              dataRetrivalAPI
-                .appendEntry(
-                  "timeTrackingChunks",
-                  newTaskRow,
-                  timeTrackingChunkSize
-                )
-                .then((res) => {})
-                .catch((err) => {});
-              SecureStore.deleteItemAsync(
-                getUserDataKey(
-                  activeUserApi.activeUser.userId,
-                  secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
-                )
-              );
-              useNavMenuApi.getState().setShowMenu(false);
-              setActivitySearchFilter("");
-              setHasPendingActivity(false);
-              setIsPickingActivity(true);
+          >
+            <View
+              style={{
+                width: "80%",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={styles.middleTextContainer}>
+                <Text
+                  fontSize={globalStyle.globalStyle.mediumMobileFont}
+                  label="Started at"
+                ></Text>
+                <Text
+                  label={getDisplayTimeAMPM(hasPendingActivity.start)}
+                ></Text>
+              </View>
+              <View
+                style={{
+                  ...styles.middleTextContainer,
+                  alignItems: "flex-end",
+                }}
+              >
+                <Text
+                  fontSize={globalStyle.globalStyle.mediumMobileFont}
+                  label="Duration"
+                ></Text>
+                <Text label={getDisplayTime(hasPendingActivity.start)}></Text>
+              </View>
+            </View>
+            <View
+              style={{
+                width: "80%",
+                height: 21,
+              }}
+            >
+              <TimeTrackingVisualization
+                activityStartTime={hasPendingActivity.start}
+                renderWidth={Dimensions.get("window").width * 0.8 - 10}
+              ></TimeTrackingVisualization>
+            </View>
+          </View>
+          <View
+            style={{
+              height: "32%",
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
             }}
-          ></Button> */}
-        </>
+          >
+            <Button
+              label="Save activity"
+              style={{
+                width: "80%",
+                height: "80%",
+              }}
+              onClick={() => {
+                if (activeUserApi.activeUser.userId === null) {
+                  console.error("No active user");
+                  return;
+                }
+                const newTaskRow = {
+                  start: hasPendingActivity.start,
+                  taskID: hasPendingActivity.taskID,
+                  end: Date.now(),
+                };
+                dataRetrivalAPI
+                  .appendEntry(
+                    "timeTrackingChunks",
+                    newTaskRow,
+                    timeTrackingChunkSize
+                  )
+                  .then((res) => {})
+                  .catch((err) => {});
+                SecureStore.deleteItemAsync(
+                  getUserDataKey(
+                    activeUserApi.activeUser.userId,
+                    secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
+                  )
+                );
+                useNavMenuApi.getState().setShowMenu(false);
+                setActivitySearchFilter("");
+                setHasPendingActivity(false);
+                setIsPickingActivity(true);
+              }}
+            ></Button>
+          </View>
+        </View>
       )}
     </Animated.View>
   ) : (
@@ -421,5 +533,13 @@ function TimeTrackingCard() {
     </Animated.View>
   );
 }
+
+const styles = {
+  middleTextContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+};
 
 export { TimeTrackingCard };
