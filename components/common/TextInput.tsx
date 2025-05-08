@@ -37,6 +37,7 @@ function TextInput({
   textAlignVertical,
   keyboardType,
   secureTextEntry,
+  children,
   onChange,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();

@@ -1,27 +1,18 @@
-import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
-import { useGlobalStyleStore } from "@/stores/globalStyles";
+import { StyleSheet } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
-import { useCallback, useEffect, useState } from "react";
-import { useSQLiteContext } from "expo-sqlite";
-import { useActiveUser } from "@/stores/activeUser";
-import { charCodeArrayToString } from "@/components/utils/fn/charOps";
-import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
-import DataSetter from "@/components/DataSetter";
-import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
-import {
-  dayPlannerChunkSize,
-  timeTrackingChunkSize,
-} from "@/components/utils/constants/chunking";
-import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTrackingCard";
+import { NavMenuBar } from "@/components/ui/NavMenuBar";
+import KeyboardVisible from "@/components/functional/KeyboardStatus";
+import Animated from "react-native-reanimated";
+import { useNavMenuApi } from "@/stores/navMenuApi";
 function Home() {
-  const dataRetrivalApix = dataRetrivalApi();
-  const featureConfigApi = useFeatureConfigs();
+  const navMenuApi = useNavMenuApi();
   return (
     <>
-      <ThemedView style={styles.container}>
+      <ThemedView style={{ ...styles.container, height: "100%" }}>
         <TimeTrackingCard></TimeTrackingCard>
+        {navMenuApi.showMenu && <NavMenuBar></NavMenuBar>}
+        <KeyboardVisible></KeyboardVisible>
       </ThemedView>
     </>
   );
@@ -32,8 +23,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-end",
     paddingLeft: 5,
     paddingRight: 5,
+    gap: 5,
+    top: 0,
   },
 });
