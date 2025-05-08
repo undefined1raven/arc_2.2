@@ -34,7 +34,13 @@ export function ThemedView({
         Keyboard.dismiss();
       }}
     >
-      <SafeAreaView style={{ top: insets.top, ...style }} {...otherProps}>
+      <SafeAreaView
+        style={{
+          flexGrow: 1,
+          ...style,
+        }}
+        {...otherProps}
+      >
         <>
           <LinearGradient
             colors={globalStyle.globalStyle.pageBackgroundColors}

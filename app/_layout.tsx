@@ -15,7 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
 import CreateNewAccountData from "@/components/functional/CreateNewAccountData";
 import { SQLiteProvider } from "expo-sqlite";
-
+import * as NavigationBar from "expo-navigation-bar";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +33,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      NavigationBar.setBackgroundColorAsync(
+        globalStyle.pageBackgroundColors[1]
+      );
+      NavigationBar.setButtonStyleAsync("dark");
+      NavigationBar.setPositionAsync("absolute");
     }
   }, [loaded]);
 

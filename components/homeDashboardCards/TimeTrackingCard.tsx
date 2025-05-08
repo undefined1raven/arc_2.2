@@ -1,6 +1,15 @@
-import { ActivityIndicator, BackHandler, View } from "react-native";
+import {
+  ActivityIndicator,
+  BackHandler,
+  KeyboardAvoidingView,
+  View,
+} from "react-native";
 import { ThemedView } from "../ThemedView";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+} from "react-native-reanimated";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as SecureStore from "expo-secure-store";
@@ -17,9 +26,14 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { CheckBox } from "../common/CheckBox";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { timeTrackingChunkSize } from "../utils/constants/chunking";
+import { useNavMenuApi } from "@/stores/navMenuApi";
+import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
+import { ArrowDeco } from "../deco/ArrowDeco";
+import { SearchIcon } from "../deco/SearchIcon";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
+  const virtualKeyboardApi = useVirtualKeyboard();
   const featureConfigApi = useFeatureConfigs();
   const [isPickingActivity, setIsPickingActivity] = useState(false);
   const [hasPendingActivity, setHasPendingActivity] = useState<
@@ -92,7 +106,8 @@ function TimeTrackingCard() {
       ),
       JSON.stringify(userDataPayload)
     );
-
+    const menuApi = useNavMenuApi.getState();
+    menuApi.setShowMenu(true);
     setIsPickingActivity(false);
   }, []);
 
@@ -166,11 +181,9 @@ function TimeTrackingCard() {
         width: "100%",
         borderRadius: globalStyle.globalStyle.borderRadius,
         height: "20%",
-        position: "absolute",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bottom: 50,
       }}
     >
       {hasPendingActivity === null && (
@@ -187,6 +200,8 @@ function TimeTrackingCard() {
             }}
             style={{ marginTop: "5%", height: "35%", width: "90%" }}
             onClick={() => {
+              const menuApi = useNavMenuApi.getState();
+              menuApi.setShowMenu(false);
               setActivitySearchFilter("");
               setIsPickingActivity(true);
             }}
@@ -236,6 +251,7 @@ function TimeTrackingCard() {
                   secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
                 )
               );
+              useNavMenuApi.getState().setShowMenu(false);
               setActivitySearchFilter("");
               setHasPendingActivity(false);
               setIsPickingActivity(true);
@@ -246,29 +262,32 @@ function TimeTrackingCard() {
     </Animated.View>
   ) : (
     <Animated.View
-      entering={FadeIn}
       style={{
         width: "100%",
         borderRadius: globalStyle.globalStyle.borderRadius,
-        height: "100%",
-        position: "absolute",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bottom: 50,
+        bottom: 0,
+        flexGrow: 1,
       }}
     >
-      <Animated.View style={{ height: "85%", width: "100%" }}>
-        <TextInput
-          textAlign="left"
-          placeholder="Search activities or categories"
-          onChange={(e) => {
-            const text = e.nativeEvent.text;
-            setActivitySearchFilter(text);
-          }}
-          style={{ height: "7%", width: "100%", marginBottom: 10 }}
-        ></TextInput>
+      {virtualKeyboardApi.isVisible && (
+        <Animated.View
+          style={{ height: virtualKeyboardApi.keyboardHeight, width: "100%" }}
+        ></Animated.View>
+      )}
+      <Animated.View
+        entering={FadeInUp}
+        style={{
+          position: "relative",
+          width: "100%",
+          top: "0%",
+          flexGrow: 1,
+        }}
+      >
         <FlashList
+          inverted={true}
           data={activities}
           estimatedItemSize={55}
           renderItem={({ item }) => {
@@ -294,6 +313,7 @@ function TimeTrackingCard() {
                     right: 10,
                     paddingBottom: 3,
                     paddingTop: 3,
+                    zIndex: -1,
                   }}
                   backgroundColor={globalStyle.globalStyle.color + "20"}
                   fontSize={15}
@@ -304,16 +324,72 @@ function TimeTrackingCard() {
           }}
         />
       </Animated.View>
-      <Button
-        textStyle={{
-          fontSize: 21,
+      <Animated.View
+        entering={FadeInDown}
+        style={{
+          marginTop: 5,
+          height: 60,
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "row",
         }}
-        style={{ marginTop: "5%", height: "8%", width: "100%" }}
-        onClick={() => {
-          setIsPickingActivity(false);
-        }}
-        label="Back"
-      ></Button>
+      >
+        <Button
+          style={{
+            height: "100%",
+            width: "30%",
+            marginBottom: 0,
+            bottom: 0,
+            paddingLeft: 40,
+            marginRight: 5,
+          }}
+          label=""
+          onClick={() => {
+            setIsPickingActivity(false);
+            setActivitySearchFilter("");
+            useNavMenuApi.getState().setShowMenu(true);
+          }}
+        >
+          <ArrowDeco
+            width={50}
+            style={{
+              transform: [{ rotate: "180deg" }],
+              width: "60%",
+              height: "60%",
+            }}
+          ></ArrowDeco>
+        </Button>
+        <View
+          style={{
+            flexGrow: 1,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <TextInput
+            textAlign="left"
+            placeholder="Search activities or categories"
+            onChange={(e) => {
+              const text = e.nativeEvent.text;
+              setActivitySearchFilter(text);
+            }}
+            style={{
+              height: "100%",
+              marginBottom: 0,
+              bottom: 0,
+              paddingLeft: 30,
+            }}
+          ></TextInput>
+          <SearchIcon
+            style={{ position: "absolute", left: 8, zIndex: -1 }}
+          ></SearchIcon>
+        </View>
+      </Animated.View>
+      {virtualKeyboardApi.isVisible && (
+        <Animated.View style={{ height: 25, width: "100%" }}></Animated.View>
+      )}
     </Animated.View>
   );
 }
