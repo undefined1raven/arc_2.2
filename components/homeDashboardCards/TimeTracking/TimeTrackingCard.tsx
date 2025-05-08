@@ -1,10 +1,11 @@
 import {
   ActivityIndicator,
   BackHandler,
+  Dimensions,
   KeyboardAvoidingView,
   View,
 } from "react-native";
-import { ThemedView } from "../ThemedView";
+import { ThemedView } from "../../ThemedView";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -17,19 +18,22 @@ import { FlashList } from "@shopify/flash-list";
 import {
   getUserDataKey,
   secureStoreKeyNames,
-} from "../utils/constants/secureStoreKeyNames";
+} from "../../utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
-import Text from "../common/Text";
-import Button from "../common/Button";
-import TextInput from "../common/TextInput";
+import Text from "../../common/Text";
+import Button from "../../common/Button";
+import TextInput from "../../common/TextInput";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
-import { CheckBox } from "../common/CheckBox";
+import { CheckBox } from "../../common/CheckBox";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
-import { timeTrackingChunkSize } from "../utils/constants/chunking";
+import { timeTrackingChunkSize } from "../../utils/constants/chunking";
 import { useNavMenuApi } from "@/stores/navMenuApi";
 import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
-import { ArrowDeco } from "../deco/ArrowDeco";
-import { SearchIcon } from "../deco/SearchIcon";
+import { ArrowDeco } from "../../deco/ArrowDeco";
+import { SearchIcon } from "../../deco/SearchIcon";
+import { layoutAnimationsDuration } from "@/constants/animations";
+import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
+import TimeTrackingVisualization from "./TimeTrackingVisualization";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -43,6 +47,14 @@ function TimeTrackingCard() {
   const [timeDisplayLabel, setTimeDisplayLabel] = useState("");
   const [activitySearchFilter, setActivitySearchFilter] = useState("");
   const [activities, setActivities] = useState<any[]>([]);
+
+  const customFadeInUp = useCallback((duration: number) => {
+    return FadeInUp.duration(duration);
+  }, []);
+
+  const customFadeInDown = useCallback((duration: number) => {
+    return FadeInDown.duration(duration);
+  }, []);
 
   useEffect(() => {
     const filteredActivities =
@@ -175,9 +187,10 @@ function TimeTrackingCard() {
 
   return isPickingActivity === false ? (
     <Animated.View
-      entering={FadeInDown}
+      entering={customFadeInDown(layoutAnimationsDuration)}
       style={{
-        backgroundColor: globalStyle.globalStyle.color + "20",
+        backgroundColor:
+          globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
         width: "100%",
         borderRadius: globalStyle.globalStyle.borderRadius,
         height: "20%",
@@ -211,15 +224,25 @@ function TimeTrackingCard() {
       )}
       {hasPendingActivity !== false && hasPendingActivity !== null && (
         <>
-          <Text
+          {/* <Text
             style={{ position: "absolute", left: 10, top: "35%" }}
             label={hasPendingActivity.name}
           ></Text>
           <Text
             style={{ position: "absolute", left: 10, top: "51%" }}
             label={timeDisplayLabel}
-          ></Text>
-          <Button
+          ></Text> */}
+          <View
+            style={{
+              width: "80%",
+              height: 30,
+            }}
+          >
+            <TimeTrackingVisualization
+              renderWidth={Dimensions.get("window").width * 0.8 - 10}
+            ></TimeTrackingVisualization>
+          </View>
+          {/* <Button
             label="Done"
             style={{
               position: "absolute",
@@ -256,7 +279,7 @@ function TimeTrackingCard() {
               setHasPendingActivity(false);
               setIsPickingActivity(true);
             }}
-          ></Button>
+          ></Button> */}
         </>
       )}
     </Animated.View>
@@ -278,7 +301,7 @@ function TimeTrackingCard() {
         ></Animated.View>
       )}
       <Animated.View
-        entering={FadeInUp}
+        entering={customFadeInUp(layoutAnimationsDuration)}
         style={{
           position: "relative",
           width: "100%",
@@ -315,7 +338,10 @@ function TimeTrackingCard() {
                     paddingTop: 3,
                     zIndex: -1,
                   }}
-                  backgroundColor={globalStyle.globalStyle.color + "20"}
+                  backgroundColor={
+                    globalStyle.globalStyle.color +
+                    layoutCardLikeBackgroundOpacity
+                  }
                   fontSize={15}
                   label={getCategoryNameFromTaskObject(item)}
                 ></Text>
@@ -325,7 +351,7 @@ function TimeTrackingCard() {
         />
       </Animated.View>
       <Animated.View
-        entering={FadeInDown}
+        entering={customFadeInDown(layoutAnimationsDuration)}
         style={{
           marginTop: 5,
           height: 60,
@@ -342,7 +368,9 @@ function TimeTrackingCard() {
             width: "30%",
             marginBottom: 0,
             bottom: 0,
-            paddingLeft: 40,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
             marginRight: 5,
           }}
           label=""

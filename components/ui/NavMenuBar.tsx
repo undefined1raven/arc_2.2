@@ -2,6 +2,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import Animated from "react-native-reanimated";
 import Button from "../common/Button";
 import { useNavMenuApi } from "@/stores/navMenuApi";
+import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 
 function NavMenuBar() {
   const menuApi = useNavMenuApi();
@@ -9,7 +10,8 @@ function NavMenuBar() {
   return (
     <Animated.View
       style={{
-        backgroundColor: globalStyle.globalStyle.color + "20",
+        backgroundColor:
+          globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
         width: "100%",
         borderRadius: globalStyle.globalStyle.borderRadius,
         height: "6%",
