@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTrackingCard";
+import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import Animated from "react-native-reanimated";

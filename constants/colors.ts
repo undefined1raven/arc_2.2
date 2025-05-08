@@ -2,6 +2,8 @@ import { ColorValueHex, PageBackgroundColorArrayType } from "./CommonTypes";
 
 export const ANDROID_RIPPLE_TRANSPARENCY = 0.2;
 
+const layoutCardLikeBackgroundOpacity = "10";
+
 type ThemeColorsType = {
   dark: {
     color: ColorValueHex;
@@ -392,4 +394,5 @@ const themeColors: Themes = {
   },
 };
 export type { ThemeColorsType, Themes, AvailableThemes };
+export { layoutCardLikeBackgroundOpacity };
 export default themeColors;
