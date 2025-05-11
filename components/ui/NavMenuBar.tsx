@@ -48,7 +48,7 @@ function NavMenuBar() {
     const dayPlannerChunks = await db.getAllAsync(
       `SELECT * FROM dayPlannerChunks WHERE userID = '${activeUserID}'`
     );
-    const fcData = await db.getAllAsync(
+    const featureConfigChunks = await db.getAllAsync(
       `SELECT * FROM featureConfigChunks WHERE userID = '${activeUserID}'`
     );
     const pk = await SecureStore.getItemAsync(getPrivateKey(activeUserID));
@@ -61,6 +61,7 @@ function NavMenuBar() {
       personalDiaryChunks,
       personalDiaryGroups,
       dayPlannerChunks,
+      featureConfigChunks,
       pk,
       symkey,
     };

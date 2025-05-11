@@ -12,7 +12,7 @@ function dayPlanner() {
     dataRetriavalAPI
       .getDataInTimeRange("dayPlannerChunks", 0, Date.now())
       .then((r) => {
-        console.log("dayPlanner", r.payload[0], Date.now() - d);
+        console.log(r.payload?.length, "XXXX");
       })
       .catch((e) => {});
   }, []);
