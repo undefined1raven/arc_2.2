@@ -25,22 +25,6 @@ const TimeTrackingVisualization = ({
   const [currentTimeWidth, setCurrentTimeWidth] = useState(0);
   const [activityStartTimeXCoord, setActivityStartTimeXCoord] = useState(0);
   const [activityDurationWidth, setActivityDurationWidth] = useState(0);
-  useEffect(() => {
-    const currentTime = new Date().getTime();
-    const interval = setInterval(() => {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const startOfTodayUnix = startOfToday.getTime();
-      const elapsedTime = activityStartTime - startOfTodayUnix;
-      const elapsedTimeWidth = Math.floor(
-        rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth)
-      );
-      setCurrentTimeWidth(elapsedTimeWidth);
-    }, 2000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,9 +34,14 @@ const TimeTrackingVisualization = ({
       const elapsedTimeWidth = Math.floor(
         rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth)
       );
-
+      const startOfTodayUnix = startOfToday.getTime();
+      const elapsedTime2 = activityStartTime - startOfTodayUnix;
+      const elapsedTimeWidth2 = Math.floor(
+        rangeScaler(elapsedTime2, 0, 86400000, 0, renderWidth)
+      );
+      setCurrentTimeWidth(elapsedTimeWidth2);
       setActivityDurationWidth(elapsedTimeWidth);
-    }, 2000);
+    }, 10);
 
     return () => {
       clearInterval(interval);

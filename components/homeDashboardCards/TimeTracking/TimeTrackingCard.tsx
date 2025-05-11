@@ -36,6 +36,7 @@ import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import TimeTrackingVisualization from "./TimeTrackingVisualization";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { AddIcon } from "@/components/deco/AddIcon";
+import { router } from "expo-router";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -270,7 +271,9 @@ function TimeTrackingCard() {
               }}
             >
               <Button
-                onClick={() => {}}
+                onClick={() => {
+                  router.push("/timeTrackingFeatureConfig/EditActivities");
+                }}
                 style={{
                   width: "50%",
                   height: "100%",
