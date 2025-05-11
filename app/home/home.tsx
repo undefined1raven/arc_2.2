@@ -5,14 +5,18 @@ import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import Animated from "react-native-reanimated";
 import { useNavMenuApi } from "@/stores/navMenuApi";
+import { StatusIndicators } from "@/components/ui/StatusIndicators";
+import DataSetter from "@/components/DataSetter";
 function Home() {
   const navMenuApi = useNavMenuApi();
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <TimeTrackingCard></TimeTrackingCard>
+        {/* <DataSetter></DataSetter> */}
         {navMenuApi.showMenu && <NavMenuBar></NavMenuBar>}
         <KeyboardVisible></KeyboardVisible>
+        <StatusIndicators></StatusIndicators>
       </ThemedView>
     </>
   );

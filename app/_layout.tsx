@@ -16,6 +16,7 @@ import { CryptoWorkers } from "@/components/utils/CryptoWorkers";
 import CreateNewAccountData from "@/components/functional/CreateNewAccountData";
 import { SQLiteProvider } from "expo-sqlite";
 import * as NavigationBar from "expo-navigation-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -48,7 +49,7 @@ export default function RootLayout() {
   return (
     <>
       <SQLiteProvider databaseName="localCache">
-        <View
+        <GestureHandlerRootView
           style={{
             flex: 1,
             backgroundColor: globalStyle.pageBackgroundColors[0],
@@ -92,10 +93,18 @@ export default function RootLayout() {
               name="login/localLogin/localLogin"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="timeTrackingFeatureConfig/EditActivities"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="dayPlanner/dayPlanner"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="home/home" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />
-        </View>
+        </GestureHandlerRootView>
       </SQLiteProvider>
     </>
   );

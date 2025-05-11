@@ -11,6 +11,7 @@ import {
   stringToCharCodeArray,
 } from "@/components/utils/fn/charOps";
 import { chunkPrefixes } from "@/constants/chunkPrefixes";
+import { useStatusIndicatorStore } from "./statusIndicatorStore";
 type TableNames =
   | "timeTrackingChunks"
   | "dayPlannerChunks"
@@ -48,6 +49,7 @@ const allowedTableNames = [
 
 const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
   appendEntry: async (tableName, rowData, chunkSize): Promise<any> => {
+    const statusIndicatorApi = useStatusIndicatorStore.getState();
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
       | null;
@@ -92,6 +94,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
         )
         .then((result) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
           db.closeAsync();
           return { status: "success", payload: result };
         })
@@ -110,13 +113,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           Object.values(newChunk)
         )
         .then((result) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
           return { status: "success", payload: result };
         })
         .catch((e) => {
           return { status: "error", error: e };
         });
     }
-
+    statusIndicatorApi.setIsSavingLocalData(true);
     try {
       const decryptedStringData = charCodeArrayToString(
         JSON.parse("[" + decryptionResults.payload.decrypted + "]")
@@ -254,8 +258,11 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       [activeUserId]
     );
 
-    const decryptionPromises = relevantChunks.map((chunk) => {
+    const decryptionPromises = relevantChunks.map((chunk, ix) => {
       const encryptedContent = chunk.encryptedContent;
+      if (ix === 1) {
+        console.log("XLFE C ,", encryptedContent);
+      }
       const decryptionPromise = cryptoOpsApi.performOperation("decrypt", {
         keyType: "symmetric",
         charCodeData: encryptedContent,
@@ -264,10 +271,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return decryptionPromise;
     });
 
+    console.log("Decryption promises LEN", decryptionPromises.length);
+
     return Promise.all(decryptionPromises)
       .then((decryptionResults) => {
         let data: any[] = [];
         decryptionResults.map((result, index) => {
+          console.log("XLF WW", result.status, index);
           if (result.status === "error") {
             return null;
           }

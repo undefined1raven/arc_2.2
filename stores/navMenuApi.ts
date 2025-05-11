@@ -9,6 +9,7 @@ type MenuItem = {
   goTo: string;
   icon: any;
   name: string;
+  pathname: string;
 };
 
 interface INavMenuApi {
@@ -20,18 +21,30 @@ interface INavMenuApi {
 
 const useNavMenuApi = create<INavMenuApi>((set, get) => ({
   menuItems: [
-    { goTo: "settings", icon: SettingdIcon, name: "settings" },
-    { goTo: "dayPlanner", icon: DayPlannerIcon, name: "dayPlanner" },
-    { goTo: "home", icon: HomeIcon, name: "home" },
+    {
+      goTo: "settings",
+      icon: SettingdIcon,
+      name: "settings",
+      pathname: "/settings/settings",
+    },
+    {
+      goTo: "dayPlanner",
+      icon: DayPlannerIcon,
+      name: "dayPlanner",
+      pathname: "/dayPlanner/dayPlanner",
+    },
+    { goTo: "home", icon: HomeIcon, name: "home", pathname: "/home/home" },
     {
       goTo: "timeTracking",
       icon: TimeStatsIcon,
       name: "timeTracking",
+      pathname: "/timeTrackingStats/timeTrackingStats",
     },
     {
       goTo: "personalDiary",
       icon: PersonalDiaryIcon,
       name: "personalDiary",
+      pathname: "/personalDiary/personalDiary",
     },
   ],
   showMenu: true,
