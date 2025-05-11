@@ -258,11 +258,8 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       [activeUserId]
     );
 
-    const decryptionPromises = relevantChunks.map((chunk, ix) => {
+    const decryptionPromises = relevantChunks.map((chunk) => {
       const encryptedContent = chunk.encryptedContent;
-      if (ix === 1) {
-        console.log("XLFE C ,", encryptedContent);
-      }
       const decryptionPromise = cryptoOpsApi.performOperation("decrypt", {
         keyType: "symmetric",
         charCodeData: encryptedContent,
@@ -271,13 +268,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return decryptionPromise;
     });
 
-    console.log("Decryption promises LEN", decryptionPromises.length);
-
     return Promise.all(decryptionPromises)
       .then((decryptionResults) => {
         let data: any[] = [];
         decryptionResults.map((result, index) => {
-          console.log("XLF WW", result.status, index);
           if (result.status === "error") {
             return null;
           }

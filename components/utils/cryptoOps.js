@@ -296,7 +296,6 @@ function stringToCharCodeArray(str) {
     async function decrypt(args) {
       var parsedCharCodeData = null;
       try {
-      console.log("PARSING THIS MOTHERFUCKER", args)
         parsedCharCodeData = JSON.parse(args.charCodeData);
       } catch (e) {
         return returnErrorResponse(e);
@@ -325,7 +324,6 @@ function stringToCharCodeArray(str) {
             return returnErrorResponse(e);
           });
       } else if (args.keyType === "symmetric") {
-       console.log("EHY THE FUCK IS THIS HAPPENING C / I", parsedCharCodeData)
         const cipherAndIv = {cipher: charCodeArrayToString(parsedCharCodeData.cipher), iv: charCodeArrayToString(parsedCharCodeData.iv)};
         const cipher = str2ab(cipherAndIv.cipher);
         const iv = str2ab(cipherAndIv.iv);
