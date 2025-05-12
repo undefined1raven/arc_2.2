@@ -14,15 +14,12 @@ import {
   getPrivateKey,
   getSymmetricKey,
 } from "../utils/constants/secureStoreKeyNames";
+import { SafeAreaView } from "react-native-safe-area-context";
 function NavMenuBar() {
   const menuApi = useNavMenuApi();
   const globalStyle = useGlobalStyleStore();
-  const [currentRoute, setCurrentRoute] = useState("home");
   const pathname = usePathname();
   const db = useSQLiteContext();
-  useEffect(() => {
-    console.log("pathname", pathname);
-  }, [pathname]);
 
   async function saveFile() {
     const activeUserID = useActiveUser.getState().activeUser.userId;
@@ -99,63 +96,67 @@ function NavMenuBar() {
   }
 
   return (
-    <Animated.View
-      style={{
-        backgroundColor:
-          globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
-        width: "100%",
-        borderRadius: globalStyle.globalStyle.borderRadius,
-        height: "6%",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {menuApi.menuItems.map((menuItem, index) => (
-        <Button
-          key={index}
-          onClick={() => {
-            if (pathname === menuItem.pathname) {
-              return;
-            }
-            if (menuItem.pathname === "/settings/settings") {
-              saveFile();
-              return;
-            }
-            router.push(menuItem.pathname);
-          }}
-          style={{
-            width: "20%",
-            height: "100%",
-            borderColor: "#00000000",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {menuItem.icon({
-            color:
-              menuItem.pathname === pathname
-                ? globalStyle.globalStyle.color
-                : globalStyle.globalStyle.color + "AA",
-          })}
-          <Animated.View
+    <SafeAreaView style={{ height: 50 }}>
+      <Animated.View
+        style={{
+          backgroundColor:
+            globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
+          width: "100%",
+          borderRadius: globalStyle.globalStyle.borderRadius,
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          position: "absolute",
+          top: 0,
+          height: 50,
+        }}
+      >
+        {menuApi.menuItems.map((menuItem, index) => (
+          <Button
+            key={index}
+            onClick={() => {
+              if (pathname === menuItem.pathname) {
+                return;
+              }
+              if (menuItem.pathname === "/settings/settings") {
+                saveFile();
+                return;
+              }
+              router.push(menuItem.pathname);
+            }}
             style={{
-              backgroundColor:
+              width: "20%",
+              height: "100%",
+              borderColor: "#00000000",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {menuItem.icon({
+              color:
                 menuItem.pathname === pathname
                   ? globalStyle.globalStyle.color
-                  : globalStyle.globalStyle.color + "20",
-              width: "65%",
-              borderRadius: globalStyle.globalStyle.borderRadius,
-              position: "absolute",
-              height: 3,
-              bottom: 2,
-            }}
-          ></Animated.View>
-        </Button>
-      ))}
-    </Animated.View>
+                  : globalStyle.globalStyle.color + "AA",
+            })}
+            <Animated.View
+              style={{
+                backgroundColor:
+                  menuItem.pathname === pathname
+                    ? globalStyle.globalStyle.color
+                    : globalStyle.globalStyle.color + "20",
+                width: "65%",
+                borderRadius: globalStyle.globalStyle.borderRadius,
+                position: "absolute",
+                height: 3,
+                bottom: 0,
+              }}
+            ></Animated.View>
+          </Button>
+        ))}
+      </Animated.View>
+    </SafeAreaView>
   );
 }
 
