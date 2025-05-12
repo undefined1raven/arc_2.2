@@ -37,6 +37,8 @@ import TimeTrackingVisualization from "./TimeTrackingVisualization";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { AddIcon } from "@/components/deco/AddIcon";
 import { router } from "expo-router";
+//@ts-ignore
+import FuzzySearch from "fuzzy-search";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -50,7 +52,6 @@ function TimeTrackingCard() {
   const [timeDisplayLabel, setTimeDisplayLabel] = useState("");
   const [activitySearchFilter, setActivitySearchFilter] = useState("");
   const [activities, setActivities] = useState<any[]>([]);
-
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
@@ -59,27 +60,38 @@ function TimeTrackingCard() {
     return FadeInDown.duration(duration);
   }, []);
 
-  useEffect(() => {
-    const filteredActivities =
-      featureConfigApi.timeTrackingFeatureConfig.filter((r) => {
-        const isTask = r.type === "task";
-        if (!isTask) {
-          return false;
-        }
-        if (activitySearchFilter.length > 0) {
-          const searchText = activitySearchFilter.toLowerCase();
-          const name = r.itme.name.toLowerCase();
-          const categoryName = getCategoryNameFromTaskObject(r).toLowerCase();
-          return (
-            isTask &&
-            (name.includes(searchText) || categoryName.includes(searchText))
-          );
-        } else {
-          return isTask;
-        }
-      });
+  const getActivities = useCallback(() => {
+    return featureConfigApi.timeTrackingFeatureConfig.filter(
+      (r) => r.type === "task"
+    );
+  }, [featureConfigApi.timeTrackingFeatureConfig]);
 
-    setActivities(filteredActivities);
+  const searcher = useCallback(() => {
+    const activitiesWithCategoryName = getActivities().map((r) => {
+      const categoryName = getCategoryNameFromTaskObject(r).toLowerCase();
+      return {
+        ...r,
+        itme: { ...r.itme, categoryName: categoryName },
+      };
+    });
+    const searcher = new FuzzySearch(
+      activitiesWithCategoryName,
+      ["itme.name", "itme.categoryName"],
+      {
+        caseSensitive: false,
+        sort: true,
+      }
+    );
+    return searcher;
+  }, [featureConfigApi.timeTrackingFeatureConfig]);
+
+  useEffect(() => {
+    if (activitySearchFilter.length > 0) {
+      const results = searcher().search(activitySearchFilter);
+      setActivities(results);
+    } else {
+      setActivities(getActivities());
+    }
   }, [activitySearchFilter]);
 
   useEffect(() => {

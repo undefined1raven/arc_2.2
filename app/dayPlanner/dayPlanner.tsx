@@ -6,16 +6,6 @@ import { ActivityIndicator, StyleSheet } from "react-native";
 
 function dayPlanner() {
   const dataRetriavalAPI = dataRetrivalApi();
-  useEffect(() => {
-    const d = Date.now();
-    console.log("dayPlanner fetch");
-    dataRetriavalAPI
-      .getDataInTimeRange("dayPlannerChunks", 0, Date.now())
-      .then((r) => {
-        console.log(r.payload?.length, "XXXX");
-      })
-      .catch((e) => {});
-  }, []);
 
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
