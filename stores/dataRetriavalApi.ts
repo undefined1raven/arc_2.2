@@ -15,6 +15,7 @@ import {
 } from "@/components/utils/fn/charOps";
 import { chunkPrefixes } from "@/constants/chunkPrefixes";
 import { useStatusIndicatorStore } from "./statusIndicatorStore";
+import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
 type TableNames =
   | "timeTrackingChunks"
   | "dayPlannerChunks"
@@ -380,7 +381,67 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: decryptionResults.payload };
     }
 
-    return { error: "Not implemented", status: "error" };
+    try {
+      const decodedStringData = charCodeArrayToString(
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+      );
+      const parsedData = JSON.parse(decodedStringData) as any[];
+      const dataMatchIndex = parsedData.findIndex((item) => {
+        const value = getValueByKeys(item, keyPath);
+        if (typeof value === null || typeof value === "undefined") {
+          return false;
+        }
+        if (value === valueToMatch) {
+          return true;
+        }
+      });
+      if (dataMatchIndex === -1) {
+        return { status: "error", error: "Match not found" };
+      }
+      const newData = [...parsedData];
+      if (replaceOrAppendValue === "replace") {
+        newData[dataMatchIndex] = newValue;
+      } else {
+        newData[dataMatchIndex] = {
+          ...newData[dataMatchIndex],
+          ...newValue,
+        };
+      }
+      if (newData.length !== parsedData.length) {
+        return { status: "error", error: "Data length mismatch" };
+      }
+      const encryptionResults = await cryptoOpsApi.performOperation("encrypt", {
+        keyType: "symmetric",
+        key: key,
+        charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
+      });
+      if (encryptionResults.status === "error") {
+        return { status: "error", error: encryptionResults.payload };
+      }
+      const encryptedContent = {
+        cipher: encryptionResults.payload.cipher,
+        iv: encryptionResults.payload.iv,
+      };
+      const updatedChunk = {
+        ...encryptedChunk,
+        encryptedContent: JSON.stringify(encryptedContent),
+      };
+      const savePromise = db.runAsync(
+        `UPDATE ${tableName} SET encryptedContent = ? WHERE userID = ? AND id = ?`,
+        [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
+      );
+      return savePromise
+        .then((result) => {
+          db.closeAsync();
+          return { status: "success" };
+        })
+        .catch((e) => {
+          db.closeAsync();
+          return { status: "error", error: e };
+        });
+    } catch (e) {
+      return { status: "error", error: "Failed to parse decrypted data" };
+    }
   },
 }));
 
