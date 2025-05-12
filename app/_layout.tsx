@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -17,10 +17,24 @@ import CreateNewAccountData from "@/components/functional/CreateNewAccountData";
 import { SQLiteProvider } from "expo-sqlite";
 import * as NavigationBar from "expo-navigation-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { NavMenuBar } from "@/components/ui/NavMenuBar";
+import { useNavMenuApi } from "@/stores/navMenuApi";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const navMenuApi = useNavMenuApi();
+  const pathname = usePathname();
+
+  const navMenuDisallowedPaths = [
+    "/NewAccountMain/page",
+    "/login/localLogin/localLogin",
+    "/downloadRecoveryCodes/page",
+    "/setAccountPin/page",
+    "/localAccountAuth/localAccountAuth",
+    "/timeTrackingFeatureConfig/EditActivities",
+  ];
+
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const [loaded] = useFonts({
     OxaniumVar: require("../assets/fonts/Oxanium-VariableFont_wght.ttf"),
@@ -104,6 +118,10 @@ export default function RootLayout() {
             <Stack.Screen name="home/home" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />
+          {navMenuApi.showMenu &&
+            navMenuDisallowedPaths.includes(pathname) === false && (
+              <NavMenuBar></NavMenuBar>
+            )}
         </GestureHandlerRootView>
       </SQLiteProvider>
     </>

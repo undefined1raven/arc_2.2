@@ -10,7 +10,6 @@ function dayPlanner() {
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
       <ActivityIndicator></ActivityIndicator>
-      <NavMenuBar></NavMenuBar>
     </ThemedView>
   );
 }

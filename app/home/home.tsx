@@ -12,7 +12,6 @@ function Home() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <TimeTrackingCard></TimeTrackingCard>
-        {navMenuApi.showMenu && <NavMenuBar></NavMenuBar>}
         <KeyboardVisible></KeyboardVisible>
         <StatusIndicators></StatusIndicators>
       </ThemedView>
