@@ -3,7 +3,10 @@ import { v4 } from "uuid";
 import * as SQLite from "expo-sqlite";
 import * as SecureStore from "expo-secure-store";
 import { secureStoreKeyNames } from "@/components/utils/constants/secureStoreKeyNames";
-import { ARC_ChunksType } from "@/constants/CommonTypes";
+import {
+  ARC_ChunksType,
+  FeatureConfigChunkType,
+} from "@/constants/CommonTypes";
 import { useActiveUser } from "./activeUser";
 import { useCryptoOpsQueue } from "./cryptoOpsQueue";
 import {
@@ -37,6 +40,18 @@ interface DataRetrivalApi {
     status: "error" | "success";
     payload?: any[];
     error?: string;
+  }>;
+  modifyEntry: (
+    tableName: TableNames,
+    keyPath: string[],
+    valueToMatch: string,
+    newValue: any,
+    chunkID?: string | undefined | null,
+    replaceOrAppend?: "replace" | "append"
+  ) => Promise<{
+    status: "error" | "success";
+    payload?: any;
+    error?: string | "Match not found";
   }>;
 }
 
@@ -290,6 +305,82 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         console.log("Decryption error", e);
         return { status: "error", error: e };
       });
+  },
+  modifyEntry: async (
+    tableName: TableNames,
+    keyPath: string[],
+    valueToMatch: string,
+    newValue: any,
+    chunkID?: string | undefined | null,
+    replaceOrAppend?: "replace" | "append"
+  ) => {
+    let replaceOrAppendValue = "replace";
+    if (replaceOrAppend === "append" || replaceOrAppend === "replace") {
+      replaceOrAppendValue = replaceOrAppend;
+    }
+    if (Array.isArray(keyPath) === false || keyPath.length === 0) {
+      return { status: "error", error: "Invalid keyPath" };
+    }
+    if (valueToMatch === null || valueToMatch === undefined) {
+      return { status: "error", error: "Invalid valueToMatch" };
+    }
+    if (newValue === null || newValue === undefined) {
+      return { status: "error", error: "Invalid newValue" };
+    }
+    const activeUserId = useActiveUser.getState().activeUser.userId as
+      | string
+      | null;
+
+    if (activeUserId === null) {
+      return { status: "error", error: "No active user" };
+    }
+    if (allowedTableNames.includes(tableName) === false) {
+      return { status: "error", error: "Invalid table name" };
+    }
+
+    const key = await SecureStore.getItemAsync(
+      secureStoreKeyNames.accountConfig.activeSymmetricKey
+    );
+    if (key === null) {
+      return { status: "error", error: "No key found" };
+    }
+    const cryptoOpsApi = useCryptoOpsQueue.getState();
+    const db = await SQLite.openDatabaseAsync("localCache");
+
+    ////If no chunkID is provided, get the latest chunk
+    const hasChunkId = typeof chunkID === "string" && chunkID.length > 0;
+    const argList: string[] = [activeUserId];
+    if (hasChunkId) {
+      argList.push(chunkID);
+    }
+
+    const encryptedChunk: ARC_ChunksType | FeatureConfigChunkType | null =
+      await db.getFirstAsync(
+        `SELECT * FROM ${tableName} WHERE userID = ? ${
+          hasChunkId ? "AND id = ?" : "ORDER BY tx DESC LIMIT 1"
+        } `,
+        argList
+      );
+
+    if (encryptedChunk === null) {
+      return { status: "error", error: "No chunks found" };
+    }
+
+    const encryptedContent = encryptedChunk.encryptedContent;
+    if (typeof encryptedContent !== "string") {
+      return { status: "error", error: "Invalid chunk data" };
+    }
+    const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
+      keyType: "symmetric",
+      charCodeData: encryptedContent,
+      key: key,
+    });
+
+    if (decryptionResults.status === "error") {
+      return { status: "error", error: decryptionResults.payload };
+    }
+
+    return { error: "Not implemented", status: "error" };
   },
 }));
 
