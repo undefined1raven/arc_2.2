@@ -66,7 +66,7 @@ function dayPlannerActiveDayView() {
 
   const debouncedUpdateTaskName = useCallback(
     debounce((task: TessTaskType, newName: string) => {
-      if (!task || !newName || !dayPlannerActiveDay) return;
+      if (!task || !dayPlannerActiveDay) return;
 
       const updatedTask: TessTaskType = {
         ...task,
@@ -102,7 +102,7 @@ function dayPlannerActiveDayView() {
         .catch((e) => {
           console.error("Error updating task name", e);
         });
-    }, 300),
+    }, 500),
     [dayPlannerActiveDay]
   );
 
@@ -316,6 +316,7 @@ function dayPlannerActiveDayView() {
                       justifyContent: "center",
                       alignItems: "space-between",
                       borderWidth: 1,
+                      borderRadius: globalStyle.globalStyle.borderRadius,
                       borderColor: globalStyle.globalStyle.color,
                     }}
                   >
@@ -323,9 +324,6 @@ function dayPlannerActiveDayView() {
                       defaultValue={typedItem.name}
                       onChange={(e) => {
                         const newName = e.nativeEvent.text;
-                        if (newName === "") {
-                          return;
-                        }
                         debouncedUpdateTaskName(typedItem, newName);
                       }}
                       textAlign="left"
