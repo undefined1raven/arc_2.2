@@ -8,7 +8,12 @@ import {
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { DayPlannerCard } from "../dayPlanner/DayPlannerCard";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
@@ -257,13 +262,19 @@ function dayPlannerActiveDayView() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          bottom: 0,
           flexGrow: 1,
+          bottom: virtualKeyboardApi.isVisible
+            ? virtualKeyboardApi.keyboardHeight
+            : 0,
         }}
       >
         {virtualKeyboardApi.isVisible && (
           <Animated.View
-            style={{ height: virtualKeyboardApi.keyboardHeight, width: "100%" }}
+            style={{
+              height: virtualKeyboardApi.keyboardHeight,
+              width: "100%",
+              backgroundColor: "blue",
+            }}
           ></Animated.View>
         )}
         <Animated.View

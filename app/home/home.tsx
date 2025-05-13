@@ -12,7 +12,6 @@ function Home() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <TimeTrackingCard></TimeTrackingCard>
-        <KeyboardVisible></KeyboardVisible>
       </ThemedView>
     </>
   );

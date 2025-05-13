@@ -20,6 +20,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import { useNavMenuApi } from "@/stores/navMenuApi";
 import { StatusIndicators } from "@/components/ui/StatusIndicators";
+import KeyboardVisible from "@/components/functional/KeyboardStatus";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -73,6 +74,7 @@ export default function RootLayout() {
             }}
           >
             <CreateNewAccountData></CreateNewAccountData>
+            <KeyboardVisible></KeyboardVisible>
             <View style={{ width: 0, height: 0 }}>
               <CryptoWorkers></CryptoWorkers>
             </View>
