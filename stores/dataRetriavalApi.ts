@@ -48,7 +48,7 @@ interface DataRetrivalApi {
     valueToMatch: string,
     newValue: any,
     chunkID?: string | undefined | null,
-    replaceOrAppend?: "replace" | "append"
+    replaceOrAppend?: "replace" | "append" | "delete"
   ) => Promise<{
     status: "error" | "success";
     payload?: any;
@@ -313,10 +313,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     valueToMatch: string,
     newValue: any,
     chunkID?: string | undefined | null,
-    replaceOrAppend?: "replace" | "append"
+    replaceOrAppend?: "replace" | "append" | "delete"
   ) => {
     let replaceOrAppendValue = "replace";
-    if (replaceOrAppend === "append" || replaceOrAppend === "replace") {
+    if (
+      replaceOrAppend === "append" ||
+      replaceOrAppend === "replace" ||
+      replaceOrAppend === "delete"
+    ) {
       replaceOrAppendValue = replaceOrAppend;
     }
     if (Array.isArray(keyPath) === false || keyPath.length === 0) {
@@ -346,8 +350,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "No key found" };
     }
     const cryptoOpsApi = useCryptoOpsQueue.getState();
+    const statusIndicatorApi = useStatusIndicatorStore.getState();
     const db = await SQLite.openDatabaseAsync("localCache");
-
+    statusIndicatorApi.setIsSavingLocalData(true);
     ////If no chunkID is provided, get the latest chunk
     const hasChunkId = typeof chunkID === "string" && chunkID.length > 0;
     const argList: string[] = [activeUserId];
@@ -364,11 +369,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       );
 
     if (encryptedChunk === null) {
+      statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "No chunks found" };
     }
 
     const encryptedContent = encryptedChunk.encryptedContent;
     if (typeof encryptedContent !== "string") {
+      statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "Invalid chunk data" };
     }
     const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
@@ -378,6 +385,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     });
 
     if (decryptionResults.status === "error") {
+      statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: decryptionResults.payload };
     }
 
@@ -396,18 +404,22 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         }
       });
       if (dataMatchIndex === -1) {
+        statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Match not found" };
       }
       const newData = [...parsedData];
       if (replaceOrAppendValue === "replace") {
         newData[dataMatchIndex] = newValue;
-      } else {
+      } else if (replaceOrAppendValue === "append") {
         newData[dataMatchIndex] = {
           ...newData[dataMatchIndex],
           ...newValue,
         };
+      } else if (replaceOrAppendValue === "delete") {
+        newData.splice(dataMatchIndex, 1);
       }
       if (newData.length !== parsedData.length) {
+        statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Data length mismatch" };
       }
       const encryptionResults = await cryptoOpsApi.performOperation("encrypt", {
@@ -416,6 +428,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
       });
       if (encryptionResults.status === "error") {
+        statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: encryptionResults.payload };
       }
       const encryptedContent = {
@@ -432,14 +445,17 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       );
       return savePromise
         .then((result) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
           db.closeAsync();
           return { status: "success" };
         })
         .catch((e) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
           db.closeAsync();
           return { status: "error", error: e };
         });
     } catch (e) {
+      statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "Failed to parse decrypted data" };
     }
   },

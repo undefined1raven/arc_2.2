@@ -21,6 +21,8 @@ type ButtonProps = {
   fontSize?: number;
   textStyle?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  onDoubleClick?: () => void;
+  androidRippleColor?: string | null;
 };
 
 function Button({
@@ -33,25 +35,40 @@ function Button({
   fontSize,
   textAlign,
   textAlignVertical,
+  onDoubleClick,
   children,
   textStyle,
+  androidRippleColor,
   disabled,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
+  const [lastTap, setLastTap] = useState<number | null>(null);
+
+  const handlePress = () => {
+    const now = Date.now();
+    if (lastTap && now - lastTap < 300) {
+      if (onDoubleClick) {
+        // If the second tap is within 300ms, it's a double-tap
+        onDoubleClick?.();
+      }
+    } else {
+      setLastTap(now);
+      onClick();
+    }
+    Keyboard.dismiss();
+  };
 
   return (
     <Pressable
-      onPress={() => {
-        onClick();
-        Keyboard.dismiss();
-      }}
+      onPress={handlePress}
       android_ripple={
-        disabled
+        disabled || androidRippleColor === null
           ? null
           : {
-              color:
-                globalStyles.globalStyle.androidRippleColor +
-                ANDROID_RIPPLE_TRANSPARENCY,
+              color: androidRippleColor
+                ? androidRippleColor
+                : globalStyles.globalStyle.androidRippleColor +
+                  ANDROID_RIPPLE_TRANSPARENCY,
             }
       }
       android_disableSound={true}

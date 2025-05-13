@@ -46,6 +46,7 @@ type TessTaskType = {
 
 type TessDayLogType = {
   day: string;
+  isActive?: boolean;
   tasks: TessTaskType[];
 };
 
