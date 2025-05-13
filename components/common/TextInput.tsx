@@ -18,6 +18,7 @@ type ButtonProps = {
   backgroundColor?: string;
   borderColor?: string;
   placeholder?: string;
+  defaultValue?: string;
   keyboardType?: "default" | "email-address" | "numeric" | "visible-password";
   onChange: () => void;
   fontSize?: number;
@@ -39,12 +40,14 @@ function TextInput({
   secureTextEntry,
   children,
   onChange,
+  defaultValue,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
     <RNTextInput
       onChange={onChange}
+      defaultValue={defaultValue ? defaultValue : ""}
       selectionColor={globalStyles.globalStyle.color + "30"}
       placeholder={placeholder ? placeholder : ""}
       style={{

@@ -211,7 +211,6 @@ function TimeTrackingCard() {
 
   return isPickingActivity === false ? (
     <Animated.View
-      entering={customFadeInDown(layoutAnimationsDuration)}
       style={{
         backgroundColor:
           globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,

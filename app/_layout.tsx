@@ -19,6 +19,7 @@ import * as NavigationBar from "expo-navigation-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import { useNavMenuApi } from "@/stores/navMenuApi";
+import { StatusIndicators } from "@/components/ui/StatusIndicators";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +34,7 @@ export default function RootLayout() {
     "/setAccountPin/page",
     "/localAccountAuth/localAccountAuth",
     "/timeTrackingFeatureConfig/EditActivities",
+    "/activeDayView/activeDayView",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -115,9 +117,14 @@ export default function RootLayout() {
               name="dayPlanner/dayPlanner"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="activeDayView/activeDayView"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="home/home" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />
+          <StatusIndicators></StatusIndicators>
           {navMenuApi.showMenu &&
             navMenuDisallowedPaths.includes(pathname) === false && (
               <NavMenuBar></NavMenuBar>
