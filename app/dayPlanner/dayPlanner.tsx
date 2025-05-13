@@ -19,7 +19,6 @@ function dayPlanner() {
     dataRetriavalAPI
       .getDataInTimeRange("dayPlannerChunks", undefined, undefined, 1)
       .then((res) => {
-        console.log("Current active day", res.payload[0]);
         if (res.status === "success") {
           const data = res.payload;
           const currentActiveDay: TessDayLogType = data?.find(
