@@ -5,19 +5,25 @@ import CalendarDeco from "@/components/deco/CalendarDeco";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { StatsDeco } from "@/components/deco/StatsDeco";
 import { dayPlannerChunkSize } from "@/components/utils/constants/chunking";
+import { computeDayPlannerCompletion } from "@/components/utils/dataProcessing/computeDayPlannerCompletion";
 import { layoutAnimationsDuration } from "@/constants/animations";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { TessDayLogType } from "@/constants/CommonTypes";
 import { monthToLabel } from "@/constants/time";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
+import { useDayPlannerStatusToEdit } from "@/stores/viewState/dayPlannerActiveStatusToEdit";
 import { router } from "expo-router";
 import React, { act, useCallback } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 function DayPlannerCard() {
+  const dayPlannerFeatureConfig = useFeatureConfigs(
+    (store) => store.dayPlannerFeatureConfig
+  );
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const dayPlannerActiveDayApi = useDayPlannerActiveDay();
   const customFadeInUp = useCallback((duration: number) => {
@@ -99,7 +105,12 @@ function DayPlannerCard() {
               alignItems: "center",
             }}
           >
-            <Button onClick={() => {}} style={styles.contextButtonStyle}>
+            <Button
+              onClick={() => {
+                router.push("/dayPlanner/statusEditor/statusEditor");
+              }}
+              style={styles.contextButtonStyle}
+            >
               <EditDeco width={35} height={25}></EditDeco>
             </Button>
             <Button onClick={() => {}} style={styles.contextButtonStyle}>
@@ -178,7 +189,10 @@ function DayPlannerCard() {
                   backgroundColor: globalStyle.successColor + "50",
                 }}
                 fontSize={globalStyle.mediumMobileFont}
-                label={"87% completed"}
+                label={`${computeDayPlannerCompletion(
+                  dayPlannerFeatureConfig,
+                  dayPlannerActiveDayApi.activeDay
+                )}% completed`}
               ></Text>
             </View>
             <Button

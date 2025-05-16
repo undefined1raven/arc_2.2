@@ -124,6 +124,10 @@ export default function RootLayout() {
                 name="activeDayView/activeDayView"
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="dayPlanner/statusEditor/statusEditor"
+                options={{ headerShown: false }}
+              />
               <Stack.Screen name="home/home" options={{ headerShown: false }} />
             </Stack>
             <StatusBar style="auto" />
