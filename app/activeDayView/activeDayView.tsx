@@ -273,7 +273,6 @@ function dayPlannerActiveDayView() {
             style={{
               height: virtualKeyboardApi.keyboardHeight,
               width: "100%",
-              backgroundColor: "blue",
             }}
           ></Animated.View>
         )}
@@ -295,7 +294,28 @@ function dayPlannerActiveDayView() {
             }
             estimatedItemSize={55}
             ListEmptyComponent={() => {
-              return <Text label="Nothing to see here"></Text>;
+              return (
+                <View
+                  style={{
+                    transform: [{ rotate: "180deg" }],
+                    width: "100%",
+                    height: 50,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "absolute",
+                  }}
+                >
+                  <Button
+                    label="Add Task"
+                    onClick={addTaskToDay}
+                    style={{
+                      width: "80%",
+                      height: "100%",
+                    }}
+                  />
+                </View>
+              );
             }}
             renderItem={({ item }) => {
               if (statusPickingForTask !== null) {
