@@ -34,7 +34,7 @@ function TextInput({
   style,
   color,
   fontSize,
-  textAlign,
+  textAlign = "left",
   textAlignVertical,
   keyboardType,
   secureTextEntry,

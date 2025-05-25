@@ -32,28 +32,9 @@ function EditActivities() {
     return FadeInDown.duration(duration);
   }, []);
 
-  const getCategoryNameFromTaskObject = useCallback(
-    (taskObject) => {
-      const categories = timeTrackingFeatureConfigApi.filter(
-        (r) => r.type === "taskCategory"
-      );
-      const catId = taskObject.itme.categoryID;
-      const category = categories.find(
-        (r) => r.itme.categoryID === catId || r.itme.id === catId
-      );
-      if (category) {
-        return category.itme.name;
-      } else {
-        return "Unknown";
-      }
-    },
-    [timeTrackingFeatureConfigApi]
-  );
-
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
-        <StatusIndicators></StatusIndicators>
         <Animated.View
           style={{
             width: "100%",

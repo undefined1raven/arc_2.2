@@ -38,7 +38,7 @@ const useNavMenuApi = create<INavMenuApi>((set, get) => ({
       goTo: "timeTracking",
       icon: TimeStatsIcon,
       name: "timeTracking",
-      pathname: "/timeTrackingStats/timeTrackingStats",
+      pathname: "/timeTrackingStats/statsHome/statsHome",
     },
     {
       goTo: "personalDiary",
