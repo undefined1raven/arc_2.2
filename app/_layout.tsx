@@ -36,6 +36,7 @@ export default function RootLayout() {
     "/localAccountAuth/localAccountAuth",
     "/timeTrackingFeatureConfig/EditActivities",
     "/activeDayView/activeDayView",
+    "/dayPlanner/statusEditor/statusEditor",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -126,6 +127,10 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="dayPlanner/statusEditor/statusEditor"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="timeTrackingStats/statsHome/statsHome"
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="home/home" options={{ headerShown: false }} />

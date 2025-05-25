@@ -308,12 +308,22 @@ function dayPlannerActiveDayView() {
                 >
                   <Button
                     label="Add Task"
+                    textStyle={{ textAlign: "left", paddingLeft: 10 }}
                     onClick={addTaskToDay}
                     style={{
                       width: "80%",
                       height: "100%",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      display: "flex",
                     }}
-                  />
+                  >
+                    <AddIcon
+                      style={{ position: "absolute", right: 10 }}
+                      width={23}
+                      height={23}
+                    ></AddIcon>
+                  </Button>
                 </View>
               );
             }}
