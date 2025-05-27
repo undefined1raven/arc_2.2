@@ -54,6 +54,17 @@ interface DataRetrivalApi {
     payload?: any;
     error?: string | "Match not found";
   }>;
+  modifyFeatureConfig: (
+    featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
+    keyPath: string[],
+    valueToMatch: string,
+    newValue: any,
+    replaceOrAppend?: "replace" | "append" | "delete"
+  ) => Promise<{
+    status: "error" | "success";
+    payload?: any;
+    error?: string | "Match not found";
+  }>;
 }
 
 const allowedTableNames = [
@@ -441,6 +452,162 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       };
       const savePromise = db.runAsync(
         `UPDATE ${tableName} SET encryptedContent = ? WHERE userID = ? AND id = ?`,
+        [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
+      );
+      return savePromise
+        .then((result) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
+          db.closeAsync();
+          return { status: "success" };
+        })
+        .catch((e) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
+          db.closeAsync();
+          return { status: "error", error: e };
+        });
+    } catch (e) {
+      statusIndicatorApi.setIsSavingLocalData(false);
+      return { status: "error", error: "Failed to parse decrypted data" };
+    }
+  },
+  modifyFeatureConfig: async (
+    featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
+    keyPath: string[],
+    valueToMatch: string,
+    newValue: any,
+    replaceOrAppend?: "replace" | "append" | "delete"
+  ) => {
+    const allowedFeatureConfigTypes = [
+      "dayPlanner",
+      "timeTracking",
+      "personalDiary",
+    ];
+    let replaceOrAppendValue = "replace";
+    if (
+      replaceOrAppend === "append" ||
+      replaceOrAppend === "replace" ||
+      replaceOrAppend === "delete"
+    ) {
+      replaceOrAppendValue = replaceOrAppend;
+    }
+    if (Array.isArray(keyPath) === false || keyPath.length === 0) {
+      return { status: "error", error: "Invalid keyPath" };
+    }
+    if (valueToMatch === null || valueToMatch === undefined) {
+      return { status: "error", error: "Invalid valueToMatch" };
+    }
+    if (newValue === null || newValue === undefined) {
+      return { status: "error", error: "Invalid newValue" };
+    }
+    const activeUserId = useActiveUser.getState().activeUser.userId as
+      | string
+      | null;
+
+    if (activeUserId === null) {
+      return { status: "error", error: "No active user" };
+    }
+    if (allowedFeatureConfigTypes.includes(featureConfigType) === false) {
+      return { status: "error", error: "Invalid table name" };
+    }
+
+    const key = await SecureStore.getItemAsync(
+      secureStoreKeyNames.accountConfig.activeSymmetricKey
+    );
+    if (key === null) {
+      return { status: "error", error: "No key found" };
+    }
+    const cryptoOpsApi = useCryptoOpsQueue.getState();
+    const statusIndicatorApi = useStatusIndicatorStore.getState();
+    const db = await SQLite.openDatabaseAsync("localCache");
+    statusIndicatorApi.setIsSavingLocalData(true);
+    ////If no chunkID is provided, get the latest chunk
+    const argList: string[] = [activeUserId];
+    const encryptedChunk: ARC_ChunksType | FeatureConfigChunkType | null =
+      await db.getFirstAsync(
+        `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = "${featureConfigType}" ORDER BY tx DESC LIMIT 1`,
+        argList
+      );
+
+    if (encryptedChunk === null) {
+      statusIndicatorApi.setIsSavingLocalData(false);
+      return { status: "error", error: "No chunks found" };
+    }
+
+    const encryptedContent = encryptedChunk.encryptedContent;
+    if (typeof encryptedContent !== "string") {
+      statusIndicatorApi.setIsSavingLocalData(false);
+      return { status: "error", error: "Invalid chunk data" };
+    }
+    const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
+      keyType: "symmetric",
+      charCodeData: encryptedContent,
+      key: key,
+    });
+
+    if (decryptionResults.status === "error") {
+      statusIndicatorApi.setIsSavingLocalData(false);
+      return { status: "error", error: decryptionResults.payload };
+    }
+
+    try {
+      const decodedStringData = charCodeArrayToString(
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+      );
+      const parsedData = JSON.parse(decodedStringData) as any[];
+      console.log("XLFFF----------- Parsed data:", parsedData.length);
+      const dataMatchIndex = parsedData.findIndex((item) => {
+        const value = getValueByKeys(item, keyPath);
+        if (typeof value === null || typeof value === "undefined") {
+          return false;
+        }
+        if (value === valueToMatch) {
+          return true;
+        }
+      });
+      console.log("XLFFF----------- Data match index:", dataMatchIndex);
+      if (dataMatchIndex === -1) {
+        statusIndicatorApi.setIsSavingLocalData(false);
+        return { status: "error", error: "Match not found" };
+      }
+      const newData = [...parsedData];
+      if (replaceOrAppendValue === "replace") {
+        newData[dataMatchIndex] = newValue;
+      } else if (replaceOrAppendValue === "append") {
+        newData[dataMatchIndex] = {
+          ...newData[dataMatchIndex],
+          ...newValue,
+        };
+      } else if (replaceOrAppendValue === "delete") {
+        newData.splice(dataMatchIndex, 1);
+      }
+      console.log("XLFFF----------- New data length:", newData.length);
+      if (newData.length !== parsedData.length) {
+        statusIndicatorApi.setIsSavingLocalData(false);
+        return { status: "error", error: "Data length mismatch" };
+      }
+      const encryptionResults = await cryptoOpsApi.performOperation("encrypt", {
+        keyType: "symmetric",
+        key: key,
+        charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
+      });
+      if (encryptionResults.status === "error") {
+        statusIndicatorApi.setIsSavingLocalData(false);
+        return { status: "error", error: encryptionResults.payload };
+      }
+      const encryptedContent = {
+        cipher: encryptionResults.payload.cipher,
+        iv: encryptionResults.payload.iv,
+      };
+      const updatedChunk = {
+        ...encryptedChunk,
+        encryptedContent: JSON.stringify(encryptedContent),
+      };
+      console.log(
+        "XLFFF----------- Updated chunk:",
+        updatedChunk.encryptedContent.length
+      );
+      const savePromise = db.runAsync(
+        `UPDATE featureConfigChunks SET encryptedContent = ? WHERE userID = ? AND id = ?`,
         [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
       );
       return savePromise

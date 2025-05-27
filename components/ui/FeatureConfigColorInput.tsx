@@ -72,7 +72,11 @@ function FeatureConfigColorInput(props: Props) {
             }}
           >
             <Button
-              style={{ width: "50%", height: "100%", marginTop: 10 }}
+              style={{
+                width: "50%",
+                height: "100%",
+                marginTop: 10,
+              }}
               onClick={() => {
                 setIsPickingColor(false);
               }}
@@ -111,7 +115,12 @@ function FeatureConfigColorInput(props: Props) {
             }}
           ></Text>
           <Button
-            style={{ ...styles().inputCoreStyle }}
+            style={{
+              ...styles().inputCoreStyle,
+              borderColor: props.value
+                ? props.value
+                : globalStyle.globalStyle.color,
+            }}
             onClick={() => {
               setIsPickingColor(true);
             }}

@@ -79,6 +79,9 @@ function FeatureConfigValueInput(props: Props) {
                   case "color":
                     props.onChange(e);
                     return;
+                  case "text":
+                    props.onChange(e.nativeEvent.text);
+                    return;
                   default:
                     break;
                 }
@@ -98,6 +101,9 @@ function FeatureConfigValueInput(props: Props) {
                     return;
                   case "color":
                     props.onChange(e);
+                    return;
+                  case "text":
+                    props.onChange(e.nativeEvent.text);
                     return;
                   default:
                     break;
