@@ -14,9 +14,21 @@ interface IFeatureConfigs {
   timeTrackingFeatureConfig: any | null;
   dayPlannerFeatureConfig: any | null;
   personalDiaryFeatureConfig: any | null;
+  setDayPlannerFeatureConfig: (config: any) => void;
+  setTimeTrackingFeatureConfig: (config: any) => void;
+  setPersonalDiaryFeatureConfig: (config: any) => void;
 }
 
 const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
+  setDayPlannerFeatureConfig: (config: any) => {
+    set({ dayPlannerFeatureConfig: config });
+  },
+  setTimeTrackingFeatureConfig: (config: any) => {
+    set({ timeTrackingFeatureConfig: config });
+  },
+  setPersonalDiaryFeatureConfig: (config: any) => {
+    set({ personalDiaryFeatureConfig: config });
+  },
   decryptFeatureConfigs: async () => {
     const activeUserId = useActiveUser.getState().activeUser.userId;
     const cryptoOpsApi = useCryptoOpsQueue.getState();

@@ -1,4 +1,4 @@
-import themeColors from "@/constants/colors";
+import themeColors, { AvailableThemes } from "@/constants/colors";
 import { ColorValueHex } from "@/constants/CommonTypes";
 import { create } from "zustand";
 
@@ -35,6 +35,7 @@ interface GlobalStyleType {
   successTextColor: "#005843";
   errorColor: ColorValueHex;
   errorTextColor: ColorValueHex;
+  colorScheme: AvailableThemes;
 }
 
 interface GlobalStyleStore {
@@ -62,6 +63,7 @@ const useGlobalStyleStore = create<GlobalStyleStore>((set) => ({
     smallMobileFont: 10,
     footnoteMobileFont: 8,
     theme: "light",
+    colorScheme: "cloudy",
     ...themeColors["cloudy"]["light"],
   },
   updateGlobalStyle: (newStyles: object) => {

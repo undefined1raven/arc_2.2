@@ -1,37 +1,35 @@
 import Button from "@/components/common/Button";
-import { ColorInput } from "@/components/common/ColorPicker";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
-import Text from "@/components/common/Text";
-import TextInput from "@/components/common/TextInput";
 import { EditDeco } from "@/components/deco/EditDeco";
-import { SearchIcon } from "@/components/deco/SearchIcon";
 import { ThemedView } from "@/components/ThemedView";
 import { FeatureConfigColorInput } from "@/components/ui/FeatureConfigColorInput";
 import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySettingPage";
 import { FeatureConfigValueInput } from "@/components/ui/FeatureConfigValueInput";
-import { NavMenuBar } from "@/components/ui/NavMenuBar";
-import { layoutAnimationsDuration } from "@/constants/animations";
-import { TessDayLogType, TessStatusType } from "@/constants/CommonTypes";
+import { TessStatusType } from "@/constants/CommonTypes";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
 import { useFocusEffect } from "@react-navigation/native";
-import { FlashList } from "@shopify/flash-list";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 function statusEditor() {
   const [isPickingStatus, setIsPickingStatus] = useState(true);
   const virtualKeyboardApi = useVirtualKeyboard();
-  const globalStyle = useGlobalStyleStore();
+  const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (r) => r.dayPlannerFeatureConfig
   );
 
   const [statusToEdit, setStatusToEdit] = useState<TessStatusType | null>(null);
+
+  const getPreviewValue = useCallback((color: string, defaultColor: string) => {
+    if (color === "default" || typeof color !== "string") {
+      return defaultColor;
+    }
+    return color;
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -53,10 +51,171 @@ function statusEditor() {
     }, [isPickingStatus])
   );
 
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const debouncedUpdate = useCallback(
+    (updateFn: () => void) => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+      const timeout = setTimeout(() => {
+        updateFn();
+      }, 300);
+      setDebounceTimeout(timeout);
+    },
+    [debounceTimeout]
+  );
+
+  const handleStatusUpdate = useCallback(
+    (field: string, value: any) => {
+      debouncedUpdate(() => {
+        const dataRetrivalAPI = dataRetrivalApi.getState();
+        const newStatus = { ...statusToEdit, [field]: value };
+
+        const statusIndex = dayPlannerFeatureConfig.findIndex(
+          (status: TessStatusType) => status.statusID === statusToEdit?.statusID
+        );
+        if (statusIndex === -1) {
+          console.error("Status to edit not found in the list.");
+        }
+
+        const updatedStatuses = [...dayPlannerFeatureConfig];
+        updatedStatuses[statusIndex] = newStatus;
+        const featureConfigApi = useFeatureConfigs.getState();
+        featureConfigApi.setDayPlannerFeatureConfig(updatedStatuses);
+        //@ts-ignore
+        setStatusToEdit(newStatus);
+
+        dataRetrivalAPI
+          .modifyFeatureConfig(
+            "dayPlanner",
+            ["statusID"],
+            statusToEdit?.statusID,
+            newStatus,
+            "replace"
+          )
+          .then((result) => {
+            console.log(`Status ${field} updated:`, result);
+          })
+          .catch((error) => {
+            console.error(`Error updating status ${field}:`, error);
+          });
+      });
+    },
+    [debouncedUpdate, statusToEdit]
+  );
+
+  const getCurrentColors = useCallback(() => {
+    function returnDefaultColors() {
+      return {
+        textColor: globalStyle.textColor,
+        color: globalStyle.color,
+      };
+    }
+    const colors = statusToEdit?.colors;
+    if (
+      colors === "default" ||
+      typeof colors !== "object" ||
+      colors === undefined
+    ) {
+      return returnDefaultColors();
+    } else {
+      const colorSchemeColors = colors[globalStyle.colorScheme];
+      if (!colorSchemeColors) {
+        return returnDefaultColors();
+      }
+      const themeColors = colorSchemeColors[globalStyle.theme];
+      if (!themeColors) {
+        return returnDefaultColors();
+      }
+      return {
+        textColor: themeColors.textColor || globalStyle.textColor,
+        color: themeColors.color || globalStyle.color,
+      };
+    }
+  }, [globalStyle.colorScheme, globalStyle.theme, statusToEdit]);
+
+  const updateColorValue = useCallback(
+    (colorType: "color" | "textColor", value: string) => {
+      const colors = statusToEdit?.colors;
+      if (colors === "default" || typeof colors !== "object") {
+        const newColors = {
+          [globalStyle.colorScheme]: {
+            [globalStyle.theme]: {
+              color: colorType === "color" ? value : getCurrentColors().color,
+              textColor:
+                colorType === "textColor"
+                  ? value
+                  : getCurrentColors().textColor,
+            },
+          },
+        };
+        handleStatusUpdate("colors", newColors);
+        return;
+      }
+      const colorSchemeColors = colors[globalStyle.colorScheme] || null;
+      if (colorSchemeColors === null) {
+        const newColors = {
+          ...colors,
+          [globalStyle.colorScheme]: {
+            [globalStyle.theme]: {
+              color: colorType === "color" ? value : getCurrentColors().color,
+              textColor:
+                colorType === "textColor"
+                  ? value
+                  : getCurrentColors().textColor,
+            },
+          },
+        };
+        handleStatusUpdate("colors", newColors);
+        return;
+      }
+      const themeColors = colorSchemeColors[globalStyle.theme] || null;
+      if (themeColors === null) {
+        const newColors = {
+          ...colors,
+          [globalStyle.colorScheme]: {
+            ...colorSchemeColors,
+            [globalStyle.theme]: {
+              color: colorType === "color" ? value : getCurrentColors().color,
+              textColor:
+                colorType === "textColor"
+                  ? value
+                  : getCurrentColors().textColor,
+            },
+          },
+        };
+        handleStatusUpdate("colors", newColors);
+        return;
+      }
+      const newColors = {
+        ...colors,
+        [globalStyle.colorScheme]: {
+          ...colorSchemeColors,
+          [globalStyle.theme]: {
+            ...themeColors,
+            [colorType]: value,
+          },
+        },
+      };
+      handleStatusUpdate("colors", newColors);
+    },
+    [
+      statusToEdit,
+      globalStyle.colorScheme,
+      globalStyle.theme,
+      getCurrentColors,
+      handleStatusUpdate,
+    ]
+  );
+
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
       {isPickingStatus ? (
         <ReversedListWithControls
+          searchKeys={["name"]}
           renderItem={({ item }) => {
             const typedItem = item as TessStatusType;
             return (
@@ -94,25 +253,30 @@ function statusEditor() {
       ) : (
         <FeatureConfigEmptySettingPage
           bototmHeaderLabel="Edit Task Status"
-          bottomHeaderButtonOnPress={() => {}}
+          bottomHeaderButtonOnPress={() => {
+            setStatusToEdit(null);
+            setIsPickingStatus(true);
+          }}
         >
           <FeatureConfigValueInput
             value={statusToEdit?.name}
-            onChange={(e) => {}}
+            onChange={(e) => {
+              handleStatusUpdate("name", e);
+            }}
             inputType="text"
             label="Name"
           ></FeatureConfigValueInput>
           <FeatureConfigColorInput
-            value={"#ffffff"}
+            value={getCurrentColors().textColor}
             onChange={(e) => {
-              console.log("Color changed:", e);
+              updateColorValue("textColor", e);
             }}
             label="Text Color"
           ></FeatureConfigColorInput>
           <FeatureConfigColorInput
-            value={"#ffffff"}
+            value={getCurrentColors().color}
             onChange={(e) => {
-              console.log("Color changed:", e);
+              updateColorValue("color", e);
             }}
             label="Color"
           ></FeatureConfigColorInput>

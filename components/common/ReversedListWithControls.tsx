@@ -16,6 +16,8 @@ import { View } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { EditDeco } from "../deco/EditDeco";
 import { TessStatusType } from "@/constants/CommonTypes";
+//@ts-ignore
+import FuzzySearch from "fuzzy-search";
 
 type ReversedListWithControlsProps = {
   data: any[];
@@ -24,6 +26,7 @@ type ReversedListWithControlsProps = {
   onBackButtonClick: () => void;
   showSearchBar: boolean;
   onSearch: (query: string) => void;
+  searchKeys?: string[];
 };
 
 function ReversedListWithControls({
@@ -33,9 +36,28 @@ function ReversedListWithControls({
   onBackButtonClick,
   showSearchBar,
   onSearch,
+  searchKeys,
 }: ReversedListWithControlsProps) {
   const globalStyle = useGlobalStyleStore();
   const virtualKeyboardApi = useVirtualKeyboard();
+  const [currentData, setCurrentData] = useState<any[]>(data);
+  const [searchFilter, setSearchFilter] = useState<string>("");
+  const searcher = useCallback(() => {
+    const searcher = new FuzzySearch(data, searchKeys ? searchKeys : [], {
+      caseSensitive: false,
+      sort: true,
+    });
+    return searcher;
+  }, [data]);
+
+  useEffect(() => {
+    if (searchFilter.length > 0) {
+      const results = searcher().search(searchFilter);
+      setCurrentData(results);
+    } else {
+      setCurrentData(data);
+    }
+  }, [searchFilter]);
 
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
@@ -76,7 +98,7 @@ function ReversedListWithControls({
       >
         <FlashList
           inverted={true}
-          data={data}
+          data={currentData}
           estimatedItemSize={55}
           renderItem={renderItem}
         />
@@ -105,6 +127,7 @@ function ReversedListWithControls({
             placeholder="Search activities or categories"
             onChange={(e) => {
               const text = e.nativeEvent.text;
+              setSearchFilter(text);
             }}
             style={{
               height: "100%",
