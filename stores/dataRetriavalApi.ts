@@ -554,7 +554,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         JSON.parse("[" + decryptionResults.payload.decrypted + "]")
       );
       const parsedData = JSON.parse(decodedStringData) as any[];
-      console.log("XLFFF----------- Parsed data:", parsedData.length);
       const dataMatchIndex = parsedData.findIndex((item) => {
         const value = getValueByKeys(item, keyPath);
         if (typeof value === null || typeof value === "undefined") {
@@ -564,7 +563,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           return true;
         }
       });
-      console.log("XLFFF----------- Data match index:", dataMatchIndex);
       if (dataMatchIndex === -1) {
         statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Match not found" };
@@ -580,7 +578,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       } else if (replaceOrAppendValue === "delete") {
         newData.splice(dataMatchIndex, 1);
       }
-      console.log("XLFFF----------- New data length:", newData.length);
       if (newData.length !== parsedData.length) {
         statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Data length mismatch" };
@@ -602,10 +599,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         ...encryptedChunk,
         encryptedContent: JSON.stringify(encryptedContent),
       };
-      console.log(
-        "XLFFF----------- Updated chunk:",
-        updatedChunk.encryptedContent.length
-      );
       const savePromise = db.runAsync(
         `UPDATE featureConfigChunks SET encryptedContent = ? WHERE userID = ? AND id = ?`,
         [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]

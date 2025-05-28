@@ -111,20 +111,40 @@ function dayPlannerActiveDayView() {
     [dayPlannerActiveDay]
   );
 
-  const getStatusColorForTask = useCallback(
+  const getStatusColorsForTask = useCallback(
     (task: TessTaskType) => {
+      function returnDefaultColors() {
+        return {
+          color: globalStyle.globalStyle.color,
+          textColor: globalStyle.globalStyle.textColor,
+        };
+      }
+
       const statusId = task.statusID;
       const status = featureConfigApi.dayPlannerFeatureConfig.find(
         (status: TessStatusType) => status.statusID === statusId
       );
       if (status) {
-        if (status.colors === "default") {
-          return globalStyle.globalStyle.color;
+        const statusColors = status.colors;
+        if (statusColors === "default") {
+          return returnDefaultColors();
         } else {
-          ////TO DO
+          const schemeColors =
+            statusColors[globalStyle.globalStyle.colorScheme];
+          if (!schemeColors) {
+            return returnDefaultColors();
+          }
+          const themeColors = schemeColors[globalStyle.globalStyle.theme];
+          if (!themeColors) {
+            return returnDefaultColors();
+          }
+          return {
+            color: themeColors.color,
+            textColor: themeColors.textColor,
+          };
         }
       } else {
-        return globalStyle.globalStyle.color;
+        return returnDefaultColors();
       }
     },
     [featureConfigApi.dayPlannerFeatureConfig]
@@ -290,7 +310,9 @@ function dayPlannerActiveDayView() {
             data={
               statusPickingForTask === null
                 ? dayPlannerActiveDay?.tasks
-                : featureConfigApi.dayPlannerFeatureConfig
+                : featureConfigApi.dayPlannerFeatureConfig.filter(
+                    (r: TessStatusType) => r.deleted !== true
+                  )
             }
             estimatedItemSize={55}
             ListEmptyComponent={() => {
@@ -358,7 +380,7 @@ function dayPlannerActiveDayView() {
                       alignItems: "space-between",
                       borderWidth: 1,
                       borderRadius: globalStyle.globalStyle.borderRadius,
-                      borderColor: globalStyle.globalStyle.color,
+                      borderColor: getStatusColorsForTask(typedItem).color,
                     }}
                   >
                     <TextInput
@@ -368,6 +390,7 @@ function dayPlannerActiveDayView() {
                         debouncedUpdateTaskName(typedItem, newName);
                       }}
                       textAlign="left"
+                      color={getStatusColorsForTask(typedItem).textColor}
                       style={{
                         position: "absolute",
                         left: 0,
@@ -401,10 +424,10 @@ function dayPlannerActiveDayView() {
                         paddingTop: 3,
                         zIndex: -1,
                       }}
+                      color={getStatusColorsForTask(typedItem).textColor}
                       label={getStatusNameForTask(typedItem)}
                       backgroundColor={
-                        getStatusColorForTask(typedItem) +
-                        layoutCardLikeBackgroundOpacity
+                        getStatusColorsForTask(typedItem).color + 35
                       }
                       fontSize={15}
                     ></Text>
