@@ -2,6 +2,7 @@ import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { ThemedView } from "@/components/ThemedView";
+import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 import { FeatureConfigColorInput } from "@/components/ui/FeatureConfigColorInput";
 import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySettingPage";
 import { FeatureConfigValueInput } from "@/components/ui/FeatureConfigValueInput";
@@ -80,7 +81,6 @@ function statusEditor() {
         if (statusIndex === -1) {
           console.error("Status to edit not found in the list.");
         }
-
         const updatedStatuses = [...dayPlannerFeatureConfig];
         updatedStatuses[statusIndex] = newStatus;
         const featureConfigApi = useFeatureConfigs.getState();
@@ -248,7 +248,9 @@ function statusEditor() {
             setIsPickingStatus(true);
           }}
           showSearchBar={true}
-          data={dayPlannerFeatureConfig}
+          data={dayPlannerFeatureConfig.filter(
+            (r: TessStatusType) => !r.deleted
+          )}
         ></ReversedListWithControls>
       ) : (
         <FeatureConfigEmptySettingPage
@@ -258,14 +260,13 @@ function statusEditor() {
             setIsPickingStatus(true);
           }}
         >
-          <FeatureConfigValueInput
-            value={statusToEdit?.name}
+          <FeatureConfigBooleanInput
+            value={!statusToEdit?.deleted}
+            label="Enabled"
             onChange={(e) => {
-              handleStatusUpdate("name", e);
+              handleStatusUpdate("deleted", !e);
             }}
-            inputType="text"
-            label="Name"
-          ></FeatureConfigValueInput>
+          ></FeatureConfigBooleanInput>
           <FeatureConfigColorInput
             value={getCurrentColors().textColor}
             onChange={(e) => {
@@ -280,6 +281,14 @@ function statusEditor() {
             }}
             label="Color"
           ></FeatureConfigColorInput>
+          <FeatureConfigValueInput
+            value={statusToEdit?.name}
+            onChange={(e) => {
+              handleStatusUpdate("name", e);
+            }}
+            inputType="text"
+            label="Name"
+          ></FeatureConfigValueInput>
         </FeatureConfigEmptySettingPage>
       )}
     </ThemedView>

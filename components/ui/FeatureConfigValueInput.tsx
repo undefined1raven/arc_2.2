@@ -7,7 +7,7 @@ import { useCallback, useState } from "react";
 import { ColorInput } from "../common/ColorPicker";
 
 type Props = {
-  inputType: "text" | "number" | "boolean" | "color" | "select";
+  inputType: "text" | "number" | "select";
   value: string;
   onChange: (value: string) => void;
   inputProps?: { [key: string]: any };
