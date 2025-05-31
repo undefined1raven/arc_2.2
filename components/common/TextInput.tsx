@@ -47,7 +47,11 @@ function TextInput({
   return (
     <RNTextInput
       onChange={onChange}
-      defaultValue={defaultValue ? defaultValue : ""}
+      defaultValue={
+        typeof defaultValue === "string" || typeof defaultValue === "number"
+          ? defaultValue
+          : ""
+      }
       selectionColor={globalStyles.globalStyle.color + "30"}
       placeholder={placeholder ? placeholder : ""}
       style={{

@@ -32,10 +32,13 @@ interface GlobalStyleType {
   textColorInactive: ColorValueHex;
   colorInactive: ColorValueHex;
   successColor: ColorValueHex;
-  successTextColor: "#005843";
+  successTextColor: ColorValueHex;
   errorColor: ColorValueHex;
   errorTextColor: ColorValueHex;
   colorScheme: AvailableThemes;
+  colorAltLight: ColorValueHex;
+  warningColor: ColorValueHex;
+  warningTextColor: ColorValueHex;
 }
 
 interface GlobalStyleStore {

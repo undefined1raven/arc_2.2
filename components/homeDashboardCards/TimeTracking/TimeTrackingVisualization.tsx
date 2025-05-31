@@ -83,7 +83,7 @@ const TimeTrackingVisualization = ({
           },
           bottomRight: { x: 0, y: 0 },
         }}
-        color={"#BCB1FE"}
+        color={globalStyle.colorAltLight}
       />
 
       <RoundedRect

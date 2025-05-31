@@ -74,7 +74,12 @@ function FeatureConfigValueInput(props: Props) {
                     props.onChange(e);
                     return;
                   case "number":
-                    props.onChange(e.nativeEvent.text);
+                    const parsedFloat = parseFloat(e.nativeEvent.text);
+                    if (isNaN(parsedFloat)) {
+                      return;
+                    } else {
+                      props.onChange(parsedFloat);
+                    }
                     return;
                   case "color":
                     props.onChange(e);
@@ -97,7 +102,12 @@ function FeatureConfigValueInput(props: Props) {
                     props.onChange(e);
                     return;
                   case "number":
-                    props.onChange(e.nativeEvent.text);
+                    const parsedFloat = parseFloat(e.nativeEvent.text);
+                    if (isNaN(parsedFloat)) {
+                      return;
+                    } else {
+                      props.onChange(parsedFloat);
+                    }
                     return;
                   case "color":
                     props.onChange(e);
