@@ -133,6 +133,10 @@ export default function RootLayout() {
                 name="timeTrackingStats/statsHome/statsHome"
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="diary/diaryMain/diaryMain"
+                options={{ headerShown: false }}
+              />
               <Stack.Screen name="home/home" options={{ headerShown: false }} />
             </Stack>
             <StatusBar style="auto" />

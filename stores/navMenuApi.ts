@@ -44,7 +44,7 @@ const useNavMenuApi = create<INavMenuApi>((set, get) => ({
       goTo: "personalDiary",
       icon: PersonalDiaryIcon,
       name: "personalDiary",
-      pathname: "/personalDiary/personalDiary",
+      pathname: "/diary/diaryMain/diaryMain",
     },
   ],
   showMenu: true,

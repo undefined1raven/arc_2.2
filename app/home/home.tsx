@@ -1,10 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
-import { useNavMenuApi } from "@/stores/navMenuApi";
 function Home() {
-  const navMenuApi = useNavMenuApi();
-
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>

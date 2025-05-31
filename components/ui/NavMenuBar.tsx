@@ -18,6 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { useDiaryData } from "@/stores/diary/diary";
 function NavMenuBar() {
   const menuApi = useNavMenuApi();
   const globalStyle = useGlobalStyleStore();
@@ -124,6 +125,14 @@ function NavMenuBar() {
             if (menuItem.pathname === "/settings/settings") {
               saveFile();
               return;
+            }
+
+            if (menuItem.pathname !== "/diary/diaryMain/diaryMain") {
+              ///Clear diary data when switching away from diary
+              ///This is to prevent memory leaks
+              const diaryApi = useDiaryData.getState();
+              diaryApi.setNotes(null);
+              diaryApi.setGroups(null);
             }
             router.push(menuItem.pathname);
           }}
