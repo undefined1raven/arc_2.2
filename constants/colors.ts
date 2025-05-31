@@ -20,6 +20,9 @@ type ThemeColorsType = {
     pageBackgroundColors: PageBackgroundColorArrayType;
     statusBarColor: ColorValueHex;
     androidRippleColor: ColorValueHex;
+    warningColor?: ColorValueHex;
+    warningTextColor?: ColorValueHex;
+    colorAltLight?: ColorValueHex;
   };
   light: {
     color: ColorValueHex;
@@ -36,6 +39,9 @@ type ThemeColorsType = {
     pageBackgroundColors: PageBackgroundColorArrayType;
     statusBarColor: ColorValueHex;
     androidRippleColor: ColorValueHex;
+    warningColor?: ColorValueHex;
+    warningTextColor?: ColorValueHex;
+    colorAltLight?: ColorValueHex;
   };
 };
 
@@ -102,6 +108,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     light: {
       androidRippleColor: "#ffffff",
@@ -118,6 +127,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   cerulRatonas: {
@@ -136,6 +148,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     light: {
       androidRippleColor: "#000000",
@@ -152,6 +167,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   sangeRed: {
@@ -170,6 +188,9 @@ const themeColors: Themes = {
       successTextColor: "#FFBACB",
       errorColor: "#FF8800",
       errorTextColor: "#FFBC70",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#000000",
@@ -186,6 +207,9 @@ const themeColors: Themes = {
       successTextColor: "#FFBACB",
       errorColor: "#FF8800",
       errorTextColor: "#FFBC70",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   monochromeGray: {
@@ -204,6 +228,9 @@ const themeColors: Themes = {
       successTextColor: "#D6D6D6",
       errorColor: "#F59696",
       errorTextColor: "#F59696",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#000000",
@@ -220,6 +247,9 @@ const themeColors: Themes = {
       successTextColor: "#D6D6D6",
       errorColor: "#F59696",
       errorTextColor: "#F59696",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   cutuSmaraldUpdate: {
@@ -238,6 +268,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     light: {
       androidRippleColor: "#000000",
@@ -254,6 +287,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   brown: {
@@ -272,6 +308,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#000000",
@@ -288,6 +327,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   turcois: {
@@ -306,6 +348,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#000000",
@@ -322,6 +367,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#ff0000",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   cloudy: {
@@ -340,6 +388,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#D0000A",
       errorTextColor: "#ae0000",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#2400ff",
@@ -356,6 +407,9 @@ const themeColors: Themes = {
       successTextColor: "#4FFF96",
       errorColor: "#D7000D",
       errorTextColor: "#FF004D",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
   paper: {
@@ -374,6 +428,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#FF6666",
       errorTextColor: "#FFAAAA",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
     dark: {
       androidRippleColor: "#333333",
@@ -390,6 +447,9 @@ const themeColors: Themes = {
       successTextColor: "#005843",
       errorColor: "#FF6666",
       errorTextColor: "#FFAAAA",
+      colorAltLight: "#BCB1FE",
+      warningColor: "#4A4800",
+      warningTextColor: "#4A4800",
     },
   },
 };

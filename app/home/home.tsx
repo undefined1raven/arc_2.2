@@ -1,10 +1,7 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
-import { NavMenuBar } from "@/components/ui/NavMenuBar";
-import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import { useNavMenuApi } from "@/stores/navMenuApi";
-import { StatusIndicators } from "@/components/ui/StatusIndicators";
 function Home() {
   const navMenuApi = useNavMenuApi();
 

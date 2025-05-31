@@ -503,8 +503,6 @@ function dayPlannerActiveDayView() {
                       endDay();
                     }
                   }}
-                  borderColor={globalStyle.globalStyle.errorColor}
-                  color={globalStyle.globalStyle.errorTextColor}
                   label={endDayLabel}
                 ></Button>
                 <Button

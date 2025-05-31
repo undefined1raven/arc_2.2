@@ -267,6 +267,14 @@ function statusEditor() {
               handleStatusUpdate("deleted", !e);
             }}
           ></FeatureConfigBooleanInput>
+          <FeatureConfigValueInput
+            value={statusToEdit?.completionEffect.toString() || ""}
+            onChange={(e) => {
+              handleStatusUpdate("completionEffect", e);
+            }}
+            inputType="text"
+            label="Completion Score"
+          ></FeatureConfigValueInput>
           <FeatureConfigColorInput
             value={getCurrentColors().textColor}
             onChange={(e) => {

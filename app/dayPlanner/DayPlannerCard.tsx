@@ -1,4 +1,5 @@
 import Button from "@/components/common/Button";
+import { SimpleDonutChart } from "@/components/common/SimpleDonutChart";
 import Text from "@/components/common/Text";
 import { BackupFileDeco } from "@/components/deco/BackupFileDeco";
 import CalendarDeco from "@/components/deco/CalendarDeco";
@@ -16,7 +17,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useDayPlannerStatusToEdit } from "@/stores/viewState/dayPlannerActiveStatusToEdit";
 import { router } from "expo-router";
-import React, { act, useCallback } from "react";
+import React, { act, useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
@@ -29,10 +30,25 @@ function DayPlannerCard() {
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
-
+  const [dayCompletionPercentage, setDayCompletionPercentage] =
+    React.useState<number>(0);
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  useEffect(() => {
+    if (
+      dayPlannerActiveDayApi.activeDay === undefined ||
+      dayPlannerActiveDayApi.activeDay === null
+    ) {
+      return;
+    }
+    const dayCompletion = computeDayPlannerCompletion(
+      dayPlannerFeatureConfig,
+      dayPlannerActiveDayApi.activeDay
+    );
+    setDayCompletionPercentage(dayCompletion);
+  }, [dayPlannerActiveDayApi.activeDay, dayPlannerFeatureConfig]);
 
   const getDateDisplayLabelFromDate = useCallback((date: Date) => {
     const month = monthToLabel[date.getMonth()];
@@ -64,6 +80,28 @@ function DayPlannerCard() {
         console.error("Error creating new day", err);
       });
   }, []);
+
+  const getColorsFromCompletionPercentage = useCallback(
+    (completionPercentage: number) => {
+      if (completionPercentage < 25) {
+        return {
+          textColor: globalStyle.errorTextColor,
+          color: globalStyle.errorColor,
+        };
+      } else if (completionPercentage < 75) {
+        return {
+          textColor: globalStyle.warningTextColor,
+          color: globalStyle.warningColor,
+        };
+      } else {
+        return {
+          textColor: globalStyle.successTextColor,
+          color: globalStyle.successColor,
+        };
+      }
+    },
+    []
+  );
 
   return (
     <Animated.View
@@ -181,19 +219,53 @@ function DayPlannerCard() {
                   )}
                 ></Text>
               </View>
-              <Text
-                color={globalStyle.textColor}
+              <View
                 style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "40%",
                   height: "100%",
-                  width: "35%",
-                  backgroundColor: globalStyle.successColor + "50",
+                  gap: 5,
                 }}
-                fontSize={globalStyle.mediumMobileFont}
-                label={`${computeDayPlannerCompletion(
-                  dayPlannerFeatureConfig,
-                  dayPlannerActiveDayApi.activeDay
-                )}% completed`}
-              ></Text>
+              >
+                <Text
+                  color={
+                    getColorsFromCompletionPercentage(dayCompletionPercentage)
+                      .textColor
+                  }
+                  textAlign="left"
+                  style={{
+                    position: "relative",
+                    left: -15,
+                    height: "100%",
+                    width: "90%",
+                    backgroundColor:
+                      getColorsFromCompletionPercentage(dayCompletionPercentage)
+                        .color + "00",
+                  }}
+                  fontSize={globalStyle.mediumMobileFont}
+                  label={`${dayCompletionPercentage}% completed`}
+                ></Text>
+                <SimpleDonutChart
+                  value={dayCompletionPercentage}
+                  min={0}
+                  max={100}
+                  style={{
+                    width: 25,
+                    height: 25,
+                    right: 15,
+                  }}
+                  color={
+                    getColorsFromCompletionPercentage(dayCompletionPercentage)
+                      .color
+                  }
+                  backgroundColor={
+                    getColorsFromCompletionPercentage(dayCompletionPercentage)
+                      .color + "50"
+                  }
+                  thickness={4}
+                ></SimpleDonutChart>
+              </View>
             </View>
             <Button
               onClick={() => {
