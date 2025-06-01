@@ -223,8 +223,10 @@ function DayPlannerCard() {
                 style={{
                   display: "flex",
                   flexDirection: "row",
-                  width: "40%",
+                  flexGrow: 1,
                   height: "100%",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
                   gap: 5,
                 }}
               >
@@ -235,10 +237,6 @@ function DayPlannerCard() {
                   }
                   textAlign="left"
                   style={{
-                    position: "relative",
-                    left: -15,
-                    height: "100%",
-                    width: "90%",
                     backgroundColor:
                       getColorsFromCompletionPercentage(dayCompletionPercentage)
                         .color + "00",
@@ -253,7 +251,6 @@ function DayPlannerCard() {
                   style={{
                     width: 25,
                     height: 25,
-                    right: 15,
                   }}
                   color={
                     getColorsFromCompletionPercentage(dayCompletionPercentage)
