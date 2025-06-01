@@ -126,14 +126,6 @@ function NavMenuBar() {
               saveFile();
               return;
             }
-
-            if (menuItem.pathname !== "/diary/diaryMain/diaryMain") {
-              ///Clear diary data when switching away from diary
-              ///This is to prevent memory leaks
-              const diaryApi = useDiaryData.getState();
-              diaryApi.setNotes(null);
-              diaryApi.setGroups(null);
-            }
             router.push(menuItem.pathname);
           }}
           style={{
