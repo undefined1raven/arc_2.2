@@ -31,9 +31,7 @@ function FeatureConfigEmptySettingPage(props: Props) {
 
   return (
     <>
-      <ThemedView
-        style={{ ...styles.container, height: "100%", width: "100%" }}
-      >
+      <ThemedView style={{ ...styles.container, flexGrow: 1, width: "100%" }}>
         <Animated.View
           style={{
             width: "100%",

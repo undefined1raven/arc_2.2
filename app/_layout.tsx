@@ -38,6 +38,7 @@ export default function RootLayout() {
     "/activeDayView/activeDayView",
     "/dayPlanner/statusEditor/statusEditor",
     "/diary/groupView/groupMain",
+    "/diary/diaryNoteView/diaryNoteView",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -140,6 +141,10 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="diary/groupView/groupMain"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="diary/diaryNoteView/diaryNoteView"
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="home/home" options={{ headerShown: false }} />
