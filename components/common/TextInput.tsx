@@ -18,17 +18,19 @@ type ButtonProps = {
   backgroundColor?: string;
   borderColor?: string;
   placeholder?: string;
-  defaultValue?: string;
+  defaultValue?: string | number;
   keyboardType?: "default" | "email-address" | "numeric" | "visible-password";
   onChange: () => void;
   fontSize?: number;
   textAlign: "left" | "right" | "center";
   textAlignVertical: "center" | "top" | "bottom";
   secureTextEntry?: boolean;
+  multiline?: boolean;
 };
 
 function TextInput({
   borderColor,
+  multiline = false,
   backgroundColor,
   placeholder,
   style,
@@ -46,6 +48,7 @@ function TextInput({
 
   return (
     <RNTextInput
+      multiline={multiline}
       onChange={onChange}
       defaultValue={
         typeof defaultValue === "string" || typeof defaultValue === "number"

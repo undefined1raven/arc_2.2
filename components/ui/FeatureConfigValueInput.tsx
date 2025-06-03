@@ -11,7 +11,7 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   inputProps?: { [key: string]: any };
-  label: string;
+  label?: string;
   labelWidthPercentage?: number;
   height?: number;
 };
@@ -34,12 +34,12 @@ function FeatureConfigValueInput(props: Props) {
         top: "1.5%",
         position: "relative",
         flexGrow: 1,
-        marginLeft: 5,
+        marginLeft: props.label ? 5 : 0,
         marginBottom: 5,
         width: `${100 - (props.labelWidthPercentage || 35)}%`,
       },
     });
-  }, [props.labelWidthPercentage]);
+  }, [props.labelWidthPercentage, props.label]);
 
   return (
     <View
@@ -52,17 +52,19 @@ function FeatureConfigValueInput(props: Props) {
         flexDirection: "row",
       }}
     >
-      <Text
-        label={props.label}
-        textAlign="left"
-        style={{
-          backgroundColor: globalStyle.globalStyle.color + "20",
-          height: "100%",
-          width: props.labelWidthPercentage
-            ? `${props.labelWidthPercentage}%`
-            : "35%",
-        }}
-      ></Text>
+      {typeof props.label === "string" && props.label.length > 0 && (
+        <Text
+          label={props.label}
+          textAlign="left"
+          style={{
+            backgroundColor: globalStyle.globalStyle.color + "20",
+            height: "100%",
+            width: props.labelWidthPercentage
+              ? `${props.labelWidthPercentage}%`
+              : "35%",
+          }}
+        ></Text>
+      )}
       {inputTypeToComponent[props.inputType](
         props.inputProps
           ? {

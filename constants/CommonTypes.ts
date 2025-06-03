@@ -218,12 +218,12 @@ type SIDNoteType = {
   noteID: string;
   groupID: string;
   version: "0.1.1";
+  content: string;
   metdata: {
     readOnly: boolean;
     title: string;
     createdAt: number;
     updatedAt: number;
-    content: string;
   };
 };
 

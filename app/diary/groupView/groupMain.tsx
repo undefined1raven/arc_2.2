@@ -20,6 +20,7 @@ import { router } from "expo-router";
 import { SettingdIcon } from "@/components/deco/SettingsIcon";
 import { v4 } from "uuid";
 import { personalDiaryNotes } from "@/components/utils/constants/chunking";
+import { useSelectedDiaryNote } from "@/stores/viewState/diarySelectedNote";
 function DiaryGroupMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -96,7 +97,12 @@ function DiaryGroupMain() {
                     >
                       <Button
                         textStyle={{ textAlign: "left", paddingLeft: 10 }}
-                        onClick={() => {}}
+                        onClick={() => {
+                          const selectedNoteAPI =
+                            useSelectedDiaryNote.getState();
+                          selectedNoteAPI.setSelectedNote(note);
+                          router.push("/diary/diaryNoteView/diaryNoteView");
+                        }}
                         style={{
                           height: "100%",
                           width: "100%",
