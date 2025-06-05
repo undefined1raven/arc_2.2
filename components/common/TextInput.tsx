@@ -26,6 +26,7 @@ type ButtonProps = {
   textAlignVertical: "center" | "top" | "bottom";
   secureTextEntry?: boolean;
   multiline?: boolean;
+  readOnly?: boolean;
 };
 
 function TextInput({
@@ -43,11 +44,13 @@ function TextInput({
   children,
   onChange,
   defaultValue,
+  readOnly = false,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
     <RNTextInput
+      readOnly={readOnly}
       multiline={multiline}
       onChange={onChange}
       defaultValue={

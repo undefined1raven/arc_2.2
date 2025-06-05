@@ -16,6 +16,9 @@ import {
 import { chunkPrefixes } from "@/constants/chunkPrefixes";
 import { useStatusIndicatorStore } from "./statusIndicatorStore";
 import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
+
+type DataChunkIdMapping = { [key: string]: string[] };
+
 type TableNames =
   | "timeTrackingChunks"
   | "dayPlannerChunks"
@@ -40,6 +43,7 @@ interface DataRetrivalApi {
   ) => Promise<{
     status: "error" | "success";
     payload?: any[];
+    dataChunkMapping?: DataChunkIdMapping;
     error?: string;
   }>;
   modifyEntry: (
@@ -246,6 +250,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     status: "error" | "success";
     payload?: any[];
     error?: string;
+    dataChunkMapping?: DataChunkIdMapping;
   }> => {
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
@@ -298,6 +303,8 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     return Promise.all(decryptionPromises)
       .then((decryptionResults) => {
         let data: any[] = [];
+        let chunkMapping: DataChunkIdMapping = {};
+
         decryptionResults.map((result, index) => {
           if (result.status === "error") {
             return null;
@@ -309,9 +316,32 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           ) as number[];
           const decodedStringData = charCodeArrayToString(encodedArray);
           const parsedData = JSON.parse(decodedStringData) as any[];
+          let idKey = null;
+          if (tableName === "personalDiaryChunks") {
+            idKey = "noteID";
+          }
+          const dataIdArray = parsedData.map((item) => {
+            if (idKey !== null && typeof item[idKey] === "string") {
+              return item[idKey];
+            }
+          });
+          if (dataIdArray.length > 0) {
+            chunkMapping[relevantChunks[index].id] = dataIdArray;
+          }
           data = [...data, ...parsedData];
         });
-        return { status: "success", payload: data };
+        const returnObject: {
+          status: "success" | "error";
+          payload: any;
+          dataChunkMapping?: DataChunkIdMapping;
+        } = {
+          status: "success",
+          payload: data,
+        };
+        if (Object.keys(chunkMapping).length > 0) {
+          returnObject["dataChunkMapping"] = chunkMapping;
+        }
+        return returnObject;
       })
       .catch((e) => {
         console.log("Decryption error", e);
@@ -622,3 +652,4 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 }));
 
 export { dataRetrivalApi };
+export type { DataChunkIdMapping };
