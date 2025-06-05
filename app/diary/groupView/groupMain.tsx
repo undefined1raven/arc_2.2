@@ -57,7 +57,7 @@ function DiaryGroupMain() {
     );
     const newNotes = [...diaryApi.notes, newNote];
     diaryApi.setNotes(newNotes);
-  }, [selectedGroup]);
+  }, [selectedGroup, diaryApi.notes]);
 
   return (
     <>
@@ -78,9 +78,12 @@ function DiaryGroupMain() {
                 estimatedItemSize={65}
                 inverted={true}
                 keyExtractor={(item) => item.noteID}
-                data={diaryApi.notes.filter(
-                  (note) => note.groupID === selectedGroup.groupID
-                )}
+                data={diaryApi.notes
+                  .filter((note) => note.groupID === selectedGroup.groupID)
+                  .sort(
+                    (a, b) =>
+                      (b.metdata?.createdAt || 0) - (a.metdata?.createdAt || 0)
+                  )}
                 renderItem={({ item }) => {
                   const note = item as SIDNoteType;
 

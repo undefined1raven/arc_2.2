@@ -42,6 +42,8 @@ function DiaryMain() {
         )
         .then((data) => {
           const notes = data.payload as any as SIDNoteType[];
+          //@ts-ignore
+          diaryApi.setNoteChunkMapping(data.dataChunkMapping);
           diaryApi.setNotes(notes);
         })
         .catch((error) => {

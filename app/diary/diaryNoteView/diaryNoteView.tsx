@@ -17,13 +17,66 @@ import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySet
 import { FeatureConfigValueInput } from "@/components/ui/FeatureConfigValueInput";
 import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 import TextInput from "@/components/common/TextInput";
-function Home() {
+import { SIDNoteType } from "@/constants/CommonTypes";
+import { useDiaryData } from "@/stores/diary/diary";
+import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+//@ts-ignore
+import { debounce } from "lodash";
+import { CopyDeco } from "@/components/deco/CopyDeco";
+import * as Clipboard from "expo-clipboard";
+
+function DiaryNoteView() {
   const selectedNote = useSelectedDiaryNote((store) => store.selectedNote);
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
-
+  const diaryAPI = useDiaryData();
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  const updateNoteImmediate = useCallback(
+    (updatedNote: SIDNoteType) => {
+      let chunkId = null;
+      const chunkMapping = diaryAPI.noteChunkMapping;
+      if (chunkMapping === null) {
+        return;
+      }
+      const keys = Object.keys(chunkMapping);
+      for (let ix = 0; ix < keys.length; ix++) {
+        const key = keys[ix];
+        const noteIdsInChunk = chunkMapping[key];
+        if (noteIdsInChunk.includes(updatedNote.noteID)) {
+          chunkId = key;
+          break;
+        }
+      }
+
+      const dataRetrivalAPI = dataRetrivalApi.getState();
+      dataRetrivalAPI
+        .modifyEntry(
+          "personalDiaryChunks",
+          ["noteID"],
+          updatedNote.noteID,
+          updatedNote,
+          chunkId,
+          "replace"
+        )
+        .then(() => {
+          if (diaryAPI.notes === null) return;
+          const updatedNotes = diaryAPI.notes.map((note) =>
+            note.noteID === updatedNote.noteID ? updatedNote : note
+          );
+          diaryAPI.setNotes(updatedNotes);
+        })
+        .catch((error) => {
+          console.error("Error updating note:", error);
+        });
+    },
+    [diaryAPI.noteChunkMapping]
+  );
+
+  const updateNote = useCallback(debounce(updateNoteImmediate, 300), [
+    updateNoteImmediate,
+  ]);
 
   const getDisplayDate = useCallback((date: number) => {
     const parsedDate = new Date(date);
@@ -53,19 +106,59 @@ function Home() {
                 router.back();
               }}
             >
-              <TextInput
-                fontSize={17}
-                defaultValue={selectedNote?.content?.replace("\n", " ")}
-                textAlignVertical="top"
-                borderColor="#00000000"
-                backgroundColor={globalStyle.color + "10"}
-                multiline={true}
+              <View
                 style={{
                   width: "100%",
                   flexGrow: 1,
                   maxHeight: "88%",
                 }}
-              ></TextInput>
+              >
+                <TextInput
+                  readOnly={selectedNote.metdata.readOnly}
+                  onChange={(e) => {
+                    const updatedNote = {
+                      ...selectedNote,
+                      metdata: {
+                        ...selectedNote.metdata,
+                        updatedAt: Date.now(),
+                      },
+                      content: e.nativeEvent.text,
+                    };
+                    updateNote(updatedNote);
+                  }}
+                  fontSize={17}
+                  defaultValue={selectedNote?.content?.replace("\n", " ")}
+                  textAlignVertical="top"
+                  borderColor="#00000000"
+                  backgroundColor={globalStyle.color + "10"}
+                  multiline={true}
+                  style={{
+                    width: "100%",
+                    flexGrow: 1,
+                    zIndex: 3,
+                    minHeight: 100,
+                  }}
+                ></TextInput>
+                <Button
+                  onClick={async () => {
+                    const noteContent = selectedNote.content;
+                    Clipboard.setStringAsync(noteContent);
+                  }}
+                  style={{
+                    position: "absolute",
+                    bottom: 5,
+                    height: 45,
+                    zIndex: 5,
+                    width: 45,
+                    right: 5,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <CopyDeco width={20} height={25}></CopyDeco>
+                </Button>
+              </View>
               <View
                 style={{
                   height: 60,
@@ -126,14 +219,34 @@ function Home() {
               </View>
               <FeatureConfigBooleanInput
                 value={selectedNote.metdata.readOnly}
-                onChange={(e) => {}}
+                onChange={(e) => {
+                  const updatedNote = {
+                    ...selectedNote,
+                    metdata: {
+                      ...selectedNote.metdata,
+                      readOnly: e,
+                    },
+                  };
+                  useSelectedDiaryNote.getState().setSelectedNote(updatedNote);
+                  updateNote(updatedNote);
+                }}
                 label="Read Only"
               ></FeatureConfigBooleanInput>
               <FeatureConfigValueInput
                 inputType="text"
                 label="Title"
                 value={selectedNote.metdata.title}
-                onChange={(e) => {}}
+                onChange={(e) => {
+                  const updatedNote = {
+                    ...selectedNote,
+                    metdata: {
+                      ...selectedNote.metdata,
+                      updatedAt: Date.now(),
+                      title: e,
+                    },
+                  };
+                  updateNote(updatedNote);
+                }}
               ></FeatureConfigValueInput>
             </FeatureConfigEmptySettingPage>
           </>
@@ -142,7 +255,7 @@ function Home() {
     </>
   );
 }
-export default Home;
+export default DiaryNoteView;
 
 const styles = StyleSheet.create({
   container: {
