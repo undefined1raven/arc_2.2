@@ -14,19 +14,224 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 import Text from "@/components/common/Text";
 import { useSelectedDiaryGroup } from "@/stores/viewState/diarySelectedGroup";
 import { router } from "expo-router";
+import { AddIcon } from "@/components/deco/AddIcon";
+import { v4 } from "uuid";
+import { personalDiaryNotes } from "@/components/utils/constants/chunking";
+import { TrashIcon } from "@/components/deco/TrashIcon";
 function DiaryMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const personalDiaryFeatureConfig = useFeatureConfigs(
     (store) => store.personalDiaryFeatureConfig
   );
-  const customFadeInUp = useCallback((duration: number) => {
-    return FadeInUp.duration(duration);
-  }, []);
+  const [longSelectIndex, setLongSelectIndex] = useState<number | null>(null);
 
-  const customFadeInDown = useCallback((duration: number) => {
-    return FadeInDown.duration(duration);
-  }, []);
+  const deleteGroup = useCallback(
+    (group: SIDGroupType) => {
+      if (diaryApi.groupChunkMapping === null || diaryApi.groups === null) {
+        console.error("Diary API is not initialized properly.");
+        return;
+      }
+      const updatedGroup = {
+        ...group,
+        deleted: true,
+      };
+      let chunkId = null;
+      const chunkMapping = diaryApi.groupChunkMapping;
+      const keys = Object.keys(chunkMapping);
+      for (let ix = 0; ix < keys.length; ix++) {
+        const key = keys[ix];
+        const groupIds = chunkMapping[key];
+        if (groupIds.includes(group.groupID)) {
+          chunkId = key;
+          break;
+        }
+      }
+      if (chunkId === null) {
+        console.error("No chunk found for group:", group.groupID);
+        return;
+      }
+
+      const updatedGroups = diaryApi.groups?.map((g) =>
+        g.groupID === group.groupID ? updatedGroup : g
+      );
+      setLongSelectIndex(null);
+      diaryApi.setGroups(updatedGroups);
+
+      const dataRetrivalAPI = dataRetrivalApi.getState();
+      dataRetrivalAPI
+        .modifyEntry(
+          "personalDiaryGroups",
+          ["groupID"],
+          group.groupID,
+          updatedGroup,
+          chunkId,
+          "replace"
+        )
+        .then((data) => {})
+        .catch((error) => {
+          console.error("Error deleting group:", error);
+        });
+    },
+    [diaryApi, setLongSelectIndex]
+  );
+
+  const createNewGroup = useCallback(() => {
+    if (diaryApi.groups === null) {
+      return;
+    }
+    const dataRetrivalAPI = dataRetrivalApi.getState();
+    const newGroup: SIDGroupType = {
+      name: "New group",
+      groupID: `GID-${v4()}`,
+      metadata: {
+        SID: null,
+        alias: "N/G",
+        ring: null,
+        createdAt: Date.now(),
+      },
+      type: "person",
+      version: "0.1.1",
+    };
+
+    const newGroups = [...diaryApi.groups, newGroup];
+    diaryApi.setGroups(newGroups);
+
+    dataRetrivalAPI
+      .appendEntry("personalDiaryGroups", newGroup, personalDiaryNotes)
+      .then((data) => {
+        console.log("New group created successfully:", data);
+      })
+      .catch((error) => {
+        console.log("Error creating new group:", error);
+      });
+  }, [diaryApi.groups]);
+
+  const renderDiaryItem = useCallback(
+    ({ item, index }: { item: SIDGroupType; index: number }) => {
+      const statusLabel =
+        personalDiaryFeatureConfig.find((r) => r.id === item.metadata.SID)
+          ?.name || "Unknown Status";
+      const hasStatus = statusLabel !== "Unknown Status";
+
+      return (
+        <View
+          style={{
+            height: 65,
+            marginBottom: index === 0 ? 25 : 10,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexDirection: "row",
+          }}
+        >
+          <Button
+            onLongPress={() => {
+              setLongSelectIndex(index);
+            }}
+            textStyle={{ textAlign: "left", paddingLeft: 10 }}
+            onClick={() => {
+              if (longSelectIndex === index) {
+                setLongSelectIndex(null);
+                return;
+              }
+              const selectedGroupAPI = useSelectedDiaryGroup.getState();
+              selectedGroupAPI.setSelectedGroup(item);
+              router.push("/diary/groupView/groupMain");
+            }}
+            style={{
+              height: "100%",
+              width: "100%",
+              position: "absolute",
+              display: "flex",
+              justifyContent: "start",
+              alignItems: "center",
+            }}
+            label={""}
+          ></Button>
+          <View
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              marginLeft: 10,
+            }}
+          >
+            <Text label={item.metadata.alias} style={{ zIndex: -1 }}></Text>
+            {hasStatus && (
+              <Text
+                fontSize={globalStyle.mediumMobileFont}
+                label={statusLabel}
+                style={{ zIndex: -1 }}
+              ></Text>
+            )}
+          </View>
+          <View
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              marginRight: longSelectIndex === index ? 0 : 10,
+            }}
+          >
+            {longSelectIndex === index ? (
+              <>
+                <Text
+                  style={{ marginLeft: 15 }}
+                  fontSize={globalStyle.regularMobileFont}
+                  label="Cancel"
+                ></Text>
+                <Button
+                  onClick={() => deleteGroup(item)}
+                  style={{
+                    zIndex: 3,
+                    width: 80,
+                    borderRadius: 0,
+                    borderWidth: 0,
+                    borderLeftWidth: 1,
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <TrashIcon
+                    height={25}
+                    width={"100%"}
+                    color={globalStyle.errorColor}
+                  ></TrashIcon>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Text
+                  fontSize={globalStyle.mediumMobileFont}
+                  label={item.name}
+                  color={globalStyle.textColorAccent}
+                  style={{
+                    zIndex: -1,
+                  }}
+                ></Text>
+                {hasStatus && (
+                  <DiaryClosenessIndicator
+                    style={{
+                      zIndex: -1,
+                    }}
+                    closeness={item.metadata.ring}
+                  ></DiaryClosenessIndicator>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      );
+    },
+    [personalDiaryFeatureConfig, longSelectIndex, globalStyle]
+  );
 
   ////Data Retrievel
   useEffect(() => {
@@ -60,6 +265,8 @@ function DiaryMain() {
         )
         .then((data) => {
           const groups = data.payload as any as SIDGroupType[];
+          //@ts-ignore
+          diaryApi.setGroupsChunkMapping(data.dataChunkMapping);
           diaryApi.setGroups(groups);
         })
         .catch((error) => {
@@ -83,99 +290,62 @@ function DiaryMain() {
                 flexGrow: 1,
               }}
             >
-              <FlashList
-                estimatedItemSize={65}
-                inverted={true}
-                keyExtractor={(item) => item.groupID}
-                data={diaryApi.groups}
-                renderItem={({ item }) => {
-                  const statusLabel =
-                    personalDiaryFeatureConfig.find(
-                      (r) => r.id === item.metadata.SID
-                    )?.name || "Unknown Status";
-                  const hasStatus = statusLabel !== "Unknown Status";
-                  return (
+              <View
+                style={{
+                  width: "100%",
+                  flexGrow: 1,
+                  marginBottom: 5,
+                }}
+              >
+                <FlashList
+                  estimatedItemSize={65}
+                  inverted={true}
+                  extraData={longSelectIndex}
+                  keyExtractor={(item, index) => item.groupID}
+                  data={diaryApi.groups.filter((g) => g.deleted !== true)}
+                  renderItem={renderDiaryItem}
+                />
+                <Animated.View
+                  entering={FadeInDown.delay(150).duration(120)}
+                  style={{
+                    height: 45,
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                  }}
+                >
+                  <Button
+                    onClick={createNewGroup}
+                    style={{
+                      height: "100%",
+                      width: "20%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      flexDirection: "row",
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                    }}
+                    label=""
+                  >
                     <View
                       style={{
-                        height: 65,
-                        marginBottom: 10,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexDirection: "row",
+                        position: "absolute",
+                        width: "100%",
+                        borderRadius: globalStyle.borderRadius,
+                        height: "100%",
+                        backgroundColor: globalStyle.colorAltLight,
                       }}
-                    >
-                      <Button
-                        textStyle={{ textAlign: "left", paddingLeft: 10 }}
-                        onClick={() => {
-                          const selectedGroupAPI =
-                            useSelectedDiaryGroup.getState();
-                          selectedGroupAPI.setSelectedGroup(item);
-                          router.push("/diary/groupView/groupMain");
-                        }}
-                        style={{
-                          height: "100%",
-                          width: "100%",
-                          position: "absolute",
-                          display: "flex",
-                          justifyContent: "start",
-                          alignItems: "center",
-                        }}
-                        label={""}
-                      ></Button>
-                      <View
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                          justifyContent: "center",
-                          marginLeft: 10,
-                        }}
-                      >
-                        <Text
-                          label={item.metadata.alias}
-                          style={{ zIndex: -1 }}
-                        ></Text>
-                        {hasStatus && (
-                          <Text
-                            fontSize={globalStyle.mediumMobileFont}
-                            label={statusLabel}
-                            style={{ zIndex: -1 }}
-                          ></Text>
-                        )}
-                      </View>
-                      <View
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 5,
-                          marginRight: 10,
-                        }}
-                      >
-                        <Text
-                          fontSize={globalStyle.mediumMobileFont}
-                          label={item.name}
-                          color={globalStyle.textColorAccent}
-                          style={{
-                            zIndex: -1,
-                          }}
-                        ></Text>
-                        {hasStatus && (
-                          <DiaryClosenessIndicator
-                            style={{
-                              zIndex: -1,
-                            }}
-                            closeness={item.metadata.ring}
-                          ></DiaryClosenessIndicator>
-                        )}
-                      </View>
-                    </View>
-                  );
-                }}
-              />
+                    ></View>
+                    <AddIcon height={20} width={20}></AddIcon>
+                  </Button>
+                </Animated.View>
+              </View>
             </Animated.View>
           ))}
       </ThemedView>

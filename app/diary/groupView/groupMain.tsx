@@ -66,7 +66,7 @@ function DiaryGroupMain() {
           (diaryApi.groups === null || selectedGroup === null ? (
             <ActivityIndicator size="large" color={globalStyle.color} />
           ) : (
-            <Animated.View
+            <View
               style={{
                 position: "relative",
                 width: "100%",
@@ -74,174 +74,184 @@ function DiaryGroupMain() {
                 flexGrow: 1,
               }}
             >
-              <FlashList
-                estimatedItemSize={65}
-                inverted={true}
-                keyExtractor={(item) => item.noteID}
-                data={diaryApi.notes
-                  .filter((note) => note.groupID === selectedGroup.groupID)
-                  .sort(
-                    (a, b) =>
-                      (b.metdata?.createdAt || 0) - (a.metdata?.createdAt || 0)
-                  )}
-                renderItem={({ item }) => {
-                  const note = item as SIDNoteType;
-
-                  return (
-                    <View
-                      style={{
-                        height: 65,
-                        marginBottom: 10,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Button
-                        textStyle={{ textAlign: "left", paddingLeft: 10 }}
-                        onClick={() => {
-                          const selectedNoteAPI =
-                            useSelectedDiaryNote.getState();
-                          selectedNoteAPI.setSelectedNote(note);
-                          router.push("/diary/diaryNoteView/diaryNoteView");
-                        }}
-                        style={{
-                          height: "100%",
-                          width: "100%",
-                          position: "absolute",
-                          display: "flex",
-                          justifyContent: "start",
-                          alignItems: "center",
-                        }}
-                        label={""}
-                      ></Button>
-                      <View
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                          justifyContent: "center",
-                          marginLeft: 10,
-                        }}
-                      >
-                        <Text
-                          label={note?.metdata?.title || "Unknown"}
-                          style={{ zIndex: -1 }}
-                        ></Text>
-                      </View>
-                      <View
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 5,
-                          marginRight: 10,
-                        }}
-                      >
-                        <Text
-                          fontSize={globalStyle.mediumMobileFont}
-                          label={new Date(item?.metdata?.createdAt || 0)
-                            .toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "2-digit",
-                              year: "numeric",
-                            })
-                            .replace(/\//g, "-")}
-                          color={globalStyle.textColorAccent}
-                          style={{
-                            zIndex: -1,
-                          }}
-                        ></Text>
-                      </View>
-                    </View>
-                  );
-                }}
-              />
               <Animated.View
-                entering={customFadeInDown(layoutAnimationsDuration)}
                 style={{
-                  marginTop: 5,
-                  height: 60,
+                  position: "relative",
                   width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row",
+                  top: "0%",
+                  flexGrow: 1,
                 }}
               >
-                <View
+                <FlashList
+                  estimatedItemSize={65}
+                  inverted={true}
+                  keyExtractor={(item) => item.noteID}
+                  data={diaryApi.notes
+                    .filter((note) => note.groupID === selectedGroup.groupID)
+                    .sort(
+                      (a, b) =>
+                        (b.metdata?.createdAt || 0) -
+                        (a.metdata?.createdAt || 0)
+                    )}
+                  renderItem={({ item }) => {
+                    const note = item as SIDNoteType;
+
+                    return (
+                      <View
+                        style={{
+                          height: 65,
+                          marginBottom: 10,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Button
+                          textStyle={{ textAlign: "left", paddingLeft: 10 }}
+                          onClick={() => {
+                            const selectedNoteAPI =
+                              useSelectedDiaryNote.getState();
+                            selectedNoteAPI.setSelectedNote(note);
+                            router.push("/diary/diaryNoteView/diaryNoteView");
+                          }}
+                          style={{
+                            height: "100%",
+                            width: "100%",
+                            position: "absolute",
+                            display: "flex",
+                            justifyContent: "start",
+                            alignItems: "center",
+                          }}
+                          label={""}
+                        ></Button>
+                        <View
+                          style={{
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            justifyContent: "center",
+                            marginLeft: 10,
+                          }}
+                        >
+                          <Text
+                            label={note?.metdata?.title || "Unknown"}
+                            style={{ zIndex: -1 }}
+                          ></Text>
+                        </View>
+                        <View
+                          style={{
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                            marginRight: 10,
+                          }}
+                        >
+                          <Text
+                            fontSize={globalStyle.mediumMobileFont}
+                            label={new Date(item?.metdata?.createdAt || 0)
+                              .toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "2-digit",
+                                year: "numeric",
+                              })
+                              .replace(/\//g, "-")}
+                            color={globalStyle.textColorAccent}
+                            style={{
+                              zIndex: -1,
+                            }}
+                          ></Text>
+                        </View>
+                      </View>
+                    );
+                  }}
+                />
+                <Animated.View
+                  entering={customFadeInDown(layoutAnimationsDuration)}
                   style={{
-                    flexGrow: 1,
+                    marginTop: 5,
+                    height: 60,
+                    width: "100%",
                     display: "flex",
+                    justifyContent: "center",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    height: "100%",
                     flexDirection: "row",
-                    borderRadius: globalStyle.borderRadius,
                   }}
                 >
-                  <>
-                    <Button
-                      onClick={() => {
-                        router.back();
-                      }}
-                      style={{
-                        height: "80%",
-                        width: "20%",
-                        borderWidth: 0,
-                        borderRightWidth: 1,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <ArrowDeco
-                        width={40}
-                        height={40}
-                        style={{ transform: [{ rotate: "180deg" }] }}
-                      ></ArrowDeco>
-                    </Button>
-                    <Button
-                      androidRippleColor={
-                        globalStyle.errorColor + ANDROID_RIPPLE_TRANSPARENCY
-                      }
-                      style={{
-                        flexGrow: 1,
-                        height: "80%",
-                        marginLeft: 15,
-                        marginRight: 15,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                      fontSize={globalStyle.regularMobileFont}
-                      onClick={addNote}
-                      label={""}
-                    >
-                      <AddIcon height={25} width={25}></AddIcon>
-                    </Button>
-                    <Button
-                      style={{
-                        height: "80%",
-                        width: "20%",
-                        borderWidth: 0,
-                        borderLeftWidth: 1,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                      label=""
-                      onClick={() => {}}
-                    >
-                      <SettingdIcon></SettingdIcon>
-                    </Button>
-                  </>
-                </View>
+                  <View
+                    style={{
+                      flexGrow: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      height: "100%",
+                      flexDirection: "row",
+                      borderRadius: globalStyle.borderRadius,
+                    }}
+                  >
+                    <>
+                      <Button
+                        onClick={() => {
+                          router.back();
+                        }}
+                        style={{
+                          height: "80%",
+                          width: "20%",
+                          borderWidth: 0,
+                          borderRightWidth: 1,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ArrowDeco
+                          width={40}
+                          height={40}
+                          style={{ transform: [{ rotate: "180deg" }] }}
+                        ></ArrowDeco>
+                      </Button>
+                      <Button
+                        androidRippleColor={
+                          globalStyle.errorColor + ANDROID_RIPPLE_TRANSPARENCY
+                        }
+                        style={{
+                          flexGrow: 1,
+                          height: "80%",
+                          marginLeft: 15,
+                          marginRight: 15,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                        fontSize={globalStyle.regularMobileFont}
+                        onClick={addNote}
+                        label={""}
+                      >
+                        <AddIcon height={25} width={25}></AddIcon>
+                      </Button>
+                      <Button
+                        style={{
+                          height: "80%",
+                          width: "20%",
+                          borderWidth: 0,
+                          borderLeftWidth: 1,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                        label=""
+                        onClick={() => {}}
+                      >
+                        <SettingdIcon></SettingdIcon>
+                      </Button>
+                    </>
+                  </View>
+                </Animated.View>
               </Animated.View>
-            </Animated.View>
+            </View>
           ))}
       </ThemedView>
     </>
