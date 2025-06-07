@@ -51,17 +51,20 @@ type TessDayLogType = {
 };
 
 type ARCTasksType = {
-  taskID: string;
-  name: string;
-  routineConfig: {
-    enabledDays: number[];
-    isActive: boolean;
-    timeConfig: { start: string; end: string }[] | null;
+  itme: {
+    taskID: string;
+    name: string;
+    routineConfig: {
+      enabledDays: number[];
+      isActive: boolean;
+      timeConfig: { start: string; end: string }[] | null;
+    };
+    deleted: boolean;
+    version: "0.1.0";
+    categoryID: null | string;
+    isSpecialStatus: boolean;
   };
-  deleted: boolean;
-  version: "0.1.0";
-  categoryID: null | string;
-  isSpecialStatus: boolean;
+  type: "task";
 };
 type ARCCategoryType = {
   categoryID: string;
@@ -205,13 +208,15 @@ type SIDGroups_ChunksType = {
 type SIDGroupType = {
   groupID: string;
   name: string;
-  type: "person";
+  type: "person" | "genericGroup";
   version: "0.1.1";
   metadata: {
-    ring: number;
+    ring: number | null;
     alias: string;
-    SID: string;
+    SID: string | null; //status id
+    createdAt?: number;
   };
+  deleted?: boolean;
 };
 
 type SIDNoteType = {

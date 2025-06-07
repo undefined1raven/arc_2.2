@@ -320,6 +320,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           if (tableName === "personalDiaryChunks") {
             idKey = "noteID";
           }
+          if (tableName === "personalDiaryGroups") {
+            idKey = "groupID";
+          }
           const dataIdArray = parsedData.map((item) => {
             if (idKey !== null && typeof item[idKey] === "string") {
               return item[idKey];

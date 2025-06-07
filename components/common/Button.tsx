@@ -23,6 +23,7 @@ type ButtonProps = {
   disabled?: boolean;
   onDoubleClick?: () => void;
   androidRippleColor?: string | null;
+  onLongPress?: () => void; // Optional long press handler
 };
 
 function Button({
@@ -31,7 +32,7 @@ function Button({
   label,
   style,
   color,
-  onClick,
+  onClick = () => {},
   fontSize,
   textAlign,
   textAlignVertical,
@@ -40,6 +41,7 @@ function Button({
   textStyle,
   androidRippleColor,
   disabled,
+  onLongPress = () => {}, // Default to no-op if not provided
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
   const [lastTap, setLastTap] = useState<number | null>(null);
@@ -60,6 +62,7 @@ function Button({
 
   return (
     <Pressable
+      onLongPress={onLongPress}
       onPress={handlePress}
       android_ripple={
         disabled || androidRippleColor === null

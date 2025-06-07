@@ -17,6 +17,9 @@ import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
+import { ARCTasksType } from "@/constants/CommonTypes";
+import { v4 } from "uuid";
+import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 function EditActivities() {
   const globalStyle = useGlobalStyleStore();
   const navMenuApi = useNavMenuApi();
@@ -31,6 +34,27 @@ function EditActivities() {
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  const createNewActivity = useCallback(() => {
+    const newAcivity: ARCTasksType = {
+      itme: {
+        taskID: `TID-${v4()}`,
+        categoryID: null,
+        isSpecialStatus: false,
+        routineConfig: {
+          enabledDays: [1, 2, 3, 4, 5, 6, 7],
+          isActive: false,
+          timeConfig: null,
+        },
+        deleted: false,
+        name: "New Activity",
+        version: "0.1.0",
+      },
+      type: "task",
+    };
+
+    const dataRetrivalAPI = dataRetrivalApi.getState();
+  }, [timeTrackingFeatureConfigApi]);
 
   return (
     <>
@@ -146,7 +170,7 @@ function EditActivities() {
                 marginLeft: 5,
               }}
               label=""
-              onClick={() => {}}
+              onClick={createNewActivity}
             >
               <AddIcon
                 width={30}
