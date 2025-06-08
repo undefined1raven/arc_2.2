@@ -22,6 +22,7 @@ import { v4 } from "uuid";
 import { personalDiaryNotes } from "@/components/utils/constants/chunking";
 import { useSelectedDiaryNote } from "@/stores/viewState/diarySelectedNote";
 import { TrashIcon } from "@/components/deco/TrashIcon";
+import { EditDeco } from "@/components/deco/EditDeco";
 function DiaryGroupMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -355,7 +356,7 @@ function DiaryGroupMain() {
                           );
                         }}
                       >
-                        <SettingdIcon></SettingdIcon>
+                        <EditDeco height={30} width={30}></EditDeco>
                       </Button>
                     </>
                   </View>

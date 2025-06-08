@@ -69,6 +69,10 @@ interface DataRetrivalApi {
     payload?: any;
     error?: string | "Match not found";
   }>;
+  appendFeatureConfigEntry: (
+    featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
+    rowData: any
+  ) => Promise<any>;
 }
 
 const allowedTableNames = [
@@ -650,6 +654,131 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     } catch (e) {
       statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "Failed to parse decrypted data" };
+    }
+  },
+  appendFeatureConfigEntry: async (
+    featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
+    rowData
+  ): Promise<any> => {
+    const allowedFeatureConfigTypes = [
+      "dayPlanner",
+      "timeTracking",
+      "personalDiary",
+    ];
+    const statusIndicatorApi = useStatusIndicatorStore.getState();
+    const activeUserId = useActiveUser.getState().activeUser.userId as
+      | string
+      | null;
+    const cryptoOpsApi = useCryptoOpsQueue.getState();
+
+    if (activeUserId === null) {
+      return { status: "error", error: "No active user" };
+    }
+    if (allowedFeatureConfigTypes.includes(featureConfigType) === false) {
+      return { status: "error", error: "Invalid table name" };
+    }
+    const db = await SQLite.openDatabaseAsync("localCache");
+
+    const latestChunk: FeatureConfigChunkType | null = await db.getFirstAsync(
+      `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = ? ORDER BY tx DESC LIMIT 1`,
+      [activeUserId, featureConfigType]
+    );
+
+    if (latestChunk === null) {
+      return { status: "error", error: "No chunks found" };
+    }
+    if (typeof latestChunk.encryptedContent !== "string") {
+      return { status: "error", error: "Invalid chunk data" };
+    }
+    const key = await SecureStore.getItemAsync(
+      secureStoreKeyNames.accountConfig.activeSymmetricKey
+    );
+    if (key === null) {
+      return { status: "error", error: "No key found" };
+    }
+    const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
+      keyType: "symmetric",
+      charCodeData: latestChunk.encryptedContent,
+      key: key,
+    });
+    if (decryptionResults.status === "error") {
+      return { status: "error", error: decryptionResults.payload };
+    }
+
+    function updateChunk(newChunk: FeatureConfigChunkType) {
+      return db
+        .runAsync(
+          `UPDATE featureConfigChunks SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
+          [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
+        )
+        .then((result) => {
+          statusIndicatorApi.setIsSavingLocalData(false);
+          db.closeAsync();
+          return { status: "success", payload: result };
+        })
+        .catch((e) => {
+          db.closeAsync();
+          return { status: "error", error: e };
+        });
+    }
+
+    statusIndicatorApi.setIsSavingLocalData(true);
+    try {
+      const decryptedStringData = charCodeArrayToString(
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+      );
+      try {
+        const parsedData = JSON.parse(decryptedStringData) as any[];
+        if (parsedData === null) {
+          return { status: "error", error: "Parsed data is null" };
+        }
+
+        if (typeof parsedData.length !== "number") {
+          return { status: "error", error: "Parsed data is not an array" };
+        }
+
+        const appendedData = [...parsedData, rowData];
+        const encryptionResults = await cryptoOpsApi.performOperation(
+          "encrypt",
+          {
+            keyType: "symmetric",
+            key: key,
+            charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
+          }
+        );
+        if (encryptionResults.status === "error") {
+          return { status: "error", error: encryptionResults.payload };
+        }
+        const encryptedContent = {
+          cipher: encryptionResults.payload.cipher,
+          iv: encryptionResults.payload.iv,
+        };
+
+        const previousContentLength = latestChunk.encryptedContent.length;
+
+        const updatedChunk = {
+          ...latestChunk,
+          encryptedContent: JSON.stringify(encryptedContent),
+        };
+
+        const newContentLength = updatedChunk.encryptedContent.length;
+
+        if (newContentLength <= previousContentLength) {
+          return {
+            status: "error",
+            error: "Content length is not increasing",
+          };
+        }
+
+        return updateChunk(updatedChunk);
+      } catch (e) {
+        return { status: "error", error: "Failed to parse decrypted data" };
+      }
+    } catch (e) {
+      return {
+        status: "error",
+        error: "Failed to parse encoded decrypted data",
+      };
     }
   },
 }));
