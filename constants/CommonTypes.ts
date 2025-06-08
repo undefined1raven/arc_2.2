@@ -224,6 +224,7 @@ type SIDNoteType = {
   groupID: string;
   version: "0.1.1";
   content: string;
+  deleted?: boolean;
   metdata: {
     readOnly: boolean;
     title: string;
