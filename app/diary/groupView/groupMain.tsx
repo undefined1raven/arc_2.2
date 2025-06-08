@@ -21,6 +21,7 @@ import { SettingdIcon } from "@/components/deco/SettingsIcon";
 import { v4 } from "uuid";
 import { personalDiaryNotes } from "@/components/utils/constants/chunking";
 import { useSelectedDiaryNote } from "@/stores/viewState/diarySelectedNote";
+import { TrashIcon } from "@/components/deco/TrashIcon";
 function DiaryGroupMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -32,6 +33,63 @@ function DiaryGroupMain() {
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  const [longSelectIndex, setLongSelectIndex] = useState<number | null>(null);
+
+  const deleteNote = useCallback(
+    (note: SIDNoteType) => {
+      const noteId = note.noteID;
+      const chunkMapping = diaryApi.noteChunkMapping;
+      if (chunkMapping === null || diaryApi.notes === null) {
+        return;
+      }
+
+      const updatedNote: SIDNoteType = {
+        ...note,
+        deleted: true,
+      };
+
+      const chunkMappingKeys = Object.keys(chunkMapping);
+      let chunkID: string | null = null;
+      for (let ix = 0; ix < chunkMappingKeys.length; ix++) {
+        const key = chunkMappingKeys[ix];
+        const notesInChunk = chunkMapping[key];
+        if (notesInChunk.includes(noteId)) {
+          chunkID = key;
+          break;
+        }
+      }
+      if (chunkID === null) {
+        return;
+      }
+      const dataRetrivalAPI = dataRetrivalApi.getState();
+
+      const updatedNotes = diaryApi.notes.map((n) =>
+        n.noteID === noteId ? updatedNote : n
+      );
+      diaryApi.setNotes(updatedNotes);
+      setLongSelectIndex(null);
+      dataRetrivalAPI
+        .modifyEntry(
+          "personalDiaryChunks",
+          ["noteID"],
+          noteId,
+          updatedNote,
+          chunkID,
+          "replace"
+        )
+        .then(() => {})
+        .catch((err) => {
+          console.error("Failed to delete note:", err);
+        });
+    },
+    [
+      setLongSelectIndex,
+      diaryApi.notes,
+      diaryApi.noteChunkMapping,
+      diaryApi.setNotes,
+    ]
+  );
 
   const addNote = useCallback(() => {
     if (typeof selectedGroup?.groupID !== "string" || diaryApi.notes === null) {
@@ -45,8 +103,8 @@ function DiaryGroupMain() {
         createdAt: Date.now(),
         updatedAt: Date.now(),
         readOnly: false,
-        content: "",
       },
+      content: "",
       version: "0.1.1",
     };
     const dataRetrivalAPI = dataRetrivalApi.getState();
@@ -92,8 +150,9 @@ function DiaryGroupMain() {
                       (a, b) =>
                         (b.metdata?.createdAt || 0) -
                         (a.metdata?.createdAt || 0)
-                    )}
-                  renderItem={({ item }) => {
+                    )
+                    .filter((n) => !n.deleted)}
+                  renderItem={({ item, index }) => {
                     const note = item as SIDNoteType;
 
                     return (
@@ -108,8 +167,15 @@ function DiaryGroupMain() {
                         }}
                       >
                         <Button
+                          onLongPress={() => {
+                            setLongSelectIndex(index);
+                          }}
                           textStyle={{ textAlign: "left", paddingLeft: 10 }}
                           onClick={() => {
+                            if (longSelectIndex === index) {
+                              setLongSelectIndex(null);
+                              return;
+                            }
                             const selectedNoteAPI =
                               useSelectedDiaryNote.getState();
                             selectedNoteAPI.setSelectedNote(note);
@@ -125,46 +191,86 @@ function DiaryGroupMain() {
                           }}
                           label={""}
                         ></Button>
-                        <View
-                          style={{
-                            height: "100%",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                            justifyContent: "center",
-                            marginLeft: 10,
-                          }}
-                        >
-                          <Text
-                            label={note?.metdata?.title || "Unknown"}
-                            style={{ zIndex: -1 }}
-                          ></Text>
-                        </View>
+                        <Text
+                          label={note?.metdata?.title || "Unknown"}
+                          style={{ zIndex: -1, marginLeft: 10 }}
+                        ></Text>
                         <View
                           style={{
                             height: "100%",
                             display: "flex",
                             flexDirection: "row",
                             alignItems: "center",
+                            justifyContent: "space-between",
                             gap: 5,
-                            marginRight: 10,
+                            marginLeft: 10,
+                            marginRight: longSelectIndex === index ? 0 : 10,
                           }}
-                        >
-                          <Text
-                            fontSize={globalStyle.mediumMobileFont}
-                            label={new Date(item?.metdata?.createdAt || 0)
-                              .toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "2-digit",
-                                year: "numeric",
-                              })
-                              .replace(/\//g, "-")}
-                            color={globalStyle.textColorAccent}
+                        ></View>
+                        {longSelectIndex === index ? (
+                          <View
                             style={{
-                              zIndex: -1,
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              height: "100%",
                             }}
-                          ></Text>
-                        </View>
+                          >
+                            <Text
+                              style={{ marginRight: 12, zIndex: -1 }}
+                              fontSize={globalStyle.regularMobileFont}
+                              label="Cancel"
+                            ></Text>
+                            <Button
+                              onClick={() => {
+                                deleteNote(note);
+                              }}
+                              style={{
+                                zIndex: 3,
+                                width: 80,
+                                borderRadius: 0,
+                                borderWidth: 0,
+                                borderLeftWidth: 1,
+                                height: "100%",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <TrashIcon
+                                height={25}
+                                width={"100%"}
+                                color={globalStyle.errorColor}
+                              ></TrashIcon>
+                            </Button>
+                          </View>
+                        ) : (
+                          <View
+                            style={{
+                              height: "100%",
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 5,
+                              marginRight: 10,
+                            }}
+                          >
+                            <Text
+                              fontSize={globalStyle.mediumMobileFont}
+                              label={new Date(item?.metdata?.createdAt || 0)
+                                .toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                })
+                                .replace(/\//g, "-")}
+                              color={globalStyle.textColorAccent}
+                              style={{
+                                zIndex: -1,
+                              }}
+                            ></Text>
+                          </View>
+                        )}
                       </View>
                     );
                   }}
@@ -243,7 +349,11 @@ function DiaryGroupMain() {
                           alignItems: "center",
                         }}
                         label=""
-                        onClick={() => {}}
+                        onClick={() => {
+                          router.push(
+                            "/diary/diaryGroupConfig/diaryGroupConfig"
+                          );
+                        }}
                       >
                         <SettingdIcon></SettingdIcon>
                       </Button>

@@ -174,6 +174,7 @@ function DiaryMain() {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "space-between",
               gap: 5,
               marginRight: longSelectIndex === index ? 0 : 10,
             }}
@@ -181,7 +182,7 @@ function DiaryMain() {
             {longSelectIndex === index ? (
               <>
                 <Text
-                  style={{ marginLeft: 15 }}
+                  style={{ marginRight: 12, zIndex: -1 }}
                   fontSize={globalStyle.regularMobileFont}
                   label="Cancel"
                 ></Text>
@@ -309,7 +310,7 @@ function DiaryMain() {
                   entering={FadeInDown.delay(150).duration(120)}
                   style={{
                     height: 45,
-                    width: "100%",
+                    width: "20%",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
@@ -322,7 +323,7 @@ function DiaryMain() {
                     onClick={createNewGroup}
                     style={{
                       height: "100%",
-                      width: "20%",
+                      width: "100%",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
