@@ -40,6 +40,7 @@ export default function RootLayout() {
     "/diary/groupView/groupMain",
     "/diary/diaryNoteView/diaryNoteView",
     "/diary/diaryGroupConfig/diaryGroupConfig",
+    "/timeTracking/editActivity/editActivity",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -150,6 +151,10 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="diary/diaryGroupConfig/diaryGroupConfig"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="timeTracking/editActivity/editActivity"
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="home/home" options={{ headerShown: false }} />

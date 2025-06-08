@@ -20,6 +20,8 @@ import { EditDeco } from "@/components/deco/EditDeco";
 import { ARCTasksType } from "@/constants/CommonTypes";
 import { v4 } from "uuid";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { router } from "expo-router";
+import { useTimeTrackingSelectedActivity } from "@/stores/viewState/timeTrackingSelectedActivity";
 function EditActivities() {
   const globalStyle = useGlobalStyleStore();
   const navMenuApi = useNavMenuApi();
@@ -54,6 +56,17 @@ function EditActivities() {
     };
 
     const dataRetrivalAPI = dataRetrivalApi.getState();
+
+    const updatedTimeTracking = [...timeTrackingFeatureConfigApi, newAcivity];
+    const featureConfigApi = useFeatureConfigs.getState();
+    featureConfigApi.setTimeTrackingFeatureConfig(updatedTimeTracking);
+
+    dataRetrivalAPI
+      .appendFeatureConfigEntry("timeTracking", newAcivity)
+      .then((r) => {})
+      .catch((e) => {
+        console.error("Error creating new activity:", e);
+      });
   }, [timeTrackingFeatureConfigApi]);
 
   return (
@@ -97,7 +110,14 @@ function EditActivities() {
                 return (
                   <Button
                     textStyle={{ textAlign: "left", paddingLeft: 10 }}
-                    onClick={() => {}}
+                    onClick={() => {
+                      const timeTrackingSelectedAcitvityApi =
+                        useTimeTrackingSelectedActivity.getState();
+                      timeTrackingSelectedAcitvityApi.setActivityToEdit(
+                        item as ARCTasksType
+                      );
+                      router.push(`/timeTracking/editActivity/editActivity`);
+                    }}
                     style={{
                       height: 55,
                       marginBottom: 10,
