@@ -8,7 +8,7 @@ import Button from "@/components/common/Button";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { layoutAnimationsDuration } from "@/constants/animations";
 import { FlashList } from "@shopify/flash-list";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
@@ -22,6 +22,7 @@ import { v4 } from "uuid";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { router } from "expo-router";
 import { useTimeTrackingSelectedActivity } from "@/stores/viewState/timeTrackingSelectedActivity";
+import FuzzySearch from "fuzzy-search";
 function EditActivities() {
   const globalStyle = useGlobalStyleStore();
   const navMenuApi = useNavMenuApi();
@@ -29,13 +30,72 @@ function EditActivities() {
   const timeTrackingFeatureConfigApi = useFeatureConfigs(
     (store) => store.timeTrackingFeatureConfig
   );
+  const featureConfigApi = useFeatureConfigs();
+
+  const getActivities = useCallback(() => {
+    return featureConfigApi.timeTrackingFeatureConfig.filter(
+      (r) => r.type === "task"
+    );
+  }, [featureConfigApi.timeTrackingFeatureConfig]);
+
+  const [filteredActivities, setFilteredActivities] = useState<ARCTasksType[]>(
+    getActivities()
+  );
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
+  const [searchText, setSearchText] = useState("");
 
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  const getCategoryNameFromTaskObject = useCallback(
+    (taskObject) => {
+      const categories = featureConfigApi.timeTrackingFeatureConfig.filter(
+        (r) => r.type === "taskCategory"
+      );
+      const catId = taskObject.itme.categoryID;
+      const category = categories.find(
+        (r) => r.itme.categoryID === catId || r.itme.id === catId
+      );
+      if (category) {
+        return category.itme.name;
+      } else {
+        return "Unknown";
+      }
+    },
+    [featureConfigApi.timeTrackingFeatureConfig]
+  );
+
+  useEffect(() => {
+    if (searchText === "") {
+      setFilteredActivities(getActivities());
+      return;
+    }
+
+    const results = searcher().search(searchText);
+    setFilteredActivities(results);
+  }, [searchText, featureConfigApi.timeTrackingFeatureConfig]);
+
+  const searcher = useCallback(() => {
+    const activitiesWithCategoryName = getActivities().map((r) => {
+      const categoryName = getCategoryNameFromTaskObject(r).toLowerCase();
+      return {
+        ...r,
+        itme: { ...r.itme, categoryName: categoryName },
+      };
+    });
+    const searcher = new FuzzySearch(
+      activitiesWithCategoryName,
+      ["itme.name", "itme.categoryName"],
+      {
+        caseSensitive: false,
+        sort: true,
+      }
+    );
+    return searcher;
+  }, [featureConfigApi.timeTrackingFeatureConfig]);
 
   const createNewActivity = useCallback(() => {
     const newAcivity: ARCTasksType = {
@@ -102,9 +162,7 @@ function EditActivities() {
           >
             <FlashList
               inverted={true}
-              data={timeTrackingFeatureConfigApi.filter(
-                (r) => r.type === "task"
-              )}
+              data={filteredActivities.filter((r) => r.type === "task")}
               estimatedItemSize={55}
               renderItem={({ item }) => {
                 return (
@@ -161,6 +219,7 @@ function EditActivities() {
                 placeholder="Search activities or categories"
                 onChange={(e) => {
                   const text = e.nativeEvent.text;
+                  setSearchText(text);
                 }}
                 style={{
                   height: "100%",
