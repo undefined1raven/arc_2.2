@@ -559,52 +559,86 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     statusIndicatorApi.setIsSavingLocalData(true);
     ////If no chunkID is provided, get the latest chunk
     const argList: string[] = [activeUserId];
-    const encryptedChunk: ARC_ChunksType | FeatureConfigChunkType | null =
-      await db.getFirstAsync(
-        `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = "${featureConfigType}" ORDER BY tx DESC LIMIT 1`,
+    const encryptedChunks: FeatureConfigChunkType[] | null =
+      await db.getAllAsync(
+        `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = "${featureConfigType}" ORDER BY tx DESC`,
         argList
       );
 
-    if (encryptedChunk === null) {
+    if (encryptedChunks === null || encryptedChunks.length === 0) {
       statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "No chunks found" };
     }
 
-    const encryptedContent = encryptedChunk.encryptedContent;
-    if (typeof encryptedContent !== "string") {
-      statusIndicatorApi.setIsSavingLocalData(false);
-      return { status: "error", error: "Invalid chunk data" };
-    }
-    const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
-      keyType: "symmetric",
-      charCodeData: encryptedContent,
-      key: key,
-    });
+    let decryptedData = [];
+    const decryptionPromises = [];
 
-    if (decryptionResults.status === "error") {
-      statusIndicatorApi.setIsSavingLocalData(false);
-      return { status: "error", error: decryptionResults.payload };
+    for (let ix = 0; ix < encryptedChunks.length; ix++) {
+      const encryptedChunk = encryptedChunks[ix];
+      const encryptedContent = encryptedChunk.encryptedContent;
+      if (typeof encryptedContent !== "string") {
+        statusIndicatorApi.setIsSavingLocalData(false);
+        return { status: "error", error: "Invalid chunk data" };
+      }
+      const decryptionPromise = cryptoOpsApi.performOperation("decrypt", {
+        keyType: "symmetric",
+        charCodeData: encryptedContent,
+        key: key,
+      });
+
+      decryptionPromises.push(decryptionPromise);
+    }
+
+    const decryptionResults = await Promise.allSettled(decryptionPromises);
+
+    let dataMatchIndex = -1;
+    let dataMatchChunk: FeatureConfigChunkType | null = null;
+    let newData: any[] = [];
+
+    for (let ix = 0; ix < decryptionResults.length; ix++) {
+      const result = decryptionResults[ix];
+      if (result.status === "fulfilled") {
+        const decryptedEncodedStringData =
+          "[" + result.value.payload.decrypted + "]";
+        const encodedArray = JSON.parse(decryptedEncodedStringData) as number[];
+        const decodedStringData = charCodeArrayToString(encodedArray);
+        try {
+          const parsedData = JSON.parse(decodedStringData) as any[];
+          const chunkId = encryptedChunks[ix].id;
+          const updatedDecryptedData: any = [...decryptedData, ...parsedData];
+          const localDataMatchIndex = parsedData.findIndex((item) => {
+            const value = getValueByKeys(item, keyPath);
+            if (typeof value === null || typeof value === "undefined") {
+              return false;
+            }
+            if (value === valueToMatch) {
+              return true;
+            }
+          });
+
+          if (localDataMatchIndex !== -1) {
+            dataMatchIndex = localDataMatchIndex;
+            newData = parsedData;
+            dataMatchChunk = encryptedChunks[ix];
+          }
+
+          decryptedData = updatedDecryptedData;
+        } catch (e) {
+          statusIndicatorApi.setIsSavingLocalData(false);
+          return { status: "error", error: "Failed to parse decrypted data" };
+        }
+      } else {
+        statusIndicatorApi.setIsSavingLocalData(false);
+        return { status: "error", error: result.reason };
+      }
     }
 
     try {
-      const decodedStringData = charCodeArrayToString(
-        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
-      );
-      const parsedData = JSON.parse(decodedStringData) as any[];
-      const dataMatchIndex = parsedData.findIndex((item) => {
-        const value = getValueByKeys(item, keyPath);
-        if (typeof value === null || typeof value === "undefined") {
-          return false;
-        }
-        if (value === valueToMatch) {
-          return true;
-        }
-      });
-      if (dataMatchIndex === -1) {
+      if (dataMatchIndex === -1 || dataMatchChunk === null) {
         statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Match not found" };
       }
-      const newData = [...parsedData];
+
       if (replaceOrAppendValue === "replace") {
         newData[dataMatchIndex] = newValue;
       } else if (replaceOrAppendValue === "append") {
@@ -615,10 +649,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       } else if (replaceOrAppendValue === "delete") {
         newData.splice(dataMatchIndex, 1);
       }
-      if (newData.length !== parsedData.length) {
-        statusIndicatorApi.setIsSavingLocalData(false);
-        return { status: "error", error: "Data length mismatch" };
-      }
+
       const encryptionResults = await cryptoOpsApi.performOperation("encrypt", {
         keyType: "symmetric",
         key: key,
@@ -633,9 +664,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         iv: encryptionResults.payload.iv,
       };
       const updatedChunk = {
-        ...encryptedChunk,
+        ...dataMatchChunk,
         encryptedContent: JSON.stringify(encryptedContent),
       };
+
       const savePromise = db.runAsync(
         `UPDATE featureConfigChunks SET encryptedContent = ? WHERE userID = ? AND id = ?`,
         [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
@@ -643,12 +675,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return savePromise
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return { status: "success" };
         })
         .catch((e) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return { status: "error", error: e };
         });
     } catch (e) {

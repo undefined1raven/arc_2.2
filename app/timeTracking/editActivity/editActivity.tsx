@@ -10,6 +10,7 @@ import { useCallback } from "react";
 import { ARCTasksType } from "@/constants/CommonTypes";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { debounce } from "lodash";
 function EditActivity() {
   const activityToEdit = useTimeTrackingSelectedActivity(
     (s) => s.activityToEdit
@@ -17,7 +18,7 @@ function EditActivity() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
 
   const updateAcitivty = useCallback(
-    (updatedActivity: ARCTasksType) => {
+    debounce((updatedActivity: ARCTasksType) => {
       const featureConfigApi = useFeatureConfigs.getState();
       const dataRetrivalAPI = dataRetrivalApi.getState();
       if (activityToEdit === null) return;
@@ -27,10 +28,14 @@ function EditActivity() {
           "timeTracking",
           ["itme", "taskID"],
           updatedActivity.itme.taskID,
-          updatedActivity
+          updatedActivity,
+          "replace"
         )
         .catch((error) => {
           console.error("Failed to update activity:", error);
+        })
+        .then((r) => {
+          console.log("Activity updated successfully:", r);
         });
 
       const updatedTimeTrackingFeatureConfig =
@@ -43,7 +48,7 @@ function EditActivity() {
       featureConfigApi.setTimeTrackingFeatureConfig(
         updatedTimeTrackingFeatureConfig
       );
-    },
+    }, 300),
     [activityToEdit]
   );
 
