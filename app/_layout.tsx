@@ -21,6 +21,7 @@ import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import { useNavMenuApi } from "@/stores/navMenuApi";
 import { StatusIndicators } from "@/components/ui/StatusIndicators";
 import KeyboardVisible from "@/components/functional/KeyboardStatus";
+import { Host, Portal } from "react-native-portalize";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -70,104 +71,109 @@ export default function RootLayout() {
 
   return (
     <>
-      <SQLiteProvider databaseName="localCache">
-        <SafeAreaView style={{ flex: 1 }}>
-          <GestureHandlerRootView
-            style={{
-              flex: 1,
-              backgroundColor: globalStyle.pageBackgroundColors[0],
-            }}
-          >
-            <CreateNewAccountData></CreateNewAccountData>
-            <KeyboardVisible></KeyboardVisible>
-            <View style={{ width: 0, height: 0 }}>
-              <CryptoWorkers></CryptoWorkers>
-            </View>
-            <LinearGradient
-              colors={globalStyle.pageBackgroundColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0.3, y: 0.7 }}
+      <Host>
+        <SQLiteProvider databaseName="localCache">
+          <SafeAreaView style={{ flex: 1 }}>
+            <GestureHandlerRootView
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "120%",
-                height: "120%",
+                flex: 1,
+                backgroundColor: globalStyle.pageBackgroundColors[0],
               }}
-            ></LinearGradient>
-            <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="NewAccountMain/page"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="downloadRecoveryCodes/page"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="setAccountPin/page"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="localAccountAuth/localAccountAuth"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="login/localLogin/localLogin"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="timeTrackingFeatureConfig/EditActivities"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="dayPlanner/dayPlanner"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="activeDayView/activeDayView"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="dayPlanner/statusEditor/statusEditor"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="timeTrackingStats/statsHome/statsHome"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="diary/diaryMain/diaryMain"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="diary/groupView/groupMain"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="diary/diaryNoteView/diaryNoteView"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="diary/diaryGroupConfig/diaryGroupConfig"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="timeTracking/editActivity/editActivity"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="home/home" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
-            <StatusIndicators></StatusIndicators>
-            {navMenuApi.showMenu &&
-              navMenuDisallowedPaths.includes(pathname) === false && (
-                <NavMenuBar></NavMenuBar>
-              )}
-          </GestureHandlerRootView>
-        </SafeAreaView>
-      </SQLiteProvider>
+            >
+              <CreateNewAccountData></CreateNewAccountData>
+              <KeyboardVisible></KeyboardVisible>
+              <View style={{ width: 0, height: 0 }}>
+                <CryptoWorkers></CryptoWorkers>
+              </View>
+              <LinearGradient
+                colors={globalStyle.pageBackgroundColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0.3, y: 0.7 }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "120%",
+                  height: "120%",
+                }}
+              ></LinearGradient>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="NewAccountMain/page"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="downloadRecoveryCodes/page"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="setAccountPin/page"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="localAccountAuth/localAccountAuth"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="login/localLogin/localLogin"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTrackingFeatureConfig/EditActivities"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dayPlanner/dayPlanner"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="activeDayView/activeDayView"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dayPlanner/statusEditor/statusEditor"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTrackingStats/statsHome/statsHome"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="diary/diaryMain/diaryMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="diary/groupView/groupMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="diary/diaryNoteView/diaryNoteView"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="diary/diaryGroupConfig/diaryGroupConfig"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTracking/editActivity/editActivity"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="home/home"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+              <StatusBar style="auto" />
+              <StatusIndicators></StatusIndicators>
+              {navMenuApi.showMenu &&
+                navMenuDisallowedPaths.includes(pathname) === false && (
+                  <NavMenuBar></NavMenuBar>
+                )}
+            </GestureHandlerRootView>
+          </SafeAreaView>
+        </SQLiteProvider>
+      </Host>
     </>
   );
 }

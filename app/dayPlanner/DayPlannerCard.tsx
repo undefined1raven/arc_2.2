@@ -19,6 +19,7 @@ import { useDayPlannerStatusToEdit } from "@/stores/viewState/dayPlannerActiveSt
 import { router } from "expo-router";
 import React, { act, useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { Portal } from "react-native-portalize";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 function DayPlannerCard() {

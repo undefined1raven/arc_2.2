@@ -46,6 +46,8 @@ function Text({
       }}
     >
       <RNText
+        ellipsizeMode="tail"
+        numberOfLines={1}
         style={{
           textAlign: textAlign ? textAlign : "center",
           textAlignVertical: textAlignVertical ? textAlignVertical : "center",

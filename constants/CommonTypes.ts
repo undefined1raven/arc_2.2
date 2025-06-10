@@ -67,10 +67,14 @@ type ARCTasksType = {
   type: "task";
 };
 type ARCCategoryType = {
-  categoryID: string;
-  name: string;
-  deleted: boolean;
-  version: "0.1.0";
+  itme: {
+    categoryID?: string;
+    id?: string; // for backwards compatibility
+    name: string;
+    deleted: boolean;
+    version: "0.1.0";
+  };
+  type: "taskCategory";
 };
 type FeatureConfigArcType = {
   tasks: ARCTasksType[];
