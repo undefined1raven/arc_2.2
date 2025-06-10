@@ -269,7 +269,11 @@ function TimeTrackingCard() {
               paddingRight: 5,
             }}
           >
-            <Text fontSize={23} label={hasPendingActivity.name}></Text>
+            <Text
+              fontSize={23}
+              style={{ maxWidth: "58%", textAlign: "left" }}
+              label={hasPendingActivity.name}
+            ></Text>
             <View
               style={{
                 width: "40%",
