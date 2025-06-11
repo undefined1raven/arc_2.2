@@ -1,6 +1,9 @@
 import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
+import Text from "@/components/common/Text";
+import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
+import { TrashIcon } from "@/components/deco/TrashIcon";
 import { ThemedView } from "@/components/ThemedView";
 import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 import { FeatureConfigColorInput } from "@/components/ui/FeatureConfigColorInput";
@@ -14,6 +17,9 @@ import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { v4 } from "uuid";
 
 function statusEditor() {
   const [isPickingStatus, setIsPickingStatus] = useState(true);
@@ -31,6 +37,8 @@ function statusEditor() {
     }
     return color;
   }, []);
+
+  const [longSelectIndex, setLongSelectIndex] = useState<null | number>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -70,13 +78,14 @@ function statusEditor() {
   );
 
   const handleStatusUpdate = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: any, statusId?: string) => {
       debouncedUpdate(() => {
         const dataRetrivalAPI = dataRetrivalApi.getState();
         const newStatus = { ...statusToEdit, [field]: value };
 
         const statusIndex = dayPlannerFeatureConfig.findIndex(
-          (status: TessStatusType) => status.statusID === statusToEdit?.statusID
+          (status: TessStatusType) =>
+            status.statusID === statusToEdit?.statusID || statusId
         );
         if (statusIndex === -1) {
           console.error("Status to edit not found in the list.");
@@ -92,7 +101,7 @@ function statusEditor() {
           .modifyFeatureConfig(
             "dayPlanner",
             ["statusID"],
-            statusToEdit?.statusID,
+            statusToEdit?.statusID || statusId || "",
             newStatus,
             "replace"
           )
@@ -136,6 +145,40 @@ function statusEditor() {
       };
     }
   }, [globalStyle.colorScheme, globalStyle.theme, statusToEdit]);
+
+  const createNewStatus = useCallback(() => {
+    const newStatus: TessStatusType = {
+      statusID: `STID-${v4()}`,
+      name: "New Status",
+      deleted: false,
+      completionEffect: 0,
+      version: "0.1.1",
+      colors: {
+        [globalStyle.colorScheme]: {
+          [globalStyle.theme]: {
+            color: globalStyle.color,
+            textColor: globalStyle.textColor,
+          },
+        },
+      },
+    };
+
+    const updatedDayPlannerFeatureConfig = [
+      ...dayPlannerFeatureConfig,
+      newStatus,
+    ];
+
+    const featureConfigApi = useFeatureConfigs.getState();
+    featureConfigApi.setDayPlannerFeatureConfig(updatedDayPlannerFeatureConfig);
+
+    const dataRetrivalAPI = dataRetrivalApi.getState();
+    dataRetrivalAPI
+      .appendFeatureConfigEntry("dayPlanner", newStatus)
+      .then((result) => {
+        console.log("New status created:", result);
+      })
+      .catch((error) => {});
+  }, [dayPlannerFeatureConfig]);
 
   const updateColorValue = useCallback(
     (colorType: "color" | "textColor", value: string) => {
@@ -215,13 +258,28 @@ function statusEditor() {
     <ThemedView style={{ ...styles.container, height: "100%" }}>
       {isPickingStatus ? (
         <ReversedListWithControls
+          key={dayPlannerFeatureConfig.filter((r) => !r.deleted).length}
+          showActionButton={true}
+          extraData={longSelectIndex}
+          onActionButtonClick={createNewStatus}
           searchKeys={["name"]}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const typedItem = item as TessStatusType;
+            const isSelected = longSelectIndex === index;
+            if (typedItem.deleted) {
+              return null;
+            }
             return (
               <Button
+                onLongPress={() => {
+                  setLongSelectIndex(index);
+                }}
                 textStyle={{ textAlign: "left", paddingLeft: 10 }}
                 onClick={() => {
+                  if (isSelected) {
+                    setLongSelectIndex(null);
+                    return;
+                  }
                   setStatusToEdit(typedItem);
                   setIsPickingStatus(false);
                 }}
@@ -231,14 +289,56 @@ function statusEditor() {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  flexDirection: "row",
                 }}
                 label={typedItem.name}
               >
-                <EditDeco
-                  height={30}
-                  width={30}
-                  style={{ position: "absolute", right: 10, zIndex: -1 }}
-                ></EditDeco>
+                {isSelected ? (
+                  <View
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      display: "flex",
+                      flexDirection: "row",
+                      height: "100%",
+                    }}
+                  >
+                    <Text
+                      style={{ marginRight: 12, zIndex: -1 }}
+                      fontSize={globalStyle.regularMobileFont}
+                      label="Cancel"
+                    ></Text>
+                    <Button
+                      onClick={() => {
+                        handleStatusUpdate("deleted", true, typedItem.statusID);
+                        setLongSelectIndex(null);
+                      }}
+                      style={{
+                        zIndex: 3,
+                        width: 80,
+                        borderRadius: 0,
+                        borderWidth: 0,
+                        borderLeftWidth: 1,
+                        height: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <TrashIcon
+                        height={25}
+                        width={"100%"}
+                        color={globalStyle.errorColor}
+                      ></TrashIcon>
+                    </Button>
+                  </View>
+                ) : (
+                  <EditDeco
+                    height={30}
+                    width={30}
+                    style={{ position: "absolute", right: 10, zIndex: -1 }}
+                  ></EditDeco>
+                )}
               </Button>
             );
           }}
@@ -260,13 +360,6 @@ function statusEditor() {
             setIsPickingStatus(true);
           }}
         >
-          <FeatureConfigBooleanInput
-            value={!statusToEdit?.deleted}
-            label="Enabled"
-            onChange={(e) => {
-              handleStatusUpdate("deleted", !e);
-            }}
-          ></FeatureConfigBooleanInput>
           <FeatureConfigValueInput
             value={statusToEdit?.completionEffect.toString() || ""}
             onChange={(e) => {

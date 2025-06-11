@@ -18,6 +18,7 @@ import { EditDeco } from "../deco/EditDeco";
 import { TessStatusType } from "@/constants/CommonTypes";
 //@ts-ignore
 import FuzzySearch from "fuzzy-search";
+import { AddIcon } from "../deco/AddIcon";
 
 type ReversedListWithControlsProps = {
   data: any[];
@@ -27,6 +28,9 @@ type ReversedListWithControlsProps = {
   showSearchBar: boolean;
   onSearch: (query: string) => void;
   searchKeys?: string[];
+  showActionButton?: boolean;
+  onActionButtonClick?: () => void;
+  extraData?: any;
 };
 
 function ReversedListWithControls({
@@ -37,6 +41,9 @@ function ReversedListWithControls({
   showSearchBar,
   onSearch,
   searchKeys,
+  showActionButton = false,
+  extraData,
+  onActionButtonClick = () => {},
 }: ReversedListWithControlsProps) {
   const globalStyle = useGlobalStyleStore();
   const virtualKeyboardApi = useVirtualKeyboard();
@@ -97,11 +104,54 @@ function ReversedListWithControls({
         }}
       >
         <FlashList
+          extraData={extraData}
           inverted={true}
           data={currentData}
           estimatedItemSize={55}
           renderItem={renderItem}
         />
+        {showActionButton && (
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(120)}
+            style={{
+              height: 45,
+              width: "20%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              bottom: 5,
+              right: 0,
+            }}
+          >
+            <Button
+              onClick={showActionButton ? onActionButtonClick : () => {}}
+              style={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row",
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+              }}
+              label=""
+            >
+              <View
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  borderRadius: globalStyle.globalStyle.borderRadius,
+                  height: "100%",
+                  backgroundColor: globalStyle.globalStyle.colorAltLight,
+                }}
+              ></View>
+              <AddIcon height={20} width={20}></AddIcon>
+            </Button>
+          </Animated.View>
+        )}
       </Animated.View>
       <Animated.View
         entering={customFadeInDown(layoutAnimationsDuration)}
