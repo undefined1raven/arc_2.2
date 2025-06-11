@@ -50,10 +50,12 @@ function RingSelector(
       height={112}
       viewBox="0 0 150 112"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="http://www.w3.org/4000/svg"
+      pointerEvents="box-none"
       {...cleanedProps}
     >
       <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(1);
@@ -66,6 +68,17 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 1).fillColor}
       />
       <Path
+        pointerEvents="auto"
+        onPress={() => {
+          if (typeof props.onRingChange === "function") {
+            props.onRingChange(1);
+          }
+        }}
+        d="M14.281 4.25h27.407l13.705 23.736L41.688 51.72H14.281L.576 27.986 14.281 4.25z"
+        strokeWidth={40}
+      />
+      <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(1);
@@ -75,6 +88,7 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 1).labelColor}
       />
       <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(0);
@@ -87,6 +101,17 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 0).fillColor}
       />
       <Path
+        pointerEvents="auto"
+        onPress={() => {
+          if (typeof props.onRingChange === "function") {
+            props.onRingChange(0);
+          }
+        }}
+        d="M61.281 32.28H88.69l13.704 23.736L88.689 79.75H61.28L47.576 56.016 61.281 32.28z"
+        strokeWidth={40}
+      />
+      <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(0);
@@ -96,6 +121,7 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 0).labelColor}
       />
       <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(2);
@@ -108,6 +134,17 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 2).fillColor}
       />
       <Path
+        pointerEvents="auto"
+        onPress={() => {
+          if (typeof props.onRingChange === "function") {
+            props.onRingChange(2);
+          }
+        }}
+        d="M108.281 4.28h27.407l13.705 23.736-13.705 23.735h-27.407L94.576 28.016 108.281 4.28z"
+        strokeWidth={40}
+      />
+      <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(2);
@@ -117,6 +154,7 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 2).labelColor}
       />
       <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(3);
@@ -129,6 +167,17 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 3).fillColor}
       />
       <Path
+        pointerEvents="auto"
+        onPress={() => {
+          if (typeof props.onRingChange === "function") {
+            props.onRingChange(3);
+          }
+        }}
+        d="M108.281 60.28h27.407l13.705 23.736-13.705 23.735h-27.407L94.576 84.016l13.705-23.737z"
+        strokeWidth={40}
+      />
+      <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(3);
@@ -138,6 +187,7 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 3).labelColor}
       />
       <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(4);
@@ -150,6 +200,17 @@ function RingSelector(
         fill={getRingOpacity(props.closeness, 4).fillColor}
       />
       <Path
+        pointerEvents="auto"
+        onPress={() => {
+          if (typeof props.onRingChange === "function") {
+            props.onRingChange(4);
+          }
+        }}
+        d="M14.281 60.28h27.407l13.705 23.736-13.705 23.735H14.281L.576 84.016l13.705-23.737z"
+        strokeWidth={40}
+      />
+      <Path
+        pointerEvents="auto"
         onPress={() => {
           if (typeof props.onRingChange === "function") {
             props.onRingChange(4);

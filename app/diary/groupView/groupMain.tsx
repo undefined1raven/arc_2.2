@@ -194,7 +194,11 @@ function DiaryGroupMain() {
                         ></Button>
                         <Text
                           label={note?.metdata?.title || "Unknown"}
-                          style={{ zIndex: -1, marginLeft: 10 }}
+                          style={{
+                            zIndex: -1,
+                            marginLeft: 10,
+                            maxWidth: "70%",
+                          }}
                         ></Text>
                         <View
                           style={{

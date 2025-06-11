@@ -93,6 +93,7 @@ function Selection({
         >
           <View style={{ flexGrow: 1, width: "100%" }}>
             <FlashList
+              inverted={true}
               data={values}
               estimatedItemSize={60}
               renderItem={({ item, index }) => {

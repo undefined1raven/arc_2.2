@@ -113,7 +113,7 @@ function DiaryMain() {
         personalDiaryFeatureConfig.find((r) => r.id === item.metadata.SID)
           ?.name || "Unknown Status";
       const hasStatus = statusLabel !== "Unknown Status";
-
+      const isPersonGroup = item.type === "person";
       return (
         <View
           style={{
@@ -160,7 +160,7 @@ function DiaryMain() {
             }}
           >
             <Text label={item.metadata.alias} style={{ zIndex: -1 }}></Text>
-            {hasStatus && (
+            {hasStatus && isPersonGroup && (
               <Text
                 fontSize={globalStyle.mediumMobileFont}
                 label={statusLabel}
@@ -217,7 +217,7 @@ function DiaryMain() {
                     zIndex: -1,
                   }}
                 ></Text>
-                {hasStatus && (
+                {hasStatus && isPersonGroup && (
                   <DiaryClosenessIndicator
                     style={{
                       zIndex: -1,

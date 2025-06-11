@@ -7,7 +7,7 @@ import { Selection } from "../common/Selection";
 type Props = {
   value: any;
   values: any[];
-  labelKeys: string[];
+  labelKeys?: string[];
   onChange: (value: any) => void;
   inputProps?: { [key: string]: any };
   label: string;
