@@ -9,6 +9,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import Button from "../common/Button";
 import { useCallback } from "react";
 import Text from "../common/Text";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   bototmHeaderLabel: string;
@@ -20,7 +21,7 @@ type Props = {
 function FeatureConfigEmptySettingPage(props: Props) {
   const virtualKeyboardApi = useVirtualKeyboard();
   const globalStyle = useGlobalStyleStore();
-
+  const insets = useSafeAreaInsets();
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
@@ -31,7 +32,15 @@ function FeatureConfigEmptySettingPage(props: Props) {
 
   return (
     <>
-      <ThemedView style={{ ...styles.container, flexGrow: 1, width: "100%" }}>
+      <ThemedView
+        style={{
+          ...styles.container,
+          flexGrow: 1,
+          width: "100%",
+          bottom: 0,
+          position: "absolute",
+        }}
+      >
         <Animated.View
           style={{
             width: "100%",

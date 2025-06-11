@@ -14,11 +14,15 @@ import { useDiaryData } from "@/stores/diary/diary";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { SIDGroupType } from "@/constants/CommonTypes";
 import { debounce } from "lodash";
+import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
+import { useFeatureConfigs } from "@/stores/featureConfigs";
 function DiaryGroupConfig() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const selectedGroup = useSelectedDiaryGroup((s) => s.selectedGroup);
   const diaryApi = useDiaryData();
-
+  const diaryFeatureConfig = useFeatureConfigs(
+    (r) => r.personalDiaryFeatureConfig
+  );
   const updateGroupPropertyInstant = useCallback(
     (updatedGroup: SIDGroupType) => {
       const group = selectedGroup;
@@ -92,6 +96,40 @@ function DiaryGroupConfig() {
               router.back();
             }}
           >
+            <FeatureConfigSelection
+              label="Group Type"
+              value={selectedGroup.type === "person" ? "Person" : "General"}
+              values={["Person", "General"]}
+              onChange={(e) => {
+                const updatedGroup: SIDGroupType = {
+                  ...selectedGroup,
+                  type: e === "Person" ? "person" : "genericGroup",
+                };
+                updateGroupPropertyInstant(updatedGroup);
+              }}
+            ></FeatureConfigSelection>
+            {selectedGroup.type === "person" && (
+              <FeatureConfigSelection
+                label="Status"
+                value={
+                  diaryFeatureConfig.find(
+                    (f) => f.id === selectedGroup.metadata.SID
+                  )?.name || "Unknown"
+                }
+                values={diaryFeatureConfig}
+                labelKeys={["name"]}
+                onChange={(e) => {
+                  const updatedGroup: SIDGroupType = {
+                    ...selectedGroup,
+                    metadata: {
+                      ...selectedGroup.metadata,
+                      SID: e.id,
+                    },
+                  };
+                  updateGroupPropertyInstant(updatedGroup);
+                }}
+              ></FeatureConfigSelection>
+            )}
             <FeatureConfigValueInput
               label="Alias"
               inputType="text"
@@ -119,68 +157,70 @@ function DiaryGroupConfig() {
                 updateGroupProperty(updatedGroup);
               }}
             ></FeatureConfigValueInput>
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                height: 150,
-                backgroundColor:
-                  globalStyle.color + layoutCardLikeBackgroundOpacity,
-                borderRadius: globalStyle.borderRadius,
-              }}
-            >
+            {selectedGroup.type === "person" && (
               <View
                 style={{
-                  width: "45%",
-                  height: "100%",
+                  width: "100%",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <DiaryClosenessIndicator
-                  height={100}
-                  width={100}
-                  closeness={selectedGroup.metadata.ring}
-                ></DiaryClosenessIndicator>
-              </View>
-              <View
-                style={{
-                  position: "absolute",
-                  left: "45%",
-                  width: 1,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  height: 150,
+                  backgroundColor:
+                    globalStyle.color + layoutCardLikeBackgroundOpacity,
                   borderRadius: globalStyle.borderRadius,
-                  height: "80%",
-                  backgroundColor: globalStyle.color,
-                }}
-              ></View>
-              <View
-                style={{
-                  width: "55%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
-                <RingSelector
-                  onRingChange={(ring: number) => {
-                    const updatedGroup = {
-                      ...selectedGroup,
-                      metadata: {
-                        ...selectedGroup.metadata,
-                        ring: ring,
-                      },
-                    };
-                    updateGroupPropertyInstant(updatedGroup);
+                <View
+                  style={{
+                    width: "45%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  closeness={selectedGroup.metadata.ring}
-                ></RingSelector>
+                >
+                  <DiaryClosenessIndicator
+                    height={100}
+                    width={100}
+                    closeness={selectedGroup.metadata.ring}
+                  ></DiaryClosenessIndicator>
+                </View>
+                <View
+                  style={{
+                    position: "absolute",
+                    left: "45%",
+                    width: 1,
+                    borderRadius: globalStyle.borderRadius,
+                    height: "80%",
+                    backgroundColor: globalStyle.color,
+                  }}
+                ></View>
+                <View
+                  style={{
+                    width: "55%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <RingSelector
+                    onRingChange={(ring: number) => {
+                      const updatedGroup = {
+                        ...selectedGroup,
+                        metadata: {
+                          ...selectedGroup.metadata,
+                          ring: ring,
+                        },
+                      };
+                      updateGroupPropertyInstant(updatedGroup);
+                    }}
+                    closeness={selectedGroup.metadata.ring}
+                  ></RingSelector>
+                </View>
               </View>
-            </View>
+            )}
           </FeatureConfigEmptySettingPage>
         ) : (
           <ActivityIndicator></ActivityIndicator>
