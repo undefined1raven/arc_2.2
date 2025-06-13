@@ -39,6 +39,9 @@ import { AddIcon } from "@/components/deco/AddIcon";
 import { router } from "expo-router";
 //@ts-ignore
 import FuzzySearch from "fuzzy-search";
+import { Portal } from "react-native-portalize";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -414,141 +417,164 @@ function TimeTrackingCard() {
       )}
     </Animated.View>
   ) : (
-    <Animated.View
-      style={{
-        width: "100%",
-        borderRadius: globalStyle.globalStyle.borderRadius,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bottom: 0,
-        flexGrow: 1,
-      }}
-    >
-      {virtualKeyboardApi.isVisible && (
-        <Animated.View
-          style={{ height: virtualKeyboardApi.keyboardHeight, width: "100%" }}
-        ></Animated.View>
-      )}
-      <Animated.View
-        entering={customFadeInUp(layoutAnimationsDuration)}
-        style={{
-          position: "relative",
-          width: "100%",
-          top: "0%",
-          flexGrow: 1,
-        }}
-      >
-        <FlashList
-          inverted={true}
-          data={activities}
-          estimatedItemSize={55}
-          renderItem={({ item }) => {
-            return (
-              <Button
-                textStyle={{ textAlign: "left", paddingLeft: 10 }}
-                onClick={() => {
-                  startActivity(item);
-                }}
-                style={{
-                  height: 55,
-                  marginBottom: 10,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                label={item.itme.name}
-              >
-                <Text
-                  style={{
-                    width: "35%",
-                    position: "absolute",
-                    right: 10,
-                    paddingBottom: 3,
-                    paddingTop: 3,
-                    zIndex: -1,
-                  }}
-                  backgroundColor={
-                    globalStyle.globalStyle.color +
-                    layoutCardLikeBackgroundOpacity
-                  }
-                  fontSize={15}
-                  label={getCategoryNameFromTaskObject(item)}
-                ></Text>
-              </Button>
-            );
-          }}
-        />
-      </Animated.View>
-      <Animated.View
-        entering={customFadeInDown(layoutAnimationsDuration)}
-        style={{
-          marginTop: 5,
-          height: 60,
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "row",
-        }}
-      >
-        <Button
+    <Portal>
+      <SafeAreaView style={{ flexGrow: 1, width: "100%" }}>
+        <LinearGradient
+          colors={globalStyle.globalStyle.pageBackgroundColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.3, y: 0.7 }}
           style={{
-            height: "100%",
-            width: "30%",
-            marginBottom: 0,
-            bottom: 0,
+            position: "absolute",
+            top: "-20%",
+            left: 0,
+            width: "120%",
+            height: "150%",
+          }}
+        ></LinearGradient>
+        <Animated.View
+          style={{
+            width: "100%",
+            borderRadius: globalStyle.globalStyle.borderRadius,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            marginRight: 5,
-          }}
-          label=""
-          onClick={() => {
-            setIsPickingActivity(false);
-            setActivitySearchFilter("");
-            useNavMenuApi.getState().setShowMenu(true);
-          }}
-        >
-          <ArrowDeco
-            width={50}
-            style={{
-              transform: [{ rotate: "180deg" }],
-              width: "60%",
-              height: "60%",
-            }}
-          ></ArrowDeco>
-        </Button>
-        <View
-          style={{
+            bottom: 0,
             flexGrow: 1,
-            display: "flex",
-            justifyContent: "center",
+            paddingLeft: 5,
+            paddingRight: 5,
           }}
         >
-          <TextInput
-            textAlign="left"
-            placeholder="Search activities or categories"
-            onChange={(e) => {
-              const text = e.nativeEvent.text;
-              setActivitySearchFilter(text);
-            }}
+          {virtualKeyboardApi.isVisible && (
+            <Animated.View
+              style={{
+                height: virtualKeyboardApi.keyboardHeight,
+                width: "100%",
+              }}
+            ></Animated.View>
+          )}
+          <Animated.View
+            entering={customFadeInUp(layoutAnimationsDuration)}
             style={{
-              height: "100%",
-              marginBottom: 0,
-              bottom: 0,
-              paddingLeft: 30,
+              position: "relative",
+              width: "100%",
+              top: "0%",
+              flexGrow: 1,
             }}
-          ></TextInput>
-          <SearchIcon
-            style={{ position: "absolute", left: 8, zIndex: -1 }}
-          ></SearchIcon>
-        </View>
-      </Animated.View>
-      {virtualKeyboardApi.isVisible && (
-        <Animated.View style={{ height: 25, width: "100%" }}></Animated.View>
-      )}
-    </Animated.View>
+          >
+            <FlashList
+              inverted={true}
+              data={activities}
+              estimatedItemSize={55}
+              renderItem={({ item }) => {
+                return (
+                  <Button
+                    textStyle={{ textAlign: "left", paddingLeft: 10 }}
+                    onClick={() => {
+                      startActivity(item);
+                    }}
+                    style={{
+                      height: 55,
+                      marginBottom: 10,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                    label={item.itme.name}
+                  >
+                    <Text
+                      style={{
+                        width: "35%",
+                        position: "absolute",
+                        right: 10,
+                        paddingBottom: 3,
+                        paddingTop: 3,
+                        zIndex: -1,
+                      }}
+                      backgroundColor={
+                        globalStyle.globalStyle.color +
+                        layoutCardLikeBackgroundOpacity
+                      }
+                      fontSize={15}
+                      label={getCategoryNameFromTaskObject(item)}
+                    ></Text>
+                  </Button>
+                );
+              }}
+            />
+          </Animated.View>
+          <Animated.View
+            entering={customFadeInDown(layoutAnimationsDuration)}
+            style={{
+              marginTop: 5,
+              height: 60,
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+          >
+            <Button
+              style={{
+                height: "100%",
+                width: "30%",
+                marginBottom: 0,
+                bottom: 0,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                marginRight: 5,
+              }}
+              label=""
+              onClick={() => {
+                setIsPickingActivity(false);
+                setActivitySearchFilter("");
+                useNavMenuApi.getState().setShowMenu(true);
+              }}
+            >
+              <ArrowDeco
+                width={50}
+                style={{
+                  transform: [{ rotate: "180deg" }],
+                  width: "60%",
+                  height: "60%",
+                }}
+              ></ArrowDeco>
+            </Button>
+            <View
+              style={{
+                flexGrow: 1,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <TextInput
+                textAlign="left"
+                placeholder="Search activities or categories"
+                onChange={(e) => {
+                  const text = e.nativeEvent.text;
+                  setActivitySearchFilter(text);
+                }}
+                style={{
+                  height: "100%",
+                  marginBottom: 0,
+                  bottom: 0,
+                  paddingLeft: 30,
+                }}
+              ></TextInput>
+              <SearchIcon
+                style={{ position: "absolute", left: 8, zIndex: -1 }}
+              ></SearchIcon>
+            </View>
+          </Animated.View>
+          {virtualKeyboardApi.isVisible && (
+            <Animated.View
+              style={{ height: 25, width: "100%" }}
+            ></Animated.View>
+          )}
+        </Animated.View>
+      </SafeAreaView>
+    </Portal>
   );
 }
 
