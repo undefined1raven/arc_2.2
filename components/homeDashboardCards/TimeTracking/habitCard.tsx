@@ -1,4 +1,9 @@
+import Button from "@/components/common/Button";
+import { Selection } from "@/components/common/Selection";
 import Text from "@/components/common/Text";
+import { EditDeco } from "@/components/deco/EditDeco";
+import { HexDeco } from "@/components/deco/HexDeco";
+import { StrikeThroughHex } from "@/components/deco/StrikeThroughHex";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
@@ -7,20 +12,53 @@ import {
   HabitCardDataType,
   useHabitCardDataApi,
 } from "@/stores/viewState/habitCardData";
-import { FlashList } from "@shopify/flash-list";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useActiveUser } from "@/stores/activeUser";
 
 function HabitCard() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
-
+  const timeTrackingFC = useFeatureConfigs((r) => r.timeTrackingFeatureConfig);
   const habitCardDataApi = useHabitCardDataApi();
-
+  const activeUserId = useActiveUser((state) => state.activeUser.userId);
+  const [habitCardTrackedIds, setHabitCardTrackedIds] = useState<string[]>([]);
   const getDateFromTimestamp = (timestamp: number) => {
     return new Date(timestamp).toISOString().split("T")[0];
   };
+
+  const formatDateToMonthDay = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+    });
+  };
+
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes} mins`;
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  useEffect(() => {
+    AsyncStorage.getItem(`${activeUserId}-habitCardData`)
+      .then((data) => {
+        if (data === null) {
+        } else {
+          const parsedData: string[] = JSON.parse(data);
+          setHabitCardTrackedIds(parsedData);
+        }
+      })
+      .catch((error) => {});
+  }, [activeUserId]);
 
   useEffect(() => {
     if (habitCardDataApi.derivedData === null) {
@@ -30,17 +68,9 @@ function HabitCard() {
       const timeTrackingFeatureConfig =
         useFeatureConfigs.getState().timeTrackingFeatureConfig;
 
-      const runningId = timeTrackingFeatureConfig.find(
-        (r) => r.itme.name === "Running"
-      ).itme.taskID;
-      const runningId2 = timeTrackingFeatureConfig.find(
-        (r) => r.itme.name === "Walk"
-      ).itme.taskID;
-      const runningId3 = timeTrackingFeatureConfig.find(
-        (r) => r.itme.name === "Shower"
-      ).itme.taskID;
+      const ids = habitCardTrackedIds;
 
-      const ids = [runningId, runningId2, runningId3];
+      console.log("Retrieving habit data for tasks:", ids);
 
       dataRetrivalAPI
         .getDataInTimeRange("timeTrackingChunks", twoWeeksAgo, null, null)
@@ -137,13 +167,14 @@ function HabitCard() {
               ),
             };
           }
+
           habitCardDataApi.setDerivedData(habitData);
         })
         .catch((error) => {
           console.error("Error retrieving habit data:", error);
         });
     }
-  }, [habitCardDataApi.derivedData]);
+  }, [habitCardDataApi.derivedData, habitCardTrackedIds]);
 
   return (
     <SafeAreaView
@@ -167,16 +198,55 @@ function HabitCard() {
           <View
             style={{
               top: -50,
-              height: 100,
+              height: 20,
+              marginLeft: 5,
+              marginRight: 5,
+              marginTop: 5,
               width: "100%",
               display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
               flexShrink: 0,
-              backgroundColor: "red",
             }}
-          ></View>
+          >
+            <Text label="Habits"></Text>
+            <Selection
+              onMultiSelection={(taskIds) => {
+                const stringified = JSON.stringify(taskIds);
+                AsyncStorage.setItem(
+                  `${activeUserId}-habitCardData`,
+                  stringified
+                ).catch((error) => {
+                  console.error("Error saving habit card data:", error);
+                });
+                setHabitCardTrackedIds(taskIds);
+              }}
+              values={timeTrackingFC.filter((r) => r.type === "task")}
+              labelKeys={["itme", "name"]}
+              multiselectMatchKeys={["itme", "taskID"]}
+              value={habitCardTrackedIds}
+              multiselect={true}
+              customSelectionButton={(props: { onClick: () => void }) => {
+                return (
+                  <Button
+                    onClick={props.onClick}
+                    style={{
+                      height: 30,
+                      width: 60,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <EditDeco></EditDeco>
+                  </Button>
+                );
+              }}
+            ></Selection>
+          </View>
           <View
             style={{
-              top: -20,
+              top: -30,
               width: "100%",
               display: "flex",
               flexGrow: 1,
@@ -185,33 +255,72 @@ function HabitCard() {
             <FlatList
               data={habitCardDataApi.derivedData}
               horizontal={true}
+              extraData={habitCardTrackedIds.length}
               renderItem={({ item }) => (
                 <View
                   style={{
-                    padding: 10,
                     height: "100%",
                     width: 180,
                     borderRightWidth: 1,
-                    marginRight: 10,
+                    marginRight: 5,
                     borderRightColor: globalStyle.color,
                   }}
                 >
-                  <Text label={item.activityName}></Text>
+                  <Text
+                    style={{ width: "100%", position: "relative", left: -7 }}
+                    textAlign="left"
+                    label={item.activityName}
+                  ></Text>
                   <FlatList
                     key={(itx) => itx.date}
                     renderItem={({ item }) => {
                       const hasDoneActivity = item.duration > 0;
                       return (
-                        <ActivityIndicator
-                          color={
-                            hasDoneActivity
-                              ? globalStyle.successColor
-                              : globalStyle.errorColor
-                          }
-                        ></ActivityIndicator>
+                        <View
+                          style={{
+                            width: "100%",
+                            height: 35,
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            paddingBottom: 5,
+                          }}
+                        >
+                          <View
+                            style={{
+                              marginLeft: 5,
+                              marginRight: 5,
+                              height: 20,
+                              width: 20,
+                            }}
+                          >
+                            {hasDoneActivity ? (
+                              <HexDeco
+                                width={20}
+                                height={20}
+                                color={globalStyle.successColor}
+                              ></HexDeco>
+                            ) : (
+                              <StrikeThroughHex
+                                width={20}
+                                height={20}
+                                color={globalStyle.color}
+                              ></StrikeThroughHex>
+                            )}
+                          </View>
+                          <Text
+                            fontSize={globalStyle.mediumMobileFont}
+                            label={`${formatDateToMonthDay(item.date)} ${
+                              item.duration > 0
+                                ? `| ${formatDuration(item.duration)}`
+                                : ""
+                            }`}
+                          ></Text>
+                        </View>
                       );
                     }}
-                    data={item.streakData.reverse()}
+                    data={item.streakData}
                   ></FlatList>
                 </View>
               )}
