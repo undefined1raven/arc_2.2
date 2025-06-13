@@ -2,10 +2,12 @@ import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { Selection } from "@/components/common/Selection";
+import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
 function Home() {
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
+        <HabitCard></HabitCard>
         <TimeTrackingCard></TimeTrackingCard>
       </ThemedView>
     </>
