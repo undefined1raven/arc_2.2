@@ -453,7 +453,6 @@ function TimeTrackingCard() {
             ></Animated.View>
           )}
           <Animated.View
-            entering={customFadeInUp(layoutAnimationsDuration)}
             style={{
               position: "relative",
               width: "100%",
@@ -503,7 +502,6 @@ function TimeTrackingCard() {
             />
           </Animated.View>
           <Animated.View
-            entering={customFadeInDown(layoutAnimationsDuration)}
             style={{
               marginTop: 5,
               height: 60,

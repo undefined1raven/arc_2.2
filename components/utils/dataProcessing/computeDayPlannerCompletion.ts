@@ -24,8 +24,9 @@ function computeDayPlannerCompletion(
     completionScore += taskCompletionScore;
   });
   const taskCount = tasks.length;
-  const completionPercantage =
-    parseFloat((completionScore / taskCount).toFixed(2)) * 100;
+  const completionPercantage = (
+    parseFloat((completionScore / taskCount).toFixed(2)) * 100
+  ).toFixed(0);
 
   return completionPercantage;
 }
