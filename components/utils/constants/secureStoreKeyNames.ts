@@ -14,6 +14,10 @@ const secureStoreKeyNames = {
   },
 };
 
+const getUserThemeKey = (userId: string) => {
+  return `userTheme_${userId}`;
+};
+
 const getUserDataKey = (
   userId: string,
   userDataKey: "timeTrackingActiveTask" | string
@@ -29,4 +33,10 @@ const getPrivateKey = (userId: string) => {
   return `privateKey_${userId}`;
 };
 
-export { secureStoreKeyNames, getPrivateKey, getSymmetricKey, getUserDataKey };
+export {
+  secureStoreKeyNames,
+  getPrivateKey,
+  getSymmetricKey,
+  getUserDataKey,
+  getUserThemeKey,
+};

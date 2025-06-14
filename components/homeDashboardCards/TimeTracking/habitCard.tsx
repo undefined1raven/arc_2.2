@@ -12,14 +12,14 @@ import {
   HabitCardDataType,
   useHabitCardDataApi,
 } from "@/stores/viewState/habitCardData";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useActiveUser } from "@/stores/activeUser";
 
-function HabitCard() {
+const HabitCard = memo(() => {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const timeTrackingFC = useFeatureConfigs((r) => r.timeTrackingFeatureConfig);
   const habitCardDataApi = useHabitCardDataApi();
@@ -361,6 +361,6 @@ function HabitCard() {
       )}
     </SafeAreaView>
   );
-}
+});
 
 export { HabitCard };

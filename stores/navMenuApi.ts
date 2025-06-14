@@ -25,7 +25,7 @@ const useNavMenuApi = create<INavMenuApi>((set, get) => ({
       goTo: "settings",
       icon: SettingdIcon,
       name: "settings",
-      pathname: "/settings/settings",
+      pathname: "/settings/settingsMain",
     },
     {
       goTo: "dayPlanner",

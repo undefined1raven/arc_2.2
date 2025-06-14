@@ -22,6 +22,10 @@ import { useNavMenuApi } from "@/stores/navMenuApi";
 import { StatusIndicators } from "@/components/ui/StatusIndicators";
 import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import { Host, Portal } from "react-native-portalize";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyNames";
+import { useActiveUser } from "@/stores/activeUser";
+import themeColors from "@/constants/colors";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -42,6 +46,8 @@ export default function RootLayout() {
     "/diary/diaryNoteView/diaryNoteView",
     "/diary/diaryGroupConfig/diaryGroupConfig",
     "/timeTracking/editActivity/editActivity",
+    "/settings/accountSettings/accountSettingsMain",
+    "/settings/accountSettings/themeSettings",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -56,11 +62,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
-      NavigationBar.setBackgroundColorAsync(
-        globalStyle.pageBackgroundColors[1]
-      );
-      NavigationBar.setButtonStyleAsync("dark");
       NavigationBar.setPositionAsync("absolute");
     }
   }, [loaded]);
@@ -161,6 +162,18 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="home/home"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/settingsMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/accountSettings/accountSettingsMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/accountSettings/themeSettings"
                   options={{ headerShown: false }}
                 />
               </Stack>
