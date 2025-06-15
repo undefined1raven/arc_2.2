@@ -13,25 +13,29 @@ import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { debounce } from "lodash";
 import { Selection } from "@/components/common/Selection";
 import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
-function EditActivity() {
-  const activityToEdit = useTimeTrackingSelectedActivity(
-    (s) => s.activityToEdit
+function EditCategory() {
+  const categoryToEdit = useTimeTrackingSelectedActivity(
+    (s) => s.categoryToEdit
   );
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const timeTrackingFeatureConfig = useFeatureConfigs(
     (s) => s.timeTrackingFeatureConfig
   );
   const updateAcitivty = useCallback(
-    debounce((updatedActivity: ARCTasksType) => {
+    debounce((updatedCategory: ARCTasksType) => {
       const featureConfigApi = useFeatureConfigs.getState();
       const dataRetrivalAPI = dataRetrivalApi.getState();
-      if (activityToEdit === null) return;
+      if (categoryToEdit === null) return;
+      let idKey = "categoryID";
+      if (typeof categoryToEdit?.itme.categoryID === "undefined") {
+        idKey = "id";
+      }
       dataRetrivalAPI
         .modifyFeatureConfig(
           "timeTracking",
-          ["itme", "taskID"],
-          updatedActivity.itme.taskID,
-          updatedActivity,
+          ["itme", idKey],
+          updatedCategory.itme[idKey],
+          updatedCategory,
           "replace"
         )
         .catch((error) => {
@@ -43,8 +47,8 @@ function EditActivity() {
 
       const updatedTimeTrackingFeatureConfig =
         featureConfigApi.timeTrackingFeatureConfig.map((fcItem: any) => {
-          if (fcItem.itme.taskID === updatedActivity.itme.taskID) {
-            return updatedActivity;
+          if (fcItem.itme[idKey] === updatedCategory.itme[idKey]) {
+            return updatedCategory;
           }
           return fcItem;
         });
@@ -52,81 +56,36 @@ function EditActivity() {
         updatedTimeTrackingFeatureConfig
       );
     }, 300),
-    [activityToEdit]
-  );
-
-  const getCategoryForActivity = useCallback(
-    (activity: ARCTasksType) => {
-      const categoryId = activity.itme.categoryID;
-      if (!categoryId) return "Unknown Category";
-      const category = timeTrackingFeatureConfig?.find((item: any) => {
-        const match = item.itme.categoryID === categoryId;
-        if (match) {
-          return item;
-        }
-        const legacyMatch = item.itme.id === categoryId;
-        if (legacyMatch) {
-          return item;
-        }
-        return false;
-      });
-      return category ? category : "Unknown Category";
-    },
-    [timeTrackingFeatureConfig]
+    [categoryToEdit]
   );
 
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
-        {activityToEdit === null ? (
+        {categoryToEdit === null ? (
           <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
         ) : (
           <FeatureConfigEmptySettingPage
-            bototmHeaderLabel="Edit activity"
+            bototmHeaderLabel="Edit category"
             bottomHeaderButtonOnPress={() => {
               router.replace("/timeTracking/timeTrackingSettingsMain");
             }}
           >
-            <FeatureConfigSelection
-              label="Category"
-              inputProps={{ selectionBoxStyle: { width: "100%" } }}
-              labelKeys={["itme", "name"]}
-              values={timeTrackingFeatureConfig.filter(
-                (item: any) => item.type === "taskCategory"
-              )}
-              value={getCategoryForActivity(activityToEdit)}
-              onChange={(category: ARCCategoryType) => {
-                const updatedActivity: ARCTasksType = {
-                  ...activityToEdit,
-                  itme: {
-                    ...activityToEdit.itme,
-                    categoryID: category.itme.categoryID || category.itme.id,
-                  },
-                };
-                const timeTrackingSelectedActivityApi =
-                  useTimeTrackingSelectedActivity.getState();
-                timeTrackingSelectedActivityApi.setActivityToEdit(
-                  updatedActivity
-                );
-
-                updateAcitivty(updatedActivity);
-              }}
-            ></FeatureConfigSelection>
             <FeatureConfigValueInput
               inputType="text"
               onChange={(newName: string) => {
-                if (activityToEdit === null) return;
-                const updatedActivity: ARCTasksType = {
-                  ...activityToEdit,
+                if (categoryToEdit === null) return;
+                const updatedCategory: ARCCategoryType = {
+                  ...categoryToEdit,
                   itme: {
-                    ...activityToEdit.itme,
+                    ...categoryToEdit.itme,
                     name: newName,
                   },
                 };
-                updateAcitivty(updatedActivity);
+                updateAcitivty(updatedCategory);
               }}
               label="Name"
-              value={activityToEdit?.itme.name}
+              value={categoryToEdit?.itme.name}
             ></FeatureConfigValueInput>
           </FeatureConfigEmptySettingPage>
         )}
@@ -134,7 +93,7 @@ function EditActivity() {
     </>
   );
 }
-export default EditActivity;
+export default EditCategory;
 
 const styles = StyleSheet.create({
   container: {

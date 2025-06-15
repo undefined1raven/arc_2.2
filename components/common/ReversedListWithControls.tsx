@@ -31,6 +31,8 @@ type ReversedListWithControlsProps = {
   showActionButton?: boolean;
   onActionButtonClick?: () => void;
   extraData?: any;
+  ItemSeparatorComponent?: React.ComponentType<any>;
+  estimatedItemSize?: number;
 };
 
 function ReversedListWithControls({
@@ -44,6 +46,8 @@ function ReversedListWithControls({
   showActionButton = false,
   extraData,
   onActionButtonClick = () => {},
+  ItemSeparatorComponent,
+  estimatedItemSize = 55,
 }: ReversedListWithControlsProps) {
   const globalStyle = useGlobalStyleStore();
   const virtualKeyboardApi = useVirtualKeyboard();
@@ -107,8 +111,9 @@ function ReversedListWithControls({
           extraData={extraData}
           inverted={true}
           data={currentData}
-          estimatedItemSize={55}
+          estimatedItemSize={estimatedItemSize}
           renderItem={renderItem}
+          ItemSeparatorComponent={ItemSeparatorComponent}
         />
         {showActionButton && (
           <Animated.View

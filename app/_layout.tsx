@@ -48,6 +48,10 @@ export default function RootLayout() {
     "/timeTracking/editActivity/editActivity",
     "/settings/accountSettings/accountSettingsMain",
     "/settings/accountSettings/themeSettings",
+    "/timeTracking/timeTrackingSettingsMain",
+    "/timeTracking/editActivity/editActivitySelection",
+    "/timeTracking/editCategory/editCategorySelection",
+    "/timeTracking/editCategory/editCategory",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -161,6 +165,10 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="timeTracking/editCategory/editCategory"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="home/home"
                   options={{ headerShown: false }}
                 />
@@ -174,6 +182,18 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="settings/accountSettings/themeSettings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTracking/timeTrackingSettingsMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTracking/editActivity/editActivitySelection"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTracking/editCategory/editCategorySelection"
                   options={{ headerShown: false }}
                 />
               </Stack>

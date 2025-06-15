@@ -14,7 +14,8 @@ import { router } from "expo-router";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
-function SettingsMain() {
+import { Dropdown } from "@/components/deco/Dropdown";
+function TimeTrackingSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
     name: string;
@@ -25,32 +26,16 @@ function SettingsMain() {
   };
   const settingOptions = [
     {
-      name: "timeTracking",
-      icon: TimeStatsIcon,
-      title: "Activities and categories",
-      description: "Add, remove and categorize your activities",
-      goTo: "timeTracking/timeTrackingSettingsMain",
+      name: "activities",
+      title: "Activities",
+      description: "Add, remove and edit your activities",
+      goTo: "/timeTracking/editActivity/editActivitySelection",
     },
     {
-      name: "dayPlanner",
-      icon: DayPlannerIcon,
-      title: "Customize day planner",
-      description: "Change colors",
-      goTo: "",
-    },
-    {
-      name: "personalDiary",
-      icon: PersonalDiaryIcon,
-      title: "Personal diary",
-      description: "Access control",
-      goTo: "",
-    },
-    {
-      name: "accountSettings",
-      icon: SettingdIcon,
-      title: "Account settings",
-      description: "Theme, security, and general settings",
-      goTo: "/settings/accountSettings/accountSettingsMain",
+      name: "categories",
+      title: "Categories",
+      description: "Add, remove and edit your categories",
+      goTo: "/timeTracking/editCategory/editCategorySelection",
     },
   ];
 
@@ -74,7 +59,6 @@ function SettingsMain() {
           paddingRight: 5,
         }}
       >
-        <item.icon width={30} height={30} />
         <View
           style={{
             display: "flex",
@@ -99,17 +83,47 @@ function SettingsMain() {
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
           <FlashList
-            estimatedItemSize={100}
             inverted={true}
             renderItem={({ item }) => renderItem(item)}
             data={settingOptions}
           ></FlashList>
+          <Text
+            textAlign="left"
+            label="Settings / Time Tracking Settings"
+            style={{
+              flexShrink: 0,
+              width: "100%",
+              height: 65,
+              paddingLeft: 90,
+              backgroundColor:
+                globalStyle.color + layoutCardLikeBackgroundOpacity,
+            }}
+          ></Text>
+          <Button
+            onClick={() => {
+              router.back();
+            }}
+            style={{
+              borderRadius: 0,
+              borderWidth: 0,
+              borderRightWidth: 1,
+              position: "absolute",
+              bottom: 0,
+              width: 80,
+              height: 65,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
+          </Button>
         </View>
       </ThemedView>
     </>
   );
 }
-export default SettingsMain;
+export default TimeTrackingSettingsMain;
 
 const styles = StyleSheet.create({
   container: {

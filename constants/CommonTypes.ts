@@ -182,7 +182,7 @@ type ARC_ChunksType = {
   userID: string;
   encryptedContent: string;
   tx: number;
-  version: "0.1.1";
+  version: "0.1.1" | "0.1.2";
 };
 
 type Tess_ChunksType = {
@@ -190,7 +190,7 @@ type Tess_ChunksType = {
   userID: string;
   encryptedContent: string;
   tx: number;
-  version: "0.1.1";
+  version: "0.1.1" | "0.1.2";
 };
 
 type SID_ChunksType = {
@@ -198,7 +198,7 @@ type SID_ChunksType = {
   userID: string;
   encryptedContent: string;
   tx: number;
-  version: "0.1.1";
+  version: "0.1.1" | "0.1.2";
 };
 
 type SIDGroups_ChunksType = {
@@ -206,7 +206,7 @@ type SIDGroups_ChunksType = {
   userID: string;
   encryptedContent: string;
   tx: number;
-  version: "0.1.1";
+  version: "0.1.1" | "0.1.2";
 };
 
 type SIDGroupType = {
