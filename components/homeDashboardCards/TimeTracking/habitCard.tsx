@@ -7,6 +7,7 @@ import { StrikeThroughHex } from "@/components/deco/StrikeThroughHex";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
+import { AfterInteractions } from "react-native-interactions";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import {
   HabitCardDataType,
@@ -280,82 +281,84 @@ const HabitCard = memo(() => {
               flexGrow: 1,
             }}
           >
-            <FlatList
-              data={habitCardDataApi.derivedData}
-              horizontal={true}
-              extraData={habitCardTrackedIds}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    userSelect: "none",
-                    height: "100%",
-                    zIndex: -1,
-                    width: 180,
-                    borderRightWidth: 1,
-                    marginRight: 5,
-                    borderRightColor: globalStyle.color,
-                  }}
-                >
-                  <Text
-                    style={{ width: "100%", position: "relative", left: -7 }}
-                    textAlign="left"
-                    label={item.activityName}
-                  ></Text>
-                  <FlatList
-                    key={(itx) => itx.date}
-                    renderItem={({ item }) => {
-                      const hasDoneActivity = item.duration > 0;
-                      return (
-                        <View
-                          style={{
-                            width: "100%",
-                            height: 35,
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            paddingBottom: 5,
-                          }}
-                        >
+            <AfterInteractions>
+              <FlatList
+                data={habitCardDataApi.derivedData}
+                horizontal={true}
+                extraData={habitCardTrackedIds}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      userSelect: "none",
+                      height: "100%",
+                      zIndex: -1,
+                      width: 180,
+                      borderRightWidth: 1,
+                      marginRight: 5,
+                      borderRightColor: globalStyle.color,
+                    }}
+                  >
+                    <Text
+                      style={{ width: "100%", position: "relative", left: -7 }}
+                      textAlign="left"
+                      label={item.activityName}
+                    ></Text>
+                    <FlatList
+                      key={(itx) => itx.date}
+                      renderItem={({ item }) => {
+                        const hasDoneActivity = item.duration > 0;
+                        return (
                           <View
                             style={{
-                              marginLeft: 5,
-                              marginRight: 5,
-                              height: 20,
-                              width: 20,
+                              width: "100%",
+                              height: 35,
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "flex-start",
+                              paddingBottom: 5,
                             }}
                           >
-                            {hasDoneActivity ? (
-                              <HexDeco
-                                width={20}
-                                height={20}
-                                color={globalStyle.successColor}
-                              ></HexDeco>
-                            ) : (
-                              <StrikeThroughHex
-                                width={20}
-                                height={20}
-                                color={globalStyle.color}
-                              ></StrikeThroughHex>
-                            )}
+                            <View
+                              style={{
+                                marginLeft: 5,
+                                marginRight: 5,
+                                height: 20,
+                                width: 20,
+                              }}
+                            >
+                              {hasDoneActivity ? (
+                                <HexDeco
+                                  width={20}
+                                  height={20}
+                                  color={globalStyle.successColor}
+                                ></HexDeco>
+                              ) : (
+                                <StrikeThroughHex
+                                  width={20}
+                                  height={20}
+                                  color={globalStyle.color}
+                                ></StrikeThroughHex>
+                              )}
+                            </View>
+                            <Text
+                              fontSize={globalStyle.mediumMobileFont}
+                              label={`${formatDateToMonthDay(item.date)} ${
+                                item.duration > 0
+                                  ? `| ${formatDuration(item.duration)}`
+                                  : ""
+                              }`}
+                            ></Text>
                           </View>
-                          <Text
-                            fontSize={globalStyle.mediumMobileFont}
-                            label={`${formatDateToMonthDay(item.date)} ${
-                              item.duration > 0
-                                ? `| ${formatDuration(item.duration)}`
-                                : ""
-                            }`}
-                          ></Text>
-                        </View>
-                      );
-                    }}
-                    data={item.streakData}
-                  ></FlatList>
-                </View>
-              )}
-              keyExtractor={(item) => item.activityName}
-            />
+                        );
+                      }}
+                      data={item.streakData}
+                    ></FlatList>
+                  </View>
+                )}
+                keyExtractor={(item) => item.activityName}
+              />
+            </AfterInteractions>
           </View>
         </>
       )}
