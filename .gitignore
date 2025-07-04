@@ -9,6 +9,20 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Build outputs
+*.apk
+*.aab
+*.ipa
+build/
+dist/
+android/app/build/
+ios/build/
+
+# Large files
+*.zip
+*.tar.gz
+*.dmg
+
 # Native
 *.orig.*
 *.jks
