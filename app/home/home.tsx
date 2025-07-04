@@ -1,11 +1,35 @@
 import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
-import { Selection } from "@/components/common/Selection";
 import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
 import { AfterInteractions } from "react-native-interactions";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect } from "react";
+import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 
 function Home() {
+  const db = useSQLiteContext();
+
+  // useEffect(() => {
+  //   console.log("RUNNING");
+  //   db.getAllAsync(
+  //     "SELECT timeRangeStart, timeRangeEnd FROM timeTrackingChunks"
+  //   )
+  //     .then((r) => {
+  //       const da = dataRetrivalApi.getState();
+  //       da.specialOps("getTimeRanges")
+  //         .then((r) => {
+  //           console.log("Modified timeTrackingChunks:", r);
+  //         })
+  //         .catch((e) => {
+  //           console.log("Error modifying timeTrackingChunks:", e);
+  //         });
+  //     })
+  //     .catch((e) => {
+  //       console.log(e);
+  //     });
+  // }, []);
+
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>

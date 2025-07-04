@@ -13,12 +13,117 @@ import {
   HabitCardDataType,
   useHabitCardDataApi,
 } from "@/stores/viewState/habitCardData";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useActiveUser } from "@/stores/activeUser";
+
+// Memoized components
+const HabitIcon = memo(
+  ({
+    hasDoneActivity,
+    globalStyle,
+  }: {
+    hasDoneActivity: boolean;
+    globalStyle: any;
+  }) => (
+    <View style={{ marginLeft: 5, marginRight: 5, height: 20, width: 20 }}>
+      {hasDoneActivity ? (
+        <HexDeco width={20} height={20} color={globalStyle.successColor} />
+      ) : (
+        <StrikeThroughHex width={20} height={20} color={globalStyle.color} />
+      )}
+    </View>
+  )
+);
+
+const StreakItem = memo(
+  ({
+    streakItem,
+    globalStyle,
+    formatDateToMonthDay,
+    formatDuration,
+  }: {
+    streakItem: any;
+    globalStyle: any;
+    formatDateToMonthDay: (date: string) => string;
+    formatDuration: (seconds: number) => string;
+  }) => {
+    const hasDoneActivity = streakItem.duration > 0;
+
+    return (
+      <View
+        style={{
+          width: "100%",
+          height: 35,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          paddingBottom: 5,
+        }}
+      >
+        <HabitIcon
+          hasDoneActivity={hasDoneActivity}
+          globalStyle={globalStyle}
+        />
+        <Text
+          fontSize={globalStyle.mediumMobileFont}
+          label={`${formatDateToMonthDay(streakItem.date)}${
+            streakItem.duration > 0
+              ? ` | ${formatDuration(streakItem.duration)}`
+              : ""
+          }`}
+        />
+      </View>
+    );
+  }
+);
+
+const HabitItem = memo(
+  ({
+    item,
+    globalStyle,
+    formatDateToMonthDay,
+    formatDuration,
+  }: {
+    item: any;
+    globalStyle: any;
+    formatDateToMonthDay: (date: string) => string;
+    formatDuration: (seconds: number) => string;
+  }) => (
+    <View
+      style={{
+        userSelect: "none",
+        height: "100%",
+        zIndex: -1,
+        width: 180,
+        borderRightWidth: 1,
+        marginRight: 5,
+        borderRightColor: globalStyle.color,
+      }}
+    >
+      <Text
+        style={{ width: "100%", position: "relative", left: -7 }}
+        textAlign="left"
+        label={item.activityName}
+      />
+      <View>
+        {item.streakData.map((streakItem: any) => (
+          <StreakItem
+            key={streakItem.date}
+            streakItem={streakItem}
+            globalStyle={globalStyle}
+            formatDateToMonthDay={formatDateToMonthDay}
+            formatDuration={formatDuration}
+          />
+        ))}
+      </View>
+    </View>
+  )
+);
 
 const HabitCard = memo(() => {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -26,18 +131,21 @@ const HabitCard = memo(() => {
   const habitCardDataApi = useHabitCardDataApi();
   const habitCardTrackedIds = useHabitCardDataApi((r) => r.trackedIds);
   const activeUserId = useActiveUser((state) => state.activeUser.userId);
-  const getDateFromTimestamp = (timestamp: number) => {
+
+  // Memoized utility functions
+  const getDateFromTimestamp = useCallback((timestamp: number) => {
     return new Date(timestamp).toISOString().split("T")[0];
-  };
-  const formatDateToMonthDay = (dateString: string) => {
+  }, []);
+
+  const formatDateToMonthDay = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "2-digit",
     });
-  };
+  }, []);
 
-  const formatDuration = (seconds: number): string => {
+  const formatDuration = useCallback((seconds: number): string => {
     if (seconds < 3600) {
       const minutes = Math.floor(seconds / 60);
       return `${minutes} mins`;
@@ -46,162 +154,173 @@ const HabitCard = memo(() => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
-  };
+  }, []);
 
+  // Memoized constants
+  const timeConstants = useMemo(
+    () => ({
+      twoWeeksAgo: Date.now() - 120 * 24 * 60 * 60 * 1000,
+      twoWeeksAgoA: Date.now() - 14 * 24 * 60 * 60 * 1000,
+    }),
+    []
+  );
+
+  // Memoized task map for O(1) lookups
+  const taskMap = useMemo(() => {
+    const map = new Map();
+    timeTrackingFC.forEach((task) => {
+      map.set(task.itme.taskID, task);
+    });
+    return map;
+  }, [timeTrackingFC]);
+
+  // Load stored data
   useEffect(() => {
-    AsyncStorage.getItem(`${activeUserId}-habitCardData`)
-      .then((data) => {
-        if (data === null) {
-        } else {
+    const loadStoredData = async () => {
+      try {
+        const data = await AsyncStorage.getItem(
+          `${activeUserId}-habitCardData`
+        );
+        if (data) {
           const parsedData: string[] = JSON.parse(data);
           const habitDataApi = useHabitCardDataApi.getState();
           habitDataApi.setTrackedIds(parsedData);
         }
-      })
-      .catch((error) => {});
+      } catch (error) {
+        console.error("Error loading habit card data:", error);
+      }
+    };
+
+    loadStoredData();
   }, [activeUserId]);
 
-  const getHabitData = useCallback((trackedIds: string[]) => {
-    const dataRetrivalAPI = dataRetrivalApi.getState();
-    const twoWeeksAgo = Date.now() - 120 * 24 * 60 * 60 * 1000;
-    const twoWeeksAgoA = Date.now() - 14 * 24 * 60 * 60 * 1000;
-    const timeTrackingFeatureConfig =
-      useFeatureConfigs.getState().timeTrackingFeatureConfig;
+  const getHabitData = useCallback(
+    (trackedIds: string[]) => {
+      const dataRetrivalAPI = dataRetrivalApi.getState();
 
-    const ids = trackedIds;
+      dataRetrivalAPI
+        .getDataInTimeRange(
+          "timeTrackingChunks",
+          timeConstants.twoWeeksAgo,
+          null,
+          null
+        )
+        .then((data) => {
+          const habitData: HabitCardDataType = [];
 
-    dataRetrivalAPI
-      .getDataInTimeRange("timeTrackingChunks", twoWeeksAgo, null, null)
-      .then((data) => {
-        const habitData: HabitCardDataType = [];
+          // Filter and sort data once
+          const filteredData = data.payload
+            .filter(
+              (t: any) =>
+                t.start > timeConstants.twoWeeksAgoA &&
+                trackedIds.includes(t.taskID)
+            )
+            .sort((a: any, b: any) => a.start - b.start);
 
-        const sortedData = data.payload
-          .sort((a, b) => a.start - b.start)
-          .filter((t) => t.start > twoWeeksAgoA)
-          .filter((t) => ids.includes(t.taskID));
+          // Process data more efficiently
+          const habitMap = new Map();
 
-        ////GET INITIAL DATA
-        for (let ix = 0; ix < sortedData.length; ix++) {
-          const item = sortedData[ix];
+          for (const item of filteredData) {
+            const task = taskMap.get(item.taskID);
+            if (!task) continue;
 
-          const task = timeTrackingFeatureConfig.find(
-            (t) => t.itme.taskID === item.taskID
-          );
+            const activityName = task.itme.name;
+            const activityDuration = Math.floor((item.end - item.start) / 1000);
+            const activityDate = getDateFromTimestamp(item.start);
 
-          if (!task) {
-            continue;
-          }
-          const activityName = task?.itme.name;
-
-          const existingHabitIndex = habitData.findIndex(
-            (h) => h.activityName === activityName
-          );
-          const existingHabit =
-            existingHabitIndex !== -1 ? habitData[existingHabitIndex] : null;
-
-          const activityDuration = Math.floor((item.end - item.start) / 1000);
-
-          const activityDate = getDateFromTimestamp(item.start);
-
-          if (existingHabit) {
-            const streakData = [...existingHabit.streakData];
-            const existingStreak = streakData.find(
-              (s) => s.date === activityDate
-            );
-            if (existingStreak) {
-              const newStreak = { ...existingStreak };
-              const newDuration = existingStreak.duration + activityDuration;
-              newStreak.duration = newDuration;
-
-              const strekIndex = streakData.findIndex(
-                (s) => s.date === activityDate
-              );
-              streakData[strekIndex] = newStreak;
-            } else {
-              streakData.push({
-                date: activityDate,
-                duration: activityDuration,
-              });
+            if (!habitMap.has(activityName)) {
+              habitMap.set(activityName, new Map());
             }
 
-            habitData[existingHabitIndex] = {
-              ...existingHabit,
-              streakData: streakData,
-            };
-          } else {
-            habitData.push({
-              activityName: activityName,
-              streakData: [
-                {
-                  date: activityDate,
-                  duration: activityDuration,
-                },
-              ],
-            });
+            const streakMap = habitMap.get(activityName);
+            const currentDuration = streakMap.get(activityDate) || 0;
+            streakMap.set(activityDate, currentDuration + activityDuration);
           }
-        }
 
-        ////ADD EMPTY HABIT IF THERE AREN'T ANY ACTIVITIES WITH THOSE IDS IN THE SPECIFIED TIME RANGE
-        for (let ix = 0; ix < ids.length; ix++) {
-          const taskId = ids[ix];
-          const task = timeTrackingFeatureConfig.find(
-            (t) => t.itme.taskID === taskId
-          );
-          if (!task) {
-            continue;
+          // Add empty habits for tracked IDs without data
+          for (const taskId of trackedIds) {
+            const task = taskMap.get(taskId);
+            if (task && !habitMap.has(task.itme.name)) {
+              habitMap.set(task.itme.name, new Map());
+            }
           }
-          const activityName = task?.itme.name;
-          const existingHabitIndex = habitData.findIndex(
-            (h) => h.activityName === activityName
-          );
-          if (existingHabitIndex === -1) {
-            habitData.push({
-              activityName: activityName,
-              streakData: [],
-            });
-          }
-        }
 
-        ////FILL BLANK DAYS
-        for (let ix = 0; ix < habitData.length; ix++) {
-          const habit = habitData[ix];
-          const streakData = [...habit.streakData];
-          const startDate = new Date(twoWeeksAgoA);
+          // Convert to final format and fill blank days
+          const startDate = new Date(timeConstants.twoWeeksAgoA);
           const endDate = new Date();
-          const currentDate = new Date(startDate);
-          while (currentDate <= endDate) {
-            const dateString = currentDate.toISOString().split("T")[0];
-            const existingStreak = streakData.find(
-              (s) => s.date === dateString
-            );
-            if (!existingStreak) {
-              streakData.push({ date: dateString, duration: 0 });
-            }
-            currentDate.setDate(currentDate.getDate() + 1);
-          }
-          habitData[ix] = {
-            ...habit,
-            streakData: streakData.sort(
-              (a, b) => new Date(a.date) - new Date(b.date)
-            ),
-          };
-        }
 
-        habitCardDataApi.setDerivedData(habitData);
-      })
-      .catch((error) => {
-        console.error("Error retrieving habit data:", error);
-      });
-  }, []);
+          for (const [activityName, streakMap] of habitMap) {
+            const streakData = [];
+            const currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+              const dateString = currentDate.toISOString().split("T")[0];
+              const duration = streakMap.get(dateString) || 0;
+              streakData.push({ date: dateString, duration });
+              currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            habitData.push({ activityName, streakData });
+          }
+
+          habitCardDataApi.setDerivedData(habitData);
+        })
+        .catch((error) => {
+          console.error("Error retrieving habit data:", error);
+        });
+    },
+    [timeConstants, taskMap, getDateFromTimestamp]
+  );
 
   useEffect(() => {
-    if (habitCardTrackedIds === null || habitCardTrackedIds.length === 0) {
-      return;
-    }
-    if (habitCardDataApi.derivedData === null) {
+    if (
+      habitCardTrackedIds?.length > 0 &&
+      habitCardDataApi.derivedData === null
+    ) {
       getHabitData(habitCardTrackedIds);
     }
-  }, [habitCardDataApi.derivedData, habitCardTrackedIds]);
+  }, [habitCardDataApi.derivedData, habitCardTrackedIds, getHabitData]);
+
+  // Memoized selection handler
+  const handleSelection = useCallback(
+    async (taskIds: string[]) => {
+      const stringified = JSON.stringify(taskIds);
+      const habitDataApi = useHabitCardDataApi.getState();
+      habitDataApi.setTrackedIds(taskIds);
+      getHabitData(taskIds);
+
+      try {
+        await AsyncStorage.setItem(
+          `${activeUserId}-habitCardData`,
+          stringified
+        );
+      } catch (error) {
+        console.error("Error saving habit card data:", error);
+      }
+    },
+    [activeUserId, getHabitData]
+  );
+
+  // Memoized filtered tasks
+  const filteredTasks = useMemo(
+    () => timeTrackingFC.filter((r) => r.type === "task"),
+    [timeTrackingFC]
+  );
+
+  // Memoized render item
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => (
+      <HabitItem
+        item={item}
+        globalStyle={globalStyle}
+        formatDateToMonthDay={formatDateToMonthDay}
+        formatDuration={formatDuration}
+      />
+    ),
+    [globalStyle, formatDateToMonthDay, formatDuration]
+  );
+
+  const keyExtractor = useCallback((item: any) => item.activityName, []);
 
   return (
     <SafeAreaView
@@ -218,7 +337,7 @@ const HabitCard = memo(() => {
       }}
     >
       {habitCardDataApi.derivedData === null && (
-        <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
+        <ActivityIndicator color={globalStyle.color} />
       )}
       {habitCardDataApi.derivedData !== null && (
         <>
@@ -236,42 +355,29 @@ const HabitCard = memo(() => {
               flexShrink: 0,
             }}
           >
-            <Text label="Habits"></Text>
+            <Text label="Habits" />
             <Selection
-              onMultiSelection={(taskIds) => {
-                const stringified = JSON.stringify(taskIds);
-                const habitDataApi = useHabitCardDataApi.getState();
-                habitDataApi.setTrackedIds(taskIds);
-                getHabitData(taskIds);
-                AsyncStorage.setItem(
-                  `${activeUserId}-habitCardData`,
-                  stringified
-                ).catch((error) => {
-                  console.error("Error saving habit card data:", error);
-                });
-              }}
-              values={timeTrackingFC.filter((r) => r.type === "task")}
+              onMultiSelection={handleSelection}
+              values={filteredTasks}
               labelKeys={["itme", "name"]}
               multiselectMatchKeys={["itme", "taskID"]}
               value={habitCardTrackedIds}
               multiselect={true}
-              customSelectionButton={(props: { onClick: () => void }) => {
-                return (
-                  <Button
-                    onClick={props.onClick}
-                    style={{
-                      height: 30,
-                      width: 60,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <EditDeco></EditDeco>
-                  </Button>
-                );
-              }}
-            ></Selection>
+              customSelectionButton={(props: { onClick: () => void }) => (
+                <Button
+                  onClick={props.onClick}
+                  style={{
+                    height: 30,
+                    width: 60,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <EditDeco />
+                </Button>
+              )}
+            />
           </View>
           <View
             style={{
@@ -286,77 +392,16 @@ const HabitCard = memo(() => {
                 data={habitCardDataApi.derivedData}
                 horizontal={true}
                 extraData={habitCardTrackedIds}
-                renderItem={({ item }) => (
-                  <View
-                    style={{
-                      userSelect: "none",
-                      height: "100%",
-                      zIndex: -1,
-                      width: 180,
-                      borderRightWidth: 1,
-                      marginRight: 5,
-                      borderRightColor: globalStyle.color,
-                    }}
-                  >
-                    <Text
-                      style={{ width: "100%", position: "relative", left: -7 }}
-                      textAlign="left"
-                      label={item.activityName}
-                    ></Text>
-                    <FlatList
-                      key={(itx) => itx.date}
-                      renderItem={({ item }) => {
-                        const hasDoneActivity = item.duration > 0;
-                        return (
-                          <View
-                            style={{
-                              width: "100%",
-                              height: 35,
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "flex-start",
-                              paddingBottom: 5,
-                            }}
-                          >
-                            <View
-                              style={{
-                                marginLeft: 5,
-                                marginRight: 5,
-                                height: 20,
-                                width: 20,
-                              }}
-                            >
-                              {hasDoneActivity ? (
-                                <HexDeco
-                                  width={20}
-                                  height={20}
-                                  color={globalStyle.successColor}
-                                ></HexDeco>
-                              ) : (
-                                <StrikeThroughHex
-                                  width={20}
-                                  height={20}
-                                  color={globalStyle.color}
-                                ></StrikeThroughHex>
-                              )}
-                            </View>
-                            <Text
-                              fontSize={globalStyle.mediumMobileFont}
-                              label={`${formatDateToMonthDay(item.date)} ${
-                                item.duration > 0
-                                  ? `| ${formatDuration(item.duration)}`
-                                  : ""
-                              }`}
-                            ></Text>
-                          </View>
-                        );
-                      }}
-                      data={item.streakData}
-                    ></FlatList>
-                  </View>
-                )}
-                keyExtractor={(item) => item.activityName}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={5}
+                windowSize={10}
+                getItemLayout={(data, index) => ({
+                  length: 180,
+                  offset: 180 * index,
+                  index,
+                })}
               />
             </AfterInteractions>
           </View>

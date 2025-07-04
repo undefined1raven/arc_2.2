@@ -101,7 +101,7 @@ function TimeTrackingSettingsMain() {
           ></Text>
           <Button
             onClick={() => {
-              router.back();
+              router.replace("/settings/settingsMain");
             }}
             style={{
               borderRadius: 0,

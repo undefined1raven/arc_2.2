@@ -361,13 +361,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     valueToMatch: string,
     newValue: any,
     chunkID?: string | undefined | null,
-    replaceOrAppend?: "replace" | "append" | "delete"
+    replaceOrAppend?: "replace" | "append" | "delete" | "specialOp"
   ) => {
     let replaceOrAppendValue = "replace";
     if (
       replaceOrAppend === "append" ||
       replaceOrAppend === "replace" ||
-      replaceOrAppend === "delete"
+      replaceOrAppend === "delete" ||
+      replaceOrAppend === "specialOp"
     ) {
       replaceOrAppendValue = replaceOrAppend;
     }
@@ -408,13 +409,25 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       argList.push(chunkID);
     }
 
-    const encryptedChunk: ARC_ChunksType | FeatureConfigChunkType | null =
+    const encryptedChunks: ARC_ChunksType | FeatureConfigChunkType | null =
       await db.getFirstAsync(
         `SELECT * FROM ${tableName} WHERE userID = ? ${
-          hasChunkId ? "AND id = ?" : "ORDER BY tx DESC LIMIT 1"
+          hasChunkId ? "AND id = ?" : "ORDER BY tx DESC"
         } `,
         argList
       );
+
+    const encryptedChunk: ARC_ChunksType | FeatureConfigChunkType | null =
+      encryptedChunks[0];
+
+    if (Object.keys(encryptedChunk).length === 5) {
+      await db.runAsync(
+        `ALTER TABLE ${tableName} ADD COLUMN timeRangeStart NUMBER`
+      );
+      await db.runAsync(
+        `ALTER TABLE ${tableName} ADD COLUMN timeRangeEnd NUMBER`
+      );
+    }
 
     if (encryptedChunk === null) {
       statusIndicatorApi.setIsSavingLocalData(false);
@@ -442,6 +455,8 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         JSON.parse("[" + decryptionResults.payload.decrypted + "]")
       );
       const parsedData = JSON.parse(decodedStringData) as any[];
+      const newData = [...parsedData];
+
       const dataMatchIndex = parsedData.findIndex((item) => {
         const value = getValueByKeys(item, keyPath);
         if (typeof value === null || typeof value === "undefined") {
@@ -451,11 +466,11 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           return true;
         }
       });
+
       if (dataMatchIndex === -1) {
         statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Match not found" };
       }
-      const newData = [...parsedData];
       if (replaceOrAppendValue === "replace") {
         newData[dataMatchIndex] = newValue;
       } else if (replaceOrAppendValue === "append") {
@@ -466,6 +481,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       } else if (replaceOrAppendValue === "delete") {
         newData.splice(dataMatchIndex, 1);
       }
+
       if (newData.length !== parsedData.length) {
         statusIndicatorApi.setIsSavingLocalData(false);
         return { status: "error", error: "Data length mismatch" };
@@ -505,6 +521,129 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     } catch (e) {
       statusIndicatorApi.setIsSavingLocalData(false);
       return { status: "error", error: "Failed to parse decrypted data" };
+    }
+  },
+  specialOps: async (opName: "getTimeRanges") => {
+    if (opName === "getTimeRanges") {
+      ///SPECIAL OP TO GET PROPER TIME RANGES FOR EACH CHUNK
+      const db = await SQLite.openDatabaseAsync("localCache");
+
+      const timeTrackingChunks: ARC_ChunksType[] | null = await db.getAllAsync(
+        "SELECT * FROM timeTrackingChunks WHERE userID = ? ORDER BY tx DESC",
+        [useActiveUser.getState().activeUser.userId]
+      );
+
+      console.log(
+        "XLF dxzd",
+        " | timeTrackingChunks",
+        timeTrackingChunks.length
+      );
+      const key = await SecureStore.getItemAsync(
+        secureStoreKeyNames.accountConfig.activeSymmetricKey
+      );
+      if (key === null) {
+        return { status: "error", error: "No key found" };
+      }
+      const decryptionPromises = [];
+
+      const cryptoOpsApi = useCryptoOpsQueue.getState();
+      for (let ix = 0; ix < timeTrackingChunks.length; ix++) {
+        const encryptedChunk = timeTrackingChunks[ix];
+        const encryptedContent = encryptedChunk.encryptedContent;
+
+        const decryptionResults = cryptoOpsApi.performOperation("decrypt", {
+          keyType: "symmetric",
+          charCodeData: encryptedContent,
+          key: key,
+        });
+
+        decryptionPromises.push(decryptionResults);
+      }
+
+      Promise.allSettled(decryptionPromises)
+        .then((decryptedContents) => {
+          for (let ix = 0; ix < decryptedContents.length; ix++) {
+            const decryptedContent = decryptedContents[ix].value;
+            const decodedStringData = charCodeArrayToString(
+              JSON.parse("[" + decryptedContent + "]")
+            );
+            const parsedData = JSON.parse(decodedStringData) as any[];
+            const newData = [...parsedData];
+
+            console.log("XLF PTTX-,", parsedData.length, ix);
+
+            const firstItem = parsedData[0];
+            const lastItem = parsedData[parsedData.length - 1];
+
+            let timeRangeStart = null;
+            let timeRangeEnd = null;
+
+            console.log(
+              "XLF dxzd",
+              " | start | end",
+              timeRangeStart,
+              timeRangeEnd
+            );
+
+            if (tableName === "timeTrackingChunks") {
+              timeRangeStart = getValueByKeys(firstItem, itemTimestampKey);
+              timeRangeEnd = getValueByKeys(lastItem, itemTimestampKey);
+            } else if (tableName === "dayPlannerChunks") {
+              const dayStartString = getValueByKeys(
+                firstItem,
+                itemTimestampKey
+              );
+              const lastDayStartString = getValueByKeys(
+                lastItem,
+                itemTimestampKey
+              );
+
+              timeRangeStart = new Date(dayStartString).getTime();
+              timeRangeEnd = new Date(lastDayStartString).getTime();
+            }
+
+            if (timeRangeEnd && timeRangeStart) {
+              encryptedChunk["timeRangeStart"] = timeRangeStart;
+              encryptedChunk["timeRangeEnd"] = timeRangeEnd;
+            }
+
+            const updatedChunk = {
+              ...encryptedChunk,
+            };
+            console.log(
+              "----------XLF updatedChunk",
+              updatedChunk.timeRangeStart,
+              updatedChunk.timeRangeEndd
+            );
+            const savePromise = db.runAsync(
+              `UPDATE ${tableName} SET encryptedContent = ?, userID = ?, tx = ?, version = ?, timeRangeStart = ?, timeRangeEnd = ? WHERE userID = ? AND id = ?`,
+              [
+                updatedChunk.encryptedContent,
+                updatedChunk.userID,
+                updatedChunk.tx,
+                updatedChunk.version,
+                updatedChunk.timeRangeStart,
+                updatedChunk.timeRangeEnd,
+                activeUserId,
+                updatedChunk.id,
+              ]
+            );
+            return savePromise
+              .then((result) => {
+                statusIndicatorApi.setIsSavingLocalData(false);
+                db.closeAsync();
+                return { status: "success" };
+              })
+              .catch((e) => {
+                statusIndicatorApi.setIsSavingLocalData(false);
+                db.closeAsync();
+                return { status: "error", error: e };
+              });
+          }
+        })
+        .catch((e) => {
+          console.log("Decryption error", e);
+        });
     }
   },
   modifyFeatureConfig: async (
