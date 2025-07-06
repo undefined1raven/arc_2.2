@@ -352,12 +352,44 @@ function dayPlannerActiveDayView() {
             renderItem={({ item }) => {
               if (statusPickingForTask !== null) {
                 const typedItem = item as TessStatusType;
+                const tessFeatureConfig =
+                  useFeatureConfigs.getState().dayPlannerFeatureConfig;
+
+                const statusFeatureConfig: TessStatusType =
+                  tessFeatureConfig.find(
+                    (item) => item.statusID === typedItem.statusID
+                  );
+
+                const colorScheme = globalStyle.globalStyle.colorScheme;
+                const theme = globalStyle.globalStyle.theme;
+
+                let colors: { color: string; textColor: string } = {
+                  color: globalStyle.globalStyle.color,
+                  textColor: globalStyle.globalStyle.textColor,
+                };
+
+                if (
+                  statusFeatureConfig.colors !== "default" &&
+                  statusFeatureConfig.colors[colorScheme] !== undefined
+                ) {
+                  const schemeColors = statusFeatureConfig.colors[colorScheme];
+                  const finalColors = schemeColors[theme];
+                  if (finalColors) {
+                    colors = finalColors;
+                  }
+                }
+
                 return (
                   <Button
-                    textStyle={{ textAlign: "left", paddingLeft: 10 }}
+                    textStyle={{
+                      textAlign: "left",
+                      paddingLeft: 10,
+                      color: colors.textColor,
+                    }}
                     onClick={() => {
                       updateTaskStatus(typedItem.statusID);
                     }}
+                    borderColor={colors.color}
                     style={{
                       height: 55,
                       marginBottom: 10,
@@ -528,7 +560,7 @@ function dayPlannerActiveDayView() {
                     setStatusPickingForTask(null);
                   }}
                   style={{
-                    height: "80%",
+                    height: 55,
                     width: "100%",
                     display: "flex",
                     justifyContent: "center",
