@@ -30,6 +30,7 @@ export default function Main() {
             isLoggedIn: false,
             userId: null,
           });
+          SplashScreen.hideAsync();
           router.replace("/NewAccountMain/page");
         } else if (res.status === "success" && !res.isEmpty && res.userId) {
           ///PROPER AUTH CHECKS NEEDED HERE. NOT REQUIRED FOR LOCAL ACCOUNTS BUT NEEDED FOR REMOTE ACCOUNTS

@@ -20,6 +20,7 @@ import {
 } from "@/components/utils/constants/secureStoreKeyNames";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 import TextInput from "@/components/common/TextInput";
+import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -35,27 +36,6 @@ function LocalLogin() {
   const [hasFile, setHasFile] = useState(false);
 
   const [pin, setpin] = useState("");
-
-  useEffect(() => {
-    if (fileJson !== null) {
-      setIsLoadingFile(false);
-      const keys = Object.keys(fileJson);
-      if (
-        keys.indexOf("userData") === -1 ||
-        keys.indexOf("pk") === -1 ||
-        keys.indexOf("timeTrackingChunks") === -1 ||
-        keys.indexOf("dayPlannerChunks") === -1 ||
-        keys.indexOf("personalDiaryChunks") === -1 ||
-        keys.indexOf("personalDiaryGroups") === -1 ||
-        keys.indexOf("symkey") === -1
-      ) {
-        setShowError(true);
-        return;
-      }
-      setHasFile(true);
-      setIsLoadingFile(false);
-    }
-  }, [fileJson]);
 
   function writeBackupToDB(wait?: boolean) {
     const userData = fileJson.userData;
@@ -216,29 +196,23 @@ function LocalLogin() {
                     secureStoreKeyNames.accountConfig.useBiometricAuth,
                     "true"
                   );
+                  Updates.reloadAsync();
                 });
               writeBackupToDB(false);
             } else {
-              setIsLoadingFile(true);
-              DocumentPicker.getDocumentAsync()
-                .then(async (file) => {
-                  if (file === null) return;
-                  if (file.assets?.length === 0) return;
-                  const fileContent = await FileSystem.readAsStringAsync(
-                    file.assets[0].uri
-                  );
-                  setFileName(file.assets[0].name);
-                  try {
-                    setFileJson(JSON.parse(fileContent));
-                  } catch (e) {
-                    console.log(e);
+              DatabaseBackupApi.importDatabase()
+                .then((r) => {
+                  if (r.status === "error") {
                     setShowError(true);
+                    setIsLoadingFile(false);
+                    return;
                   }
+                  setFileName(r.fileName ? r.fileName : "Backup file");
+                  setIsLoadingFile(false);
+                  setShowError(false);
+                  setHasFile(true);
                 })
-                .catch((e) => {
-                  setShowError(true);
-                  console.log(e);
-                });
+                .catch((e) => {});
             }
           }}
           style={{ width: "75%", height: "6%", marginBottom: "4%" }}

@@ -1,16 +1,9 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
-import { Selection } from "@/components/common/Selection";
-import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
-import { FlashList } from "@shopify/flash-list";
-import { SettingdIcon } from "@/components/deco/SettingsIcon";
-import { TimeStatsIcon } from "@/components/deco/TimeStatsIcon";
-import { DayPlannerIcon } from "@/components/deco/DayPlannerIcon";
-import { PersonalDiaryIcon } from "@/components/deco/PersonalDiaryIcon";
 import * as NavigationBar from "expo-navigation-bar";
 import { useCallback } from "react";
 import Button from "@/components/common/Button";
+import * as Updates from "expo-updates";
 import { router } from "expo-router";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
@@ -24,6 +17,7 @@ import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyName
 import { useActiveUser } from "@/stores/activeUser";
 import { HexDeco } from "@/components/deco/HexDeco";
 import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
+import { NukeLocalData } from "@/components/utils/db/checkTables";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -205,7 +199,7 @@ function AccountSettingsMain() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
-          <View style={{ display: "flex", flexGrow: 1 }}>
+          <View style={{ display: "flex", flexGrow: 1, gap: 10 }}>
             <Button
               onClick={() => {
                 console.log("XLF BACKSUPS");
@@ -221,6 +215,16 @@ function AccountSettingsMain() {
               }}
               style={{ height: 50 }}
               label="Export Backup"
+            ></Button>
+            <Button
+              onDoubleClick={() => {
+                NukeLocalData();
+                Updates.reloadAsync();
+              }}
+              borderColor={globalStyle.errorColor}
+              textStyle={{ color: globalStyle.errorTextColor }}
+              style={{ height: 50 }}
+              label="Delete local data [double tap]"
             ></Button>
           </View>
           <Text

@@ -59,6 +59,7 @@ export const DatabaseBackupApi = {
   importDatabase: async (): Promise<{
     status: "success" | "error";
     message: string;
+    fileName?: string;
   }> => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -90,6 +91,7 @@ export const DatabaseBackupApi = {
 
       return {
         status: "success",
+        fileName: selectedFile.name,
         message:
           "Encrypted database imported successfully. Restart the app to see changes.",
       };

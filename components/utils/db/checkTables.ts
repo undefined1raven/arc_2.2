@@ -127,4 +127,4 @@ async function checkTables(): Promise<CheckTablesReturnSig> {
     });
 }
 
-export { checkTables };
+export { checkTables, NukeLocalData };
