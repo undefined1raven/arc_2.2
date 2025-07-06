@@ -35,30 +35,12 @@ export const DatabaseBackupApi = {
         to: tempBackupPath,
       });
 
-      //   // Share the encrypted database file
-      //   await Sharing.shareAsync(tempBackupPath, {
-      //     mimeType: "application/x-sqlite3",
-      //     dialogTitle: "Save Encrypted Database Backup",
-      //     UTI: "public.database",
-      //   });
-
-      // Save to device's Downloads folder or Documents
-      const downloadsPath = `${FileSystem.documentDirectory}../Downloads/${backupFilename}`;
-      const documentsPath = `${FileSystem.documentDirectory}${backupFilename}`;
-
-      try {
-        // Try Downloads folder first
-        await FileSystem.copyAsync({
-          from: tempBackupPath,
-          to: downloadsPath,
-        });
-      } catch {
-        // Fallback to Documents folder
-        await FileSystem.copyAsync({
-          from: tempBackupPath,
-          to: documentsPath,
-        });
-      }
+      // Share the encrypted database file
+      await Sharing.shareAsync(tempBackupPath, {
+        mimeType: "application/x-sqlite3",
+        dialogTitle: "Save Encrypted Database Backup",
+        UTI: "public.database",
+      });
 
       // Cleanup
       await FileSystem.deleteAsync(tempBackupPath, { idempotent: true });
