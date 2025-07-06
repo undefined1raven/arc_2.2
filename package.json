@@ -27,7 +27,7 @@
     "expo-constants": "~17.0.8",
     "expo-crypto": "^14.0.2",
     "expo-document-picker": "~13.0.3",
-    "expo-file-system": "^18.0.12",
+    "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
     "expo-linear-gradient": "^14.0.2",
@@ -59,7 +59,8 @@
     "react-native-webview": "13.12.5",
     "reanimated-color-picker": "^4.0.1",
     "uuid": "^11.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-sharing": "~13.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

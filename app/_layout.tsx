@@ -52,6 +52,7 @@ export default function RootLayout() {
     "/timeTracking/editActivity/editActivitySelection",
     "/timeTracking/editCategory/editCategorySelection",
     "/timeTracking/editCategory/editCategory",
+    "/settings/accountSettings/backupSettings",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -182,6 +183,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="settings/accountSettings/themeSettings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/accountSettings/backupSettings"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

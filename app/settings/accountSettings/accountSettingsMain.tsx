@@ -31,6 +31,12 @@ function AccountSettingsMain() {
       description: "Change the theme of the app",
       goTo: "/settings/accountSettings/themeSettings",
     },
+    {
+      name: "backup",
+      title: "Backup",
+      description: "Make a backup of your data",
+      goTo: "/settings/accountSettings/backupSettings",
+    },
   ];
 
   const renderItem = useCallback((item: SettingOption) => {
