@@ -458,6 +458,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       const newData = [...parsedData];
       if (replaceOrAppendValue === "replace") {
         newData[dataMatchIndex] = newValue;
+
+        ///TEMP FIX
+        for (let ix = 0; ix < newData.length; ix++) {
+          const data = newData[ix];
+          const value = getValueByKeys(data, keyPath);
+          if (value === valueToMatch) {
+            newData[ix] = newValue;
+          }
+        }
+        ///TEMP FIX
       } else if (replaceOrAppendValue === "append") {
         newData[dataMatchIndex] = {
           ...newData[dataMatchIndex],

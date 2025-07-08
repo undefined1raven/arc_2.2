@@ -59,27 +59,56 @@ function DayPlannerCard() {
 
   const startDay = useCallback(() => {
     const dataRetrivalAPI = dataRetrivalApi.getState();
+    const dayPlannerApi = useDayPlannerActiveDay.getState();
     const newDate = new Date();
     const formattedDate = newDate.toDateString();
-    const newDay: TessDayLogType = {
-      day: formattedDate,
-      isActive: true,
-      tasks: [],
-    };
-    dataRetrivalAPI
-      .appendEntry("dayPlannerChunks", newDay, dayPlannerChunkSize)
-      .then((res) => {
-        if (res.status === "success") {
-          console.log("New day created successfully");
-          dayPlannerActiveDayApi.setActiveDay(newDay);
+    const recentDays = dayPlannerApi.recentDays;
+
+    const todayDayIndex = recentDays.findIndex(
+      (day) => day.day === formattedDate
+    );
+
+    if (todayDayIndex !== -1) {
+      const existingDay = recentDays[todayDayIndex];
+      existingDay.isActive = true;
+      dataRetrivalAPI
+        .modifyEntry(
+          "dayPlannerChunks",
+          ["day"],
+          formattedDate,
+          existingDay,
+          undefined,
+          "replace"
+        )
+        .then((res) => {
+          dayPlannerApi.setActiveDay(existingDay);
           router.push("/activeDayView/activeDayView");
-        } else {
-          console.error("Failed to create new day");
-        }
-      })
-      .catch((err) => {
-        console.error("Error creating new day", err);
-      });
+        })
+        .catch((err) => {
+          console.error("Error updating existing day", err);
+        });
+    } else {
+      const newDay: TessDayLogType = {
+        day: formattedDate,
+        isActive: true,
+        tasks: [],
+      };
+
+      dataRetrivalAPI
+        .appendEntry("dayPlannerChunks", newDay, dayPlannerChunkSize)
+        .then((res) => {
+          if (res.status === "success") {
+            console.log("New day created successfully");
+            dayPlannerActiveDayApi.setActiveDay(newDay);
+            router.push("/activeDayView/activeDayView");
+          } else {
+            console.error("Failed to create new day");
+          }
+        })
+        .catch((err) => {
+          console.error("Error creating new day", err);
+        });
+    }
   }, []);
 
   const getColorsFromCompletionPercentage = useCallback(
