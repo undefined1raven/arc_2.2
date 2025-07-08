@@ -13,47 +13,6 @@ function dayPlanner() {
     (store) => store.activeDay
   );
 
-  const temporaryFixFn = useCallback((recentDays: TessDayLogType[]) => {
-    const dataRetriavalAPI = dataRetrivalApi.getState();
-    const activeDays = recentDays.filter((day) => day.isActive === true);
-    activeDays.pop();
-
-    const promises = [];
-
-    for (let ix = 0; ix < activeDays.length; ix++) {
-      const day = activeDays[ix];
-      const endedDay: TessDayLogType = { ...day };
-      delete endedDay.isActive;
-      promises.push(
-        dataRetriavalAPI.modifyEntry(
-          "dayPlannerChunks",
-          ["day"],
-          endedDay.day,
-          endedDay,
-          undefined,
-          "replace"
-        )
-      );
-    }
-
-    Promise.allSettled(promises)
-      .then((results) => {
-        const successfulUpdates = results.filter(
-          (result) => result.status === "fulfilled"
-        );
-        if (successfulUpdates.length > 0) {
-          console.log(
-            `Successfully updated ${successfulUpdates.length} active days.`
-          );
-        } else {
-          console.log("No active days were updated.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating active days:", error);
-      });
-  }, []);
-
   useEffect(() => {
     if (dayPlannerActiveDay !== undefined) {
       return;
@@ -70,9 +29,7 @@ function dayPlanner() {
 
           //@ts-ignore
           dayPlannerApi.setRecentDays(data);
-          ///TEMP FIX
-          temporaryFixFn(data);
-          ///TEMP FIX
+
           if (currentActiveDay) {
             console.log("Active day found", currentActiveDay.day);
             dayPlannerApi.setActiveDay(currentActiveDay);
