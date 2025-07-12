@@ -20,6 +20,7 @@ function dayPlanner() {
       return;
     }
 
+    ///Get the data for the active day. Has priority over recent days.
     dataRetriavalAPI
       .getDataInTimeRange("dayPlannerChunks", null, null, 1)
       .then((res) => {
@@ -40,19 +41,20 @@ function dayPlanner() {
       })
       .catch((err) => {});
 
+    ///Get the recent days data
     dataRetriavalAPI
       .getDataInTimeRange("dayPlannerChunks", null, null, 3)
       .then((res) => {
         //@ts-ignore
-        dayPlannerApi.setRecentDays(res.payload || []);
+        let data: TessDayLogType[] = res.payload;
+
+        dayPlannerApi.setRecentDays(data || []);
       });
   }, [dayPlannerActiveDay]);
 
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
-      <View style={{ flex: 1 }}>
-        <DayPlannerChart />
-      </View>
+      {dayPlannerApi.recentDays.length > 0 && <DayPlannerChart />}
       <DayPlannerCard></DayPlannerCard>
     </ThemedView>
   );

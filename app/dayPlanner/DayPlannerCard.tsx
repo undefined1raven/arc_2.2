@@ -132,7 +132,7 @@ function DayPlannerCard() {
   );
 
   return (
-    <Animated.View
+    <View
       style={{
         backgroundColor: globalStyle.color + layoutCardLikeBackgroundOpacity,
         width: "100%",
@@ -159,7 +159,7 @@ function DayPlannerCard() {
           }}
         >
           <Text
-            fontSize={globalStyle.mediumMobileFont}
+            fontSize={globalStyle.regularMobileFont}
             label="Day Planner"
           ></Text>
           <View
@@ -179,9 +179,9 @@ function DayPlannerCard() {
             >
               <EditDeco width={35} height={25}></EditDeco>
             </Button>
-            <Button onClick={() => {}} style={styles.contextButtonStyle}>
+            {/* <Button onClick={() => {}} style={styles.contextButtonStyle}>
               <StatsDeco width={35} height={25}></StatsDeco>
-            </Button>
+            </Button> */}
           </View>
         </View>
       )}
@@ -307,7 +307,7 @@ function DayPlannerCard() {
             ></Button>
           </View>
         )}
-    </Animated.View>
+    </View>
   );
 }
 

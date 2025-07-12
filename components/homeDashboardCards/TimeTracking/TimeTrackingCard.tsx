@@ -213,7 +213,7 @@ function TimeTrackingCard() {
   );
 
   return isPickingActivity === false ? (
-    <Animated.View
+    <View
       style={{
         backgroundColor:
           globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
@@ -415,7 +415,7 @@ function TimeTrackingCard() {
           </View>
         </View>
       )}
-    </Animated.View>
+    </View>
   ) : (
     <Portal>
       <SafeAreaView style={{ flexGrow: 1, width: "100%" }}>
