@@ -35,6 +35,7 @@
     "expo-navigation-bar": "~4.0.9",
     "expo-router": "~4.0.18",
     "expo-secure-store": "^14.0.1",
+    "expo-sharing": "~13.0.1",
     "expo-splash-screen": "~0.29.22",
     "expo-sqlite": "^15.1.2",
     "expo-status-bar": "~2.0.1",
@@ -49,6 +50,7 @@
     "react-native": "0.76.7",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-get-random-values": "^1.11.0",
+    "react-native-gifted-charts": "^1.4.62",
     "react-native-interactions": "^0.4.0",
     "react-native-portalize": "^1.0.7",
     "react-native-reanimated": "~3.16.1",
@@ -59,8 +61,7 @@
     "react-native-webview": "13.12.5",
     "reanimated-color-picker": "^4.0.1",
     "uuid": "^11.1.0",
-    "zustand": "^5.0.3",
-    "expo-sharing": "~13.0.1"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

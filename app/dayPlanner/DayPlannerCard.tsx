@@ -14,15 +14,19 @@ import { monthToLabel } from "@/constants/time";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
+import { useStatusIndicatorStore } from "@/stores/statusIndicatorStore";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useDayPlannerStatusToEdit } from "@/stores/viewState/dayPlannerActiveStatusToEdit";
 import { router } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import React, { act, useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Portal } from "react-native-portalize";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 function DayPlannerCard() {
+  const db = useSQLiteContext();
+
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (store) => store.dayPlannerFeatureConfig
   );
@@ -55,6 +59,53 @@ function DayPlannerCard() {
     const month = monthToLabel[date.getMonth()];
     const day = date.getDate();
     return `Today | ${month} ${day}`;
+  }, []);
+
+  ////TEMP
+  useEffect(() => {
+    const dataRetrival = dataRetrivalApi.getState();
+
+    db.getAllAsync('SELECT id FROM "dayPlannerChunks"').then((data) => {
+      db.getFirstAsync(
+        'SELECT id, timeRangeStart, timeRangeEnd FROM "dayPlannerChunks"'
+      )
+        .then(() => {
+          console.log("Time range already exists in dayPlannerChunks");
+        })
+        .catch((error) => {
+          const chunkIds = data.map((item) => item.id);
+          const BATCH_SIZE = 50;
+          const processBatch = async (startIndex: number) => {
+            const statusIndicator = useStatusIndicatorStore.getState();
+            statusIndicator.setIsSavingLocalData(true);
+            if (startIndex >= chunkIds.length) {
+              console.log("All chunks processed");
+              statusIndicator.setIsSavingLocalData(false);
+              return;
+            }
+
+            const batch = chunkIds.slice(startIndex, startIndex + BATCH_SIZE);
+
+            try {
+              const result = await dataRetrival.getChunkTimeRange(
+                "dayPlannerChunks",
+                batch
+              );
+              if (result.status === "success") {
+              } else {
+                console.error("Error fetching chunk time range:", result.error);
+              }
+
+              // Process next batch after current one completes
+              await processBatch(startIndex + BATCH_SIZE);
+            } catch (error) {
+              console.error("Error in getChunkTimeRange:", error);
+            }
+          };
+
+          processBatch(0);
+        });
+    });
   }, []);
 
   const startDay = useCallback(() => {
