@@ -57,8 +57,6 @@ function DayPlannerChart() {
         let additionalFields = {};
         if (numberOfDaysDisplayed <= 7) {
           additionalFields = {
-            capThickness: 8,
-            capColor: colorFromCompletion,
             topLabelComponent: () => {
               return (
                 <Text
@@ -66,7 +64,7 @@ function DayPlannerChart() {
                   label={`${dayCompletion}%`}
                   style={{
                     width: 50,
-                    color: globalStyle.colorAltLight,
+                    color: colorFromCompletion,
                   }}
                 ></Text>
               );
@@ -81,9 +79,11 @@ function DayPlannerChart() {
           barBorderTopRightRadius: globalStyle.borderRadius,
           barBorderTopLeftRadius: globalStyle.borderRadius,
           labelTextStyle: {
-            color: globalStyle.textColorAccent,
+            color: colorFromCompletion,
             fontSize: 14,
           },
+          capThickness: numberOfDaysDisplayed > 7 ? 4 : 8,
+          capColor: colorFromCompletion,
           ...additionalFields,
         };
       });
