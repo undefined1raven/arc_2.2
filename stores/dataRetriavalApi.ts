@@ -16,6 +16,7 @@ import {
 import { chunkPrefixes } from "@/constants/chunkPrefixes";
 import { useStatusIndicatorStore } from "./statusIndicatorStore";
 import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
+import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFromData";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -26,14 +27,6 @@ type TableNames =
   | "personalDiaryGroups";
 
 interface DataRetrivalApi {
-  getChunkTimeRange: (
-    tableName: TableNames,
-    chunkIds: string[]
-  ) => Promise<{
-    status: "error" | "success";
-    error?: string;
-    payload?: any;
-  }>;
   appendEntry: (
     tableName: TableNames,
     rowData: any,
@@ -91,135 +84,6 @@ const allowedTableNames = [
 ];
 
 const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
-  getChunkTimeRange: async (tableName: TableNames, chunkIds: string[]) => {
-    if (
-      !Array.isArray(chunkIds) ||
-      chunkIds.length === 0 ||
-      chunkIds.some((id) => typeof id !== "string")
-    ) {
-      return { status: "error", error: "Invalid chunk ID" };
-    }
-
-    const activeUserId = useActiveUser.getState().activeUser.userId as
-      | string
-      | null;
-    const db = await SQLite.openDatabaseAsync("localCache");
-    if (activeUserId === null) {
-      return { status: "error", error: "No active user" };
-    }
-    if (allowedTableNames.includes(tableName) === false) {
-      return { status: "error", error: "Invalid table name" };
-    }
-
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
-    if (key === null) {
-      return { status: "error", error: "No key found" };
-    }
-
-    const chunks: (ARC_ChunksType | FeatureConfigChunkType | null)[] =
-      await Promise.all(
-        chunkIds.map((chunkId) =>
-          db.getFirstAsync(
-            `SELECT * FROM ${tableName} WHERE userID = ? AND id = ?`,
-            [activeUserId, chunkId]
-          )
-        )
-      );
-
-    try {
-      await db.execAsync(
-        `ALTER TABLE ${tableName} ADD COLUMN timeRangeStart INTEGER`
-      );
-      await db.execAsync(
-        `ALTER TABLE ${tableName} ADD COLUMN timeRangeEnd INTEGER`
-      );
-    } catch (error) {
-      // Columns might already exist, continue
-    }
-
-    const cryptoOpsApi = useCryptoOpsQueue.getState();
-    const decryptionPromises = chunks.map((chunk) => {
-      if (chunk === null || typeof chunk.encryptedContent !== "string") {
-        return Promise.resolve(null);
-      }
-      return cryptoOpsApi.performOperation("decrypt", {
-        keyType: "symmetric",
-        charCodeData: chunk.encryptedContent,
-        key: key,
-      });
-    });
-
-    const decryptedContents = await Promise.allSettled(decryptionPromises);
-
-    if (decryptedContents.some((result) => result.status === "rejected")) {
-      return { status: "error", error: "Decryption failed" };
-    }
-
-    let decryptedData = decryptedContents.map((result, index) => {
-      if (result.value === null) {
-        return undefined;
-      }
-      if (result.status === "fulfilled") {
-        const decodedStringData = charCodeArrayToString(
-          JSON.parse("[" + result.value.payload.decrypted + "]")
-        );
-        return JSON.parse(decodedStringData);
-      }
-      return null;
-    });
-
-    decryptedData = decryptedData.filter((data) => data !== null);
-
-    let chunkUpdatePromises: Promise<any>[] = [];
-
-    chunks.map((chunk, index) => {
-      const decryptedDataSet = decryptedData[index];
-      let timeRangeStart = null;
-      let timeRangeEnd = null;
-
-      if (tableName === "timeTrackingChunks") {
-        timeRangeStart = decryptedDataSet[0].start;
-        timeRangeEnd = decryptedDataSet[decryptedDataSet.length - 1].end;
-      } else if (tableName === "dayPlannerChunks") {
-        function dayToUnixTimestamp(day: string): number {
-          const date = new Date(day);
-          return date.getTime();
-        }
-        timeRangeStart = dayToUnixTimestamp(decryptedDataSet[0].day);
-        timeRangeEnd = dayToUnixTimestamp(
-          decryptedDataSet[decryptedDataSet.length - 1].day
-        );
-      }
-
-      const updatedChunkInfo = {
-        timeRangeStart,
-        timeRangeEnd,
-        id: chunk.id,
-      };
-
-      chunkUpdatePromises.push(
-        db.runAsync(
-          `UPDATE ${tableName} SET timeRangeStart = ?, timeRangeEnd = ? WHERE id = ?`,
-          [timeRangeStart, timeRangeEnd, chunk.id]
-        )
-      );
-    });
-
-    return Promise.allSettled(chunkUpdatePromises)
-      .then((results) => {
-        if (results.some((result) => result.status === "rejected")) {
-          return { status: "error", error: "Failed to update time ranges" };
-        } else {
-          return { status: "success", payload: null };
-        }
-      })
-      .catch((error) => {
-        return { status: "error", error: error.message };
-      });
-  },
-
   appendEntry: async (tableName, rowData, chunkSize): Promise<any> => {
     const statusIndicatorApi = useStatusIndicatorStore.getState();
     const activeUserId = useActiveUser.getState().activeUser.userId as
@@ -260,11 +124,30 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     }
 
     function updateChunk(newChunk: ARC_ChunksType) {
-      return db
-        .runAsync(
+      let query: Promise<any> | null = null;
+      if (
+        tableName === "dayPlannerChunks" ||
+        tableName === "timeTrackingChunks"
+      ) {
+        query = db.runAsync(
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ?, timeRangeStart = ?, timeRangeEnd = ? WHERE userID = ? AND id = ?`,
+          [
+            newChunk.encryptedContent,
+            newChunk.tx,
+            newChunk.timeRangeStart,
+            newChunk.timeRangeEnd,
+            activeUserId,
+            newChunk.id,
+          ]
+        );
+      } else {
+        query = db.runAsync(
           `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
           [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
-        )
+        );
+      }
+
+      return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
           db.closeAsync();
@@ -277,13 +160,27 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     }
 
     function insertChunk(newChunk: ARC_ChunksType) {
-      return db
-        .runAsync(
+      let query: Promise<any> | null = null;
+      if (
+        tableName === "dayPlannerChunks" ||
+        tableName === "timeTrackingChunks"
+      ) {
+        query = db.runAsync(
+          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, timeRangeStart, timeRangeEnd) VALUES (${"?, ".repeat(
+            6
+          )} ?);`,
+          Object.values(newChunk)
+        );
+      } else {
+        query = db.runAsync(
           `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version) VALUES (${"?, ".repeat(
             4
           )} ?);`,
           Object.values(newChunk)
-        )
+        );
+      }
+
+      return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
           return { status: "success", payload: result };
@@ -327,12 +224,27 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
           const chunkIDPrefix = chunkPrefixes[tableName];
 
+          let timeRangeFields = {};
+          if (
+            tableName === "timeTrackingChunks" ||
+            tableName === "dayPlannerChunks"
+          ) {
+            const dataTimeRange = getTimeRangeFromData(newData, tableName);
+            if (dataTimeRange.status === "success" && dataTimeRange.payload) {
+              timeRangeFields = {
+                timeRangeStart: dataTimeRange.payload.start,
+                timeRangeEnd: dataTimeRange.payload.end,
+              };
+            }
+          }
+
           const newChunk = {
             id: `${chunkIDPrefix}${v4()}`,
             encryptedContent: JSON.stringify(encryptedContent),
             userID: activeUserId,
             tx: Date.now(),
             version: "0.1.0",
+            ...timeRangeFields,
           };
 
           return insertChunk(newChunk);
@@ -356,9 +268,24 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
           const previousContentLength = latestChunk.encryptedContent.length;
 
+          let timeRangeFields = {};
+          if (
+            tableName === "dayPlannerChunks" ||
+            tableName === "timeTrackingChunks"
+          ) {
+            const dataTimeRange = getTimeRangeFromData(appendedData, tableName);
+            if (dataTimeRange.status === "success" && dataTimeRange.payload) {
+              timeRangeFields = {
+                timeRangeStart: dataTimeRange.payload.start,
+                timeRangeEnd: dataTimeRange.payload.end,
+              };
+            }
+          }
+
           const updatedChunk = {
             ...latestChunk,
             encryptedContent: JSON.stringify(encryptedContent),
+            ...timeRangeFields,
           };
 
           const newContentLength = updatedChunk.encryptedContent.length;
