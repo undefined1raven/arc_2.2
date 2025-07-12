@@ -4,11 +4,13 @@ import { TessDayLogType } from "@/constants/CommonTypes";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useCallback, useEffect } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { DayPlannerCard } from "./DayPlannerCard";
+import { DayPlannerChart } from "@/components/ui/dayPlanner/DayPlannerChart";
 
 function dayPlanner() {
   const dataRetriavalAPI = dataRetrivalApi();
+  const dayPlannerApi = useDayPlannerActiveDay();
   const dayPlannerActiveDay = useDayPlannerActiveDay(
     (store) => store.activeDay
   );
@@ -17,18 +19,15 @@ function dayPlanner() {
     if (dayPlannerActiveDay !== undefined) {
       return;
     }
+
     dataRetriavalAPI
-      .getDataInTimeRange("dayPlannerChunks", undefined, undefined, 1)
+      .getDataInTimeRange("dayPlannerChunks", null, null, 1)
       .then((res) => {
-        const dayPlannerApi = useDayPlannerActiveDay.getState();
         if (res.status === "success") {
           const data = res.payload;
           const currentActiveDay: TessDayLogType = data?.find(
             (day) => day.isActive === true
           );
-
-          //@ts-ignore
-          dayPlannerApi.setRecentDays(data);
 
           if (currentActiveDay) {
             console.log("Active day found", currentActiveDay.day);
@@ -40,10 +39,20 @@ function dayPlanner() {
         }
       })
       .catch((err) => {});
+
+    dataRetriavalAPI
+      .getDataInTimeRange("dayPlannerChunks", null, null, 3)
+      .then((res) => {
+        //@ts-ignore
+        dayPlannerApi.setRecentDays(res.payload || []);
+      });
   }, [dayPlannerActiveDay]);
 
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
+      <View style={{ flex: 1 }}>
+        <DayPlannerChart />
+      </View>
       <DayPlannerCard></DayPlannerCard>
     </ThemedView>
   );
