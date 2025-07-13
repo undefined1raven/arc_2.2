@@ -375,15 +375,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       parsedChunkLimit = `LIMIT ${chunkLimit}`;
     }
 
-    console.log("Fetching data in time range", {
-      tableName,
-      from,
-      until,
-      chunkLimit,
-      timeRangeStart,
-      timeRangeEnd,
-    });
-
     let timeRangeString = "";
 
     if (timeRangeStart !== null) {
@@ -394,8 +385,17 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       timeRangeString += ` AND ${timeRangeEnd}`;
     }
 
+    let orderByString = "ORDER BY tx ASC";
+
+    if (
+      tableName === "timeTrackingChunks" ||
+      tableName === "dayPlannerChunks"
+    ) {
+      orderByString = "ORDER BY timeRangeEnd ASC";
+    }
+
     const relevantChunks: ARC_ChunksType[] = await db.getAllAsync(
-      `SELECT * FROM ${tableName} WHERE userID = ? ${timeRangeString} ORDER BY timeRangeEnd ASC ${parsedChunkLimit}`,
+      `SELECT * FROM ${tableName} WHERE userID = ? ${timeRangeString} ${orderByString} ${parsedChunkLimit}`,
       [activeUserId]
     );
 

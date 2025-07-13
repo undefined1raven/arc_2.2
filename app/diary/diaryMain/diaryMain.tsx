@@ -240,12 +240,7 @@ function DiaryMain() {
 
     if (diaryApi.notes === null) {
       dataRetrivalAPI
-        .getDataInTimeRange(
-          "personalDiaryChunks",
-          new Date(0).getTime(),
-          Date.now(),
-          null
-        )
+        .getDataInTimeRange("personalDiaryChunks", null, null, null)
         .then((data) => {
           const notes = data.payload as any as SIDNoteType[];
           //@ts-ignore
@@ -258,12 +253,7 @@ function DiaryMain() {
     }
     if (diaryApi.groups === null) {
       dataRetrivalAPI
-        .getDataInTimeRange(
-          "personalDiaryGroups",
-          new Date(0).getTime(),
-          Date.now(),
-          null
-        )
+        .getDataInTimeRange("personalDiaryGroups", null, null, null)
         .then((data) => {
           const groups = data.payload as any as SIDGroupType[];
           //@ts-ignore
