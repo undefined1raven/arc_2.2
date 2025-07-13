@@ -387,23 +387,21 @@ const HabitCard = memo(() => {
               flexGrow: 1,
             }}
           >
-            <AfterInteractions>
-              <FlatList
-                data={habitCardDataApi.derivedData}
-                horizontal={true}
-                extraData={habitCardTrackedIds}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                removeClippedSubviews={true}
-                maxToRenderPerBatch={5}
-                windowSize={10}
-                getItemLayout={(data, index) => ({
-                  length: 180,
-                  offset: 180 * index,
-                  index,
-                })}
-              />
-            </AfterInteractions>
+            <FlatList
+              data={habitCardDataApi.derivedData}
+              horizontal={true}
+              extraData={habitCardTrackedIds}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={5}
+              windowSize={10}
+              getItemLayout={(data, index) => ({
+                length: 180,
+                offset: 180 * index,
+                index,
+              })}
+            />
           </View>
         </>
       )}
