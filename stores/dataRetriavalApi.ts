@@ -341,20 +341,61 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
     const db = await SQLite.openDatabaseAsync("localCache");
 
-    let txQuery = "tx > 0";
+    let timeRangeStart: null | string = null;
+    let timeRangeEnd: null | string = null;
     if (typeof from === "number") {
-      txQuery = `tx >= ${from}`;
+      const firstChunkIncludingFrom: ARC_ChunksType | null =
+        await db.getFirstAsync(
+          `SELECT * FROM ${tableName} WHERE userID = ? AND timeRangeStart <= ? ORDER BY timeRangeStart DESC LIMIT 1`,
+          [activeUserId, from]
+        );
+      if (
+        firstChunkIncludingFrom !== null &&
+        firstChunkIncludingFrom !== undefined
+      ) {
+        timeRangeStart = `timeRangeStart >= ${firstChunkIncludingFrom.timeRangeStart}`;
+      }
     }
     if (typeof until === "number") {
-      txQuery += ` AND tx <= ${until}`;
+      const lastChunkIncludingUntil: ARC_ChunksType | null =
+        await db.getFirstAsync(
+          `SELECT * FROM ${tableName} WHERE userID = ? AND timeRangeEnd >= ? ORDER BY timeRangeEnd DESC LIMIT 1`,
+          [activeUserId, until]
+        );
+      if (
+        lastChunkIncludingUntil !== null &&
+        lastChunkIncludingUntil !== undefined
+      ) {
+        timeRangeEnd = `timeRangeEnd <= ${lastChunkIncludingUntil.timeRangeEnd}`;
+      }
     }
 
     let parsedChunkLimit = "";
     if (typeof chunkLimit === "number") {
       parsedChunkLimit = `LIMIT ${chunkLimit}`;
     }
+
+    console.log("Fetching data in time range", {
+      tableName,
+      from,
+      until,
+      chunkLimit,
+      timeRangeStart,
+      timeRangeEnd,
+    });
+
+    let timeRangeString = "";
+
+    if (timeRangeStart !== null) {
+      timeRangeString += ` AND ${timeRangeStart}`;
+    }
+
+    if (timeRangeEnd !== null) {
+      timeRangeString += ` AND ${timeRangeEnd}`;
+    }
+
     const relevantChunks: ARC_ChunksType[] = await db.getAllAsync(
-      `SELECT * FROM ${tableName} WHERE userID = ? AND ${txQuery} ORDER BY tx DESC ${parsedChunkLimit}`,
+      `SELECT * FROM ${tableName} WHERE userID = ? ${timeRangeString} ORDER BY timeRangeEnd ASC ${parsedChunkLimit}`,
       [activeUserId]
     );
 
@@ -401,6 +442,35 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           }
           data = [...data, ...parsedData];
         });
+
+        ////Final data time range filtering
+        if (
+          data.length > 0 &&
+          (from || until) &&
+          (tableName === "dayPlannerChunks" ||
+            tableName === "timeTrackingChunks")
+        ) {
+          data = data.filter((item) => {
+            const itemTimeRange = getTimeRangeFromData([item], tableName);
+            if (itemTimeRange.status === "error") {
+              return false;
+            }
+            const itemStart: number = itemTimeRange.payload?.start as number;
+            const itemEnd: number = itemTimeRange.payload?.end as number;
+
+            let isInTimeRange = true;
+            if (typeof from === "number" && itemStart < from) {
+              isInTimeRange = false;
+            }
+
+            if (typeof until === "number" && itemEnd > until) {
+              isInTimeRange = false;
+            }
+
+            return isInTimeRange;
+          });
+        }
+
         const returnObject: {
           status: "success" | "error";
           payload: any;

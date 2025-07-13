@@ -42,12 +42,20 @@ function dayPlanner() {
       .catch((err) => {});
 
     ///Get the recent days data
+    const lastMonthStart = new Date();
+    lastMonthStart.setDate(lastMonthStart.getDate() - 30);
+    lastMonthStart.setHours(0, 0, 0, 0);
+    const msInADay = 24 * 60 * 60 * 1000;
     dataRetriavalAPI
-      .getDataInTimeRange("dayPlannerChunks", null, null, 3)
+      .getDataInTimeRange(
+        "dayPlannerChunks",
+        lastMonthStart.getTime(),
+        Date.now() + msInADay,
+        null
+      )
       .then((res) => {
         //@ts-ignore
         let data: TessDayLogType[] = res.payload;
-
         dayPlannerApi.setRecentDays(data || []);
       });
   }, [dayPlannerActiveDay]);
