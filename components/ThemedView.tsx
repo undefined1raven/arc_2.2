@@ -14,18 +14,44 @@ import {
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
+  keyboardDismissMode?: boolean;
 };
 
 export function ThemedView({
   style,
   lightColor,
   darkColor,
+  keyboardDismissMode = true,
   ...otherProps
 }: ThemedViewProps) {
   const globalStyle = useGlobalStyleStore();
   const insets = useSafeAreaInsets();
 
-  return (
+  return keyboardDismissMode === false ? (
+    <SafeAreaView
+      style={{
+        flexGrow: 1,
+        ...style,
+      }}
+      {...otherProps}
+    >
+      <>
+        <LinearGradient
+          colors={globalStyle.globalStyle.pageBackgroundColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.3, y: 0.7 }}
+          style={{
+            position: "absolute",
+            top: "-20%",
+            left: 0,
+            width: "120%",
+            height: "150%",
+          }}
+        ></LinearGradient>
+        {otherProps.children}
+      </>
+    </SafeAreaView>
+  ) : (
     <TouchableWithoutFeedback
       onPress={() => {
         Keyboard.dismiss();

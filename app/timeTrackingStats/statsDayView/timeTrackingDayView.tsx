@@ -1,4 +1,9 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+  VirtualizedList,
+} from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { useTimeStatsData } from "@/stores/viewState/timeStatsData";
 import { useCallback, useMemo } from "react";
@@ -65,6 +70,15 @@ function TimeTrackingDayView() {
         if (duration === null) return "N/A";
         const hours = Math.floor(duration / 3600);
         const minutes = Math.floor((duration % 3600) / 60);
+        const seconds = duration % 60;
+
+        if (hours === 0) {
+          if (minutes === 0) {
+            return `${seconds}s`;
+          }
+          return `${minutes}m ${seconds}s`;
+        }
+
         return `${hours}h ${minutes}m`;
       }
 
@@ -107,6 +121,7 @@ function TimeTrackingDayView() {
           style={{
             width: "100%",
             height: 50,
+            zIndex: -1,
             display: "flex",
             borderRadius: globalStyle.borderRadius,
             justifyContent: "space-between",
@@ -161,45 +176,42 @@ function TimeTrackingDayView() {
 
   return (
     <>
-      <ThemedView style={{ ...styles.container, height: "100%" }}>
+      <ThemedView
+        keyboardDismissMode={false}
+        style={{ ...styles.container, height: "100%" }}
+      >
         <View style={{ flex: 1, width: "100%", marginBottom: 5 }}>
-          <FlashList
+          <VirtualizedList
+            getItemCount={() => relevantItems.length}
+            getItem={(data, index) => data[index]}
             keyExtractor={(item) => item.start.toString()}
-            estimatedItemSize={50}
             inverted={true}
             ItemSeparatorComponent={() => (
               <View
                 style={{
+                  zIndex: -1,
                   height: 10,
                 }}
               />
             )}
             data={relevantItems}
             renderItem={renderItem}
-          ></FlashList>
+          ></VirtualizedList>
         </View>
         <Animated.View
           entering={FadeInDown}
           style={{
             height: 60,
             width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-start",
             borderRadius: globalStyle.borderRadius,
             backgroundColor:
               globalStyle.color + layoutCardLikeBackgroundOpacity,
           }}
         >
-          <Text
-            textAlign="left"
-            label={displayLabel}
-            style={{
-              flexShrink: 0,
-              width: "100%",
-              height: 65,
-              paddingLeft: 90,
-              backgroundColor:
-                globalStyle.color + layoutCardLikeBackgroundOpacity,
-            }}
-          ></Text>
           <Button
             onClick={() => {
               router.back();
@@ -208,7 +220,6 @@ function TimeTrackingDayView() {
               borderRadius: 0,
               borderWidth: 0,
               borderRightWidth: 1,
-              position: "absolute",
               bottom: 0,
               width: 80,
               height: 60,
@@ -219,6 +230,7 @@ function TimeTrackingDayView() {
           >
             <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
           </Button>
+          <Text textAlign="left" label={displayLabel}></Text>
         </Animated.View>
       </ThemedView>
     </>

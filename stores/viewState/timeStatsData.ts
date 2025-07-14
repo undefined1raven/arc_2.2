@@ -7,12 +7,18 @@ interface TimeStatsData {
   setDataInTimeRange: (data: ArcTaskLogType[]) => void;
   activeDayView: string | null;
   setActiveDayView: (day: string | null) => void;
+  isFetchingData: boolean;
+  setIsFetchingData: (isFetching: boolean) => void;
 }
 
 const useTimeStatsData = create<TimeStatsData>((set, get) => ({
   dataInTimeRange: null,
   viewRange: [],
   activeDayView: null,
+  isFetchingData: false,
+  setIsFetchingData: (isFetching: boolean) => {
+    set({ isFetchingData: isFetching });
+  },
   setActiveDayView: (day: string | null) => {
     set({ activeDayView: day });
   },
@@ -33,8 +39,9 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
     ) {
       dateRange.push(date.toISOString().split("T")[0]);
     }
+    dateRange.shift();
 
-    set({ viewRange: dateRange });
+    set({ viewRange: dateRange.reverse() });
     set({ dataInTimeRange: data });
   },
 }));

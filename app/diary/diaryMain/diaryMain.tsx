@@ -268,7 +268,10 @@ function DiaryMain() {
 
   return (
     <>
-      <ThemedView style={{ ...styles.container, height: "100%" }}>
+      <ThemedView
+        keyboardDismissMode={false}
+        style={{ ...styles.container, height: "100%" }}
+      >
         {diaryApi.notes === null ||
           (diaryApi.groups === null ? (
             <ActivityIndicator size="large" color={globalStyle.color} />

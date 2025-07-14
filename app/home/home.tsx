@@ -7,7 +7,10 @@ import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCar
 function Home() {
   return (
     <>
-      <ThemedView style={{ ...styles.container, height: "100%" }}>
+      <ThemedView
+        keyboardDismissMode={false}
+        style={{ ...styles.container, height: "100%" }}
+      >
         <AfterInteractions>
           <HabitCard></HabitCard>
         </AfterInteractions>
