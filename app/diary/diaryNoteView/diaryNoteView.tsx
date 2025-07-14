@@ -11,7 +11,7 @@ import {
   layoutCardLikeBackgroundOpacity,
 } from "@/constants/colors";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Text from "@/components/common/Text";
 import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySettingPage";
 import { FeatureConfigValueInput } from "@/components/ui/FeatureConfigValueInput";
@@ -32,6 +32,17 @@ function DiaryNoteView() {
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
+
+  ////Local state to make sure that the debounced updates always have the latest values
+  const [noteContent, setNoteContent] = useState<string>(
+    selectedNote?.content || ""
+  );
+  const [noteTitle, setNoteTitle] = useState<string>(
+    selectedNote?.metdata.title || ""
+  );
+  const [noteReadOnly, setNoteReadOnly] = useState<boolean>(
+    selectedNote?.metdata.readOnly || false
+  );
 
   const updateNoteImmediate = useCallback(
     (updatedNote: SIDNoteType) => {
@@ -116,13 +127,17 @@ function DiaryNoteView() {
                 <TextInput
                   readOnly={selectedNote.metdata.readOnly}
                   onChange={(e) => {
+                    const newText = e.nativeEvent.text;
+                    setNoteContent(newText);
                     const updatedNote = {
                       ...selectedNote,
                       metdata: {
                         ...selectedNote.metdata,
                         updatedAt: Date.now(),
+                        title: noteTitle,
+                        readOnly: noteReadOnly,
                       },
-                      content: e.nativeEvent.text,
+                      content: newText,
                     };
                     updateNote(updatedNote);
                   }}
@@ -220,12 +235,15 @@ function DiaryNoteView() {
               <FeatureConfigBooleanInput
                 value={selectedNote.metdata.readOnly}
                 onChange={(e) => {
+                  setNoteReadOnly(e);
                   const updatedNote = {
                     ...selectedNote,
                     metdata: {
                       ...selectedNote.metdata,
                       readOnly: e,
+                      title: noteTitle,
                     },
+                    content: noteContent,
                   };
                   useSelectedDiaryNote.getState().setSelectedNote(updatedNote);
                   updateNote(updatedNote);
@@ -237,13 +255,16 @@ function DiaryNoteView() {
                 label="Title"
                 value={selectedNote.metdata.title}
                 onChange={(e) => {
+                  setNoteTitle(e);
                   const updatedNote = {
                     ...selectedNote,
                     metdata: {
                       ...selectedNote.metdata,
                       updatedAt: Date.now(),
+                      readOnly: noteReadOnly,
                       title: e,
                     },
+                    content: noteContent,
                   };
                   updateNote(updatedNote);
                 }}
