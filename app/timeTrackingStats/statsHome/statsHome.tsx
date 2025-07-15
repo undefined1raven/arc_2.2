@@ -185,42 +185,70 @@ function Home() {
               <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
             )}
           </View>
-          <Button
-            fontSize={globalStyle.regularMobileFont}
+          <View
             style={{
-              width: 130,
-              height: "100%",
-              borderWidth: 0,
-              borderLeftWidth: 1,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               flexDirection: "row",
               gap: 10,
-            }}
-            onClick={() => {
-              const twoWeeksAgo = new Date();
-              twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-              DateTimePickerAndroid.open({
-                value: twoWeeksAgo,
-                maximumDate: new Date(),
-                onChange: (event, date) => {
-                  if (event.type === "set" && date) {
-                    setCustomTimeRangeStart(date.toISOString().split("T")[0]);
-                  }
-                },
-              });
+              height: "100%",
             }}
           >
-            <CalendarDeco style={{ zIndex: -1 }}></CalendarDeco>
-            <Text
-              style={{ zIndex: -1 }}
+            {/* <Button
               fontSize={globalStyle.regularMobileFont}
-              label={getDisplayText(viewData[viewData.length - 1])}
-            ></Text>
-          </Button>
+              style={{
+                width: 80,
+                height: "100%",
+                borderWidth: 0,
+                borderLeftWidth: 1,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 10,
+              }}
+              onClick={() => {}}
+            >
+              <CalendarDeco style={{ zIndex: -1 }}></CalendarDeco>
+            </Button> */}
+            <Button
+              fontSize={globalStyle.regularMobileFont}
+              style={{
+                width: 130,
+                height: "100%",
+                borderWidth: 0,
+                borderLeftWidth: 1,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 10,
+              }}
+              onClick={() => {
+                const twoWeeksAgo = new Date();
+                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+                DateTimePickerAndroid.open({
+                  value: twoWeeksAgo,
+                  maximumDate: new Date(),
+                  onChange: (event, date) => {
+                    if (event.type === "set" && date) {
+                      setCustomTimeRangeStart(date.toISOString().split("T")[0]);
+                    }
+                  },
+                });
+              }}
+            >
+              <CalendarDeco style={{ zIndex: -1 }}></CalendarDeco>
+              <Text
+                style={{ zIndex: -1 }}
+                fontSize={globalStyle.regularMobileFont}
+                label={getDisplayText(viewData[viewData.length - 1])}
+              ></Text>
+            </Button>
+          </View>
         </Animated.View>
       </ThemedView>
     </>

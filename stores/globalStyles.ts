@@ -39,6 +39,7 @@ interface GlobalStyleType {
   colorAltLight: ColorValueHex;
   warningColor: ColorValueHex;
   warningTextColor: ColorValueHex;
+  chartColorSet: ColorValueHex[];
 }
 
 interface GlobalStyleStore {
