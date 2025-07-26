@@ -363,7 +363,7 @@ function statusEditor() {
           <FeatureConfigValueInput
             value={statusToEdit?.completionEffect.toString() || ""}
             onChange={(e) => {
-              handleStatusUpdate("completionEffect", e);
+              handleStatusUpdate("completionEffect", parseFloat(e));
             }}
             inputType="text"
             label="Completion Score"

@@ -11,7 +11,7 @@ function computeDayPlannerCompletion(
     return 0;
   }
 
-  let completionScore = 0;
+  let completionScore: number = 0;
   tasks.forEach((task) => {
     const taskStatusID = task.statusID;
     const taskStatus = dayPlannerFeatureConfig.find(
@@ -20,14 +20,15 @@ function computeDayPlannerCompletion(
     if (!taskStatus) {
       return;
     }
-    const taskCompletionScore = taskStatus.completionEffect;
+    const taskCompletionScore = parseFloat(
+      taskStatus.completionEffect.toString()
+    );
     completionScore += taskCompletionScore;
   });
   const taskCount = tasks.length;
   const completionPercantage = (
     parseFloat((completionScore / taskCount).toFixed(2)) * 100
   ).toFixed(0);
-
   return completionPercantage;
 }
 
