@@ -16,6 +16,8 @@ import DateTimePicker, {
 
 import DatePicker from "react-native-date-picker";
 import CalendarDeco from "@/components/deco/CalendarDeco";
+import { BarChart } from "react-native-gifted-charts";
+import { BarChartDeco } from "@/components/deco/BarChartDeco";
 function Home() {
   const [customTimeRangeStart, setCustomTimeRangeStart] = useState<
     string | null
@@ -189,11 +191,10 @@ function Home() {
             style={{
               display: "flex",
               flexDirection: "row",
-              gap: 10,
               height: "100%",
             }}
           >
-            {/* <Button
+            <Button
               fontSize={globalStyle.regularMobileFont}
               style={{
                 width: 80,
@@ -210,8 +211,12 @@ function Home() {
               }}
               onClick={() => {}}
             >
-              <CalendarDeco style={{ zIndex: -1 }}></CalendarDeco>
-            </Button> */}
+              <BarChartDeco
+                style={{ zIndex: -1 }}
+                height={28}
+                width={35}
+              ></BarChartDeco>
+            </Button>
             <Button
               fontSize={globalStyle.regularMobileFont}
               style={{

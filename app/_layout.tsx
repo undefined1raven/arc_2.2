@@ -54,6 +54,7 @@ export default function RootLayout() {
     "/timeTracking/editCategory/editCategory",
     "/settings/accountSettings/backupSettings",
     "/timeTrackingStats/statsDayView/timeTrackingDayView",
+    "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -204,6 +205,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="timeTrackingStats/statsDayView/timeTrackingDayView"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
                   options={{ headerShown: false }}
                 />
               </Stack>

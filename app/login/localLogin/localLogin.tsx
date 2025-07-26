@@ -13,6 +13,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { getInsertStringFromObject } from "@/components/utils/db/dbUtils";
 import * as Updates from "expo-updates";
 import * as SecureStore from "expo-secure-store";
+import * as SQLite from "expo-sqlite";
 import {
   getPrivateKey,
   getSymmetricKey,
@@ -24,11 +25,9 @@ import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
-  const db = useSQLiteContext();
 
   ////File state
   const [fileName, setFileName] = useState("");
-  const [fileJson, setFileJson] = useState(null);
 
   ////UI State
   const [isLoadingFile, setIsLoadingFile] = useState(false);
@@ -38,101 +37,6 @@ function LocalLogin() {
   const [pin, setpin] = useState("");
 
   function writeBackupToDB(wait?: boolean) {
-    const userData = fileJson.userData;
-
-    const promiseArray = [];
-    promiseArray.push(
-      db.runAsync(
-        `INSERT OR REPLACE INTO users ${
-          getInsertStringFromObject(userData).queryString
-        }`,
-        getInsertStringFromObject(userData).values
-      )
-    );
-
-    const arcData = fileJson.timeTrackingChunks;
-    if (arcData !== null && typeof arcData?.length === "number") {
-      arcData.forEach((chunk) => {
-        promiseArray.push(
-          db
-            .runAsync(
-              `INSERT OR REPLACE INTO timeTrackingChunks ${
-                getInsertStringFromObject(chunk).queryString
-              }`,
-              getInsertStringFromObject(chunk).values
-            )
-            .catch((e) => {
-              console.log("Error inserting arcData chunk", e);
-            })
-        );
-      });
-    }
-    const tessData = fileJson.dayPlannerChunks;
-    if (tessData !== null && typeof tessData?.length === "number") {
-      tessData.forEach((chunk) => {
-        promiseArray.push(
-          db.runAsync(
-            `INSERT OR REPLACE INTO dayPlannerChunks ${
-              getInsertStringFromObject(chunk).queryString
-            }`,
-            getInsertStringFromObject(chunk).values
-          )
-        );
-      });
-    }
-    const SIDData = fileJson.personalDiaryChunks;
-    if (SIDData !== null && typeof SIDData?.length === "number") {
-      SIDData.forEach((chunk) => {
-        promiseArray.push(
-          db.runAsync(
-            `INSERT OR REPLACE INTO personalDiaryChunks ${
-              getInsertStringFromObject(chunk).queryString
-            }`,
-            getInsertStringFromObject(chunk).values
-          )
-        );
-      });
-    }
-
-    const SIDGroups = fileJson.personalDiaryGroups;
-    if (SIDGroups !== null && typeof SIDGroups?.length === "number") {
-      SIDGroups.forEach((chunk) => {
-        promiseArray.push(
-          db.runAsync(
-            `INSERT OR REPLACE INTO personalDiaryGroups ${
-              getInsertStringFromObject(chunk).queryString
-            }`,
-            getInsertStringFromObject(chunk).values
-          )
-        );
-      });
-    }
-
-    const featureConfigChunks = fileJson.featureConfigChunks;
-    if (
-      featureConfigChunks !== null &&
-      typeof featureConfigChunks?.length === "number"
-    ) {
-      featureConfigChunks.forEach((chunk) => {
-        promiseArray.push(
-          db.runAsync(
-            `INSERT OR REPLACE INTO featureConfigChunks ${
-              getInsertStringFromObject(chunk).queryString
-            }`,
-            getInsertStringFromObject(chunk).values
-          )
-        );
-      });
-    }
-
-    promiseArray.push(
-      SecureStore.setItemAsync(getPrivateKey(userData.id), fileJson.pk)
-    );
-
-    promiseArray.push(
-      SecureStore.setItemAsync(getSymmetricKey(userData.id), userData.PIKBackup)
-    );
-
     if (wait) {
       return Promise.all(promiseArray);
     } else {
@@ -201,16 +105,31 @@ function LocalLogin() {
               writeBackupToDB(false);
             } else {
               DatabaseBackupApi.importDatabase()
-                .then((r) => {
+                .then(async (r) => {
                   if (r.status === "error") {
                     setShowError(true);
                     setIsLoadingFile(false);
                     return;
                   }
-                  setFileName(r.fileName ? r.fileName : "Backup file");
-                  setIsLoadingFile(false);
-                  setShowError(false);
-                  setHasFile(true);
+                  const db = await SQLite.openDatabaseAsync("localCache");
+                  const userData: { id: string; PIKBackup: string } | null =
+                    await db.getFirstAsync("SELECT id, PIKBackup FROM users;");
+                  db.closeAsync();
+                  if (
+                    typeof userData === "object" &&
+                    userData?.PIKBackup &&
+                    userData?.id
+                  ) {
+                    SecureStore.setItemAsync(
+                      getSymmetricKey(userData.id),
+                      userData.PIKBackup
+                    );
+                    setIsLoadingFile(false);
+                    setShowError(false);
+                    setHasFile(true);
+                  } else {
+                    console.error("No user data found in the backup file.");
+                  }
                 })
                 .catch((e) => {});
             }

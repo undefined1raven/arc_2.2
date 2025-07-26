@@ -185,7 +185,10 @@ const HabitCard = memo(() => {
           const parsedData: string[] = JSON.parse(data);
           const habitDataApi = useHabitCardDataApi.getState();
           habitDataApi.setTrackedIds(parsedData);
+        } else {
+          habitCardDataApi.setTrackedIds([]);
         }
+        habitCardDataApi.setHasTrackedIds(true);
       } catch (error) {
         console.error("Error loading habit card data:", error);
       }
@@ -338,6 +341,30 @@ const HabitCard = memo(() => {
     >
       {habitCardDataApi.derivedData === null && (
         <ActivityIndicator color={globalStyle.color} />
+      )}
+      {habitCardDataApi.derivedData?.length === 0 && (
+        <Selection
+          onMultiSelection={handleSelection}
+          values={filteredTasks}
+          labelKeys={["itme", "name"]}
+          multiselectMatchKeys={["itme", "taskID"]}
+          value={habitCardTrackedIds}
+          multiselect={true}
+          customSelectionButton={(props: { onClick: () => void }) => (
+            <Button
+              fontSize={globalStyle.regularMobileFont}
+              label="Choose activities to track habits for"
+              onClick={props.onClick}
+              style={{
+                height: 50,
+                width: 240,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            ></Button>
+          )}
+        />
       )}
       {habitCardDataApi.derivedData !== null && (
         <>
