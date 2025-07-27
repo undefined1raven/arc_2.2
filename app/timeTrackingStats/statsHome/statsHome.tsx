@@ -209,7 +209,11 @@ function Home() {
                 flexDirection: "row",
                 gap: 10,
               }}
-              onClick={() => {}}
+              onClick={() => {
+                router.push(
+                  "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                );
+              }}
             >
               <BarChartDeco
                 style={{ zIndex: -1 }}
