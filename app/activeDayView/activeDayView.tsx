@@ -46,7 +46,6 @@ function dayPlannerActiveDayView() {
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
-
   const [statusPickingForTask, setStatusPickingForTask] =
     useState<TessTaskType | null>(null);
 
@@ -70,28 +69,7 @@ function dayPlannerActiveDayView() {
   );
 
   const debouncedUpdateTaskName = useCallback(
-    debounce((task: TessTaskType, newName: string) => {
-      if (!task || !dayPlannerActiveDay) return;
-
-      const updatedTask: TessTaskType = {
-        ...task,
-        name: newName,
-      };
-
-      const updatedTasks = dayPlannerActiveDay?.tasks.map((t) =>
-        t.TTID === task.TTID ? updatedTask : t
-      );
-
-      if (!updatedTasks) {
-        return;
-      }
-      const updatedDay = {
-        ...dayPlannerActiveDay,
-        tasks: updatedTasks,
-      };
-
-      useDayPlannerActiveDay.getState().setActiveDay(updatedDay);
-
+    debounce((updatedDay: TessDayLogType) => {
       dataRetriavalAPI
         .modifyEntry(
           "dayPlannerChunks",
@@ -105,10 +83,10 @@ function dayPlannerActiveDayView() {
           console.log("Task name updated", r);
         })
         .catch((e) => {
-          console.error("Error updating task name", e);
+          console.log("Error updating task name", e);
         });
     }, 500),
-    [dayPlannerActiveDay]
+    []
   );
 
   const getStatusColorsForTask = useCallback(
@@ -418,8 +396,31 @@ function dayPlannerActiveDayView() {
                     <TextInput
                       defaultValue={typedItem.name}
                       onChange={(e) => {
+                        if (!dayPlannerActiveDay) return;
                         const newName = e.nativeEvent.text;
-                        debouncedUpdateTaskName(typedItem, newName);
+
+                        const updatedTask: TessTaskType = {
+                          ...typedItem,
+                          name: newName,
+                        };
+
+                        const updatedTasks = dayPlannerActiveDay?.tasks.map(
+                          (t) => (t.TTID === typedItem.TTID ? updatedTask : t)
+                        );
+
+                        if (!updatedTasks) {
+                          return;
+                        }
+                        const updatedDay = {
+                          ...dayPlannerActiveDay,
+                          tasks: updatedTasks,
+                        };
+
+                        useDayPlannerActiveDay
+                          .getState()
+                          //@ts-ignore
+                          .setActiveDay(updatedDay);
+                        debouncedUpdateTaskName(updatedDay);
                       }}
                       textAlign="left"
                       color={getStatusColorsForTask(typedItem).textColor}
