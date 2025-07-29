@@ -1,4 +1,9 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { SimpleFooter } from "@/components/common/SimpleFooter";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
@@ -34,6 +39,8 @@ function TimeTrackingDataExplorer() {
     [timeTrackingFC]
   );
   const dataRetrievalApi = dataRetrivalApi();
+
+  const screenSize = useWindowDimensions();
 
   useEffect(() => {
     if (timeTrackingDataExplorer.dataInTimeRange !== null) {
@@ -117,14 +124,14 @@ function TimeTrackingDataExplorer() {
             width: "100%",
           }}
         >
-          <View
+          {/* <View
             style={{
               height: 65,
               borderRadius: globalStyle.borderRadius,
               backgroundColor:
                 globalStyle.color + layoutCardLikeBackgroundOpacity,
             }}
-          ></View>
+          ></View> */}
           <View
             style={{
               flex: 1,
@@ -173,10 +180,10 @@ function TimeTrackingDataExplorer() {
                   {...getChartColorProps(timeTrackingDataExplorer.viewState)}
                   {...getChartPointColors(timeTrackingDataExplorer.viewState)}
                   {...getDataSetMaxValue(timeTrackingDataExplorer.viewState)}
-                  curvature={0.15}
+                  curvature={0.1}
                   curved={true}
-                  width={350}
-                  height={250}
+                  width={screenSize.width - 40}
+                  height={screenSize.height / 2 - 80}
                   showVerticalLines
                   verticalLinesColor={globalStyle.color + "30"}
                   rulesColor={globalStyle.color + "30"}
@@ -184,10 +191,16 @@ function TimeTrackingDataExplorer() {
                   dataPointsHeight={2}
                   dataPointsWidth={2}
                   textFontSize={10}
+                  yAxisLabelSuffix="h"
+                  yAxisTextStyle={{
+                    fontSize: globalStyle.mediumMobileFont,
+                    color: globalStyle.textColor,
+                  }}
                   xAxisLabelTextStyle={{
-                    fontSize: 10,
+                    fontSize: globalStyle.smallMobileFont,
                     position: "relative",
                     left: 10,
+                    color: globalStyle.textColor,
                   }}
                 />
               )}
