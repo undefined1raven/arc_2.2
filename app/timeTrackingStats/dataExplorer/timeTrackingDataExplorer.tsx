@@ -4,14 +4,23 @@ import { SimpleFooter } from "@/components/common/SimpleFooter";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import Text from "@/components/common/Text";
-import { useTimeTrackingDataExplorer } from "@/stores/viewState/timeTrackingDataExplorer";
+import {
+  getChartColorProps,
+  getChartDataProps,
+  getChartPointColors,
+  getDataSetMaxValue,
+  processDataInTimeRange,
+  useTimeTrackingDataExplorer,
+} from "@/stores/viewState/timeTrackingDataExplorer";
 import { AddIcon } from "@/components/deco/AddIcon";
 import Button from "@/components/common/Button";
 import { Selection } from "@/components/common/Selection";
 import { EditDeco } from "@/components/deco/EditDeco";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { FlashList } from "@shopify/flash-list";
+import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { LineChart } from "react-native-gifted-charts";
 
 function TimeTrackingDataExplorer() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -24,6 +33,28 @@ function TimeTrackingDataExplorer() {
     () => timeTrackingFC.filter((r) => r.type === "task"),
     [timeTrackingFC]
   );
+  const dataRetrievalApi = dataRetrivalApi();
+
+  useEffect(() => {
+    if (timeTrackingDataExplorer.dataInTimeRange !== null) {
+      return;
+    }
+    const weekAgoTimestamp = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    const timeTrackingApi = useTimeTrackingDataExplorer.getState();
+    dataRetrievalApi
+      .getDataInTimeRange(
+        "timeTrackingChunks",
+        weekAgoTimestamp,
+        Date.now(),
+        null
+      )
+      .then((data) => {
+        timeTrackingApi.setDataInTimeRange(data.payload || null);
+      })
+      .catch((error) => {
+        console.error("Error fetching time tracking data:", error);
+      });
+  }, []);
 
   const renderItem = useCallback(
     ({ item, index }) => {
@@ -32,6 +63,10 @@ function TimeTrackingDataExplorer() {
         console.warn("Task not found for item:", item);
         return null;
       }
+      const color =
+        timeTrackingDataExplorer.viewState.find(
+          (r) => r.activityName === task.itme.name
+        )?.color || globalStyle.color;
       const taskName = task.itme.name || "Unnamed Task";
       return (
         <View
@@ -57,14 +92,14 @@ function TimeTrackingDataExplorer() {
               height: 30,
               width: 30,
               borderRadius: 5,
-              backgroundColor: "red",
+              backgroundColor: color,
             }}
           ></View>
           <Text fontSize={globalStyle.regularMobileFont} label={taskName} />
         </View>
       );
     },
-    [timeTrackingFC]
+    [timeTrackingFC, timeTrackingDataExplorer.viewState]
   );
 
   return (
@@ -132,6 +167,30 @@ function TimeTrackingDataExplorer() {
                   />
                 </>
               )}
+              {timeTrackingDataExplorer.viewState.length > 0 && (
+                <LineChart
+                  {...getChartDataProps(timeTrackingDataExplorer.viewState)}
+                  {...getChartColorProps(timeTrackingDataExplorer.viewState)}
+                  {...getChartPointColors(timeTrackingDataExplorer.viewState)}
+                  {...getDataSetMaxValue(timeTrackingDataExplorer.viewState)}
+                  curvature={0.15}
+                  curved={true}
+                  width={350}
+                  height={250}
+                  showVerticalLines
+                  verticalLinesColor={globalStyle.color + "30"}
+                  rulesColor={globalStyle.color + "30"}
+                  initialSpacing={0}
+                  dataPointsHeight={2}
+                  dataPointsWidth={2}
+                  textFontSize={10}
+                  xAxisLabelTextStyle={{
+                    fontSize: 10,
+                    position: "relative",
+                    left: 10,
+                  }}
+                />
+              )}
             </View>
             <View
               style={{
@@ -157,6 +216,7 @@ function TimeTrackingDataExplorer() {
                   flex: 1,
                   marginLeft: 10,
                   marginRight: 10,
+                  marginBottom: 10,
                 }}
               >
                 <FlashList
@@ -169,6 +229,10 @@ function TimeTrackingDataExplorer() {
               </View>
               <Selection
                 onMultiSelection={(e) => {
+                  const t =
+                    useTimeTrackingDataExplorer.getState().dataInTimeRange;
+                  const viewData = processDataInTimeRange(t, e);
+                  timeTrackingDataExplorer.setViewState(viewData);
                   timeTrackingDataExplorer.setSelectedActivities(e);
                 }}
                 values={filteredTasks}
