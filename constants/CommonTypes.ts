@@ -76,10 +76,7 @@ type ARCCategoryType = {
   };
   type: "taskCategory";
 };
-type FeatureConfigArcType = {
-  tasks: ARCTasksType[];
-  taskCategories: ARCCategoryType[];
-};
+type FeatureConfigArcType = (ARCCategoryType | ARCTasksType)[];
 
 type TessStatusType = {
   statusID: string;
@@ -121,12 +118,7 @@ export type DayClassifierType = {
   version: "0.1.1";
 };
 
-type FeatureConfigTessType = {
-  statusArray: TessStatusType[];
-  labelArray: TessLabelType[];
-  dayClassifier: DayClassifierType[];
-  pinProtected: boolean;
-};
+type FeatureConfigTessType = TessStatusType[];
 
 type SIDMoodType = {
   moodID: string;

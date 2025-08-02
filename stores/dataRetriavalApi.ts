@@ -35,6 +35,7 @@ interface DataRetrivalApi {
     status: "error" | "success";
     payload?: any;
     error?: string;
+    insertedIntoChunk?: string;
   }>;
   getDataInTimeRange: (
     tableName: TableNames,
@@ -98,7 +99,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "Invalid table name" };
     }
     const db = await SQLite.openDatabaseAsync("localCache");
-    const latestChunk: ARC_ChunksType | null = await db.getFirstAsync(
+    let latestChunk: ARC_ChunksType | null = await db.getFirstAsync(
       `SELECT * FROM ${tableName} WHERE userID = ? ORDER BY tx DESC LIMIT 1`,
       [activeUserId]
     );
@@ -151,7 +152,11 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
           db.closeAsync();
-          return { status: "success", payload: result };
+          return {
+            status: "success",
+            payload: result,
+            insertedIntoChunk: newChunk.id,
+          };
         })
         .catch((e) => {
           db.closeAsync();
@@ -183,7 +188,11 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          return { status: "success", payload: result };
+          return {
+            status: "success",
+            payload: result,
+            insertedIntoChunk: newChunk.id,
+          };
         })
         .catch((e) => {
           return { status: "error", error: e };
@@ -413,7 +422,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       .then((decryptionResults) => {
         let data: any[] = [];
         let chunkMapping: DataChunkIdMapping = {};
-
         decryptionResults.map((result, index) => {
           if (result.status === "error") {
             return null;
@@ -442,7 +450,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           }
           data = [...data, ...parsedData];
         });
-
         ////Final data time range filtering
         if (
           data.length > 0 &&

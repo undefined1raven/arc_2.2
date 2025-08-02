@@ -7,9 +7,9 @@ interface IDiary {
   groups: SIDGroupType[] | null;
   setGroups: (groups: SIDGroupType[] | null) => void;
   noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null;
-  groupChunkMapping: Record<string, SIDGroupType["groupID"]> | null;
+  groupChunkMapping: { [key: string]: string[] } | null;
   setGroupsChunkMapping: (
-    groupChunkMapping: Record<string, SIDGroupType["groupID"]> | null
+    groupChunkMapping: { [key: string]: string[] } | null
   ) => void;
   setNoteChunkMapping: (
     noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null
@@ -19,7 +19,7 @@ interface IDiary {
 const useDiaryData = create<IDiary>()((set, get) => ({
   groupChunkMapping: null,
   setGroupsChunkMapping: (
-    groupChunkMapping: Record<string, SIDGroupType["groupID"]> | null
+    groupChunkMapping: { [key: string]: string[] } | null
   ) => set({ groupChunkMapping }),
   notes: null,
   noteChunkMapping: null,

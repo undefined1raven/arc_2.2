@@ -29,6 +29,7 @@ import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { saveNewUser } from "@/components/utils/db/saveNewUser";
 import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
 import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
+import { reloadAsync } from "expo-updates";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -113,6 +114,7 @@ export default function Main() {
             saveNewUser(wrappedSymKey)
               .then(() => {
                 console.log("Saved new user");
+                reloadAsync();
               })
               .catch((e) => {
                 console.error("Error saving new user", e);
@@ -152,6 +154,7 @@ export default function Main() {
                 saveNewUser(wrappedSymKey)
                   .then(() => {
                     console.log("Saved new user");
+                    reloadAsync();
                   })
                   .catch((e) => {
                     console.log("Error saving new user", e);

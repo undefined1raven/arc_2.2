@@ -20,12 +20,14 @@ function getTimeRangeFromData(
     timeRangeStart = data[0].start;
     timeRangeEnd = data[data.length - 1].end;
   } else if (tableName === "dayPlannerChunks") {
-    function dayToUnixTimestamp(day: string): number {
-      const date = new Date(day);
-      return date.getTime();
-    }
-    timeRangeStart = dayToUnixTimestamp(data[0].day);
-    timeRangeEnd = dayToUnixTimestamp(data[data.length - 1].day);
+    try {
+      function dayToUnixTimestamp(day: string): number {
+        const date = new Date(day);
+        return date.getTime();
+      }
+      timeRangeStart = dayToUnixTimestamp(data[0].day);
+      timeRangeEnd = dayToUnixTimestamp(data[data.length - 1].day);
+    } catch (error) {}
   }
 
   return {

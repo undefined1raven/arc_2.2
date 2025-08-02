@@ -140,6 +140,9 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
     set({ activeDayView: day });
   },
   setDataInTimeRange: (data: ArcTaskLogType[]) => {
+    if (data.length === 0) {
+      return;
+    }
     const dataStartDay = new Date(data[0]?.start).toISOString().split("T")[0];
     const dataEndDay = new Date(data[data.length - 1]?.start)
       .toISOString()

@@ -4,7 +4,10 @@ import { v4 } from "uuid";
 import { defaultFeatureConfig } from "./config/defaultFeatureConfig";
 import { stringToCharCodeArray } from "./fn/charOps";
 import * as SecureStore from "expo-secure-store";
-import { version } from "react";
+import * as SQLite from "expo-sqlite";
+import { ARC_ChunksType } from "@/constants/CommonTypes";
+import { chunkPrefixes } from "@/constants/chunkPrefixes";
+import { getInsertStringFromObject } from "./db/dbUtils";
 function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
@@ -47,7 +50,7 @@ async function getNewRecoveryCodes(symmetricKeyData: string) {
     });
 }
 
-async function encryptFeatureConfigs(jwkKeyData: string) {
+async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
   const timeTrackingFeatureConfig = defaultFeatureConfig.arc;
   const diaryFeatureConfig = defaultFeatureConfig.sid;
@@ -126,6 +129,99 @@ async function encryptFeatureConfigs(jwkKeyData: string) {
     });
 }
 
+async function createEmptyChunks(jwkKeyData: string, userId: string) {
+  const cryptoOpsApi = useCryptoOpsQueue.getState();
+  const db = await SQLite.openDatabaseAsync("localCache");
+  const emptyEncryptedArray = await cryptoOpsApi.performOperation("encrypt", {
+    keyType: "symmetric",
+    key: jwkKeyData,
+    charCodeData: stringToCharCodeArray(JSON.stringify([])),
+  });
+
+  if (emptyEncryptedArray.status !== "success") {
+    console.error("Failed to create empty encrypted array");
+    return;
+  }
+
+  const emptyEncryptedContent = JSON.stringify(emptyEncryptedArray.payload);
+
+  const emptyNewTimeTrackingChunk: ARC_ChunksType = {
+    id: `${chunkPrefixes["timeTrackingChunks"]}${v4()}`,
+    userID: userId,
+    encryptedContent: emptyEncryptedContent,
+    tx: Date.now(),
+    timeRangeStart: Date.now(),
+    timeRangeEnd: Date.now(),
+    version: "0.1.2",
+  };
+
+  const emptyNewDayPlannerChunk: ARC_ChunksType = {
+    id: `${chunkPrefixes["dayPlannerChunks"]}${v4()}`,
+    userID: userId,
+    encryptedContent: emptyEncryptedContent,
+    tx: Date.now(),
+    timeRangeStart: Date.now(),
+    timeRangeEnd: Date.now(),
+    version: "0.1.2",
+  };
+
+  const emptyNewPersonalDiaryChunk = {
+    id: `${chunkPrefixes["personalDiaryChunks"]}${v4()}`,
+    userID: userId,
+    encryptedContent: emptyEncryptedContent,
+    tx: Date.now(),
+    version: "0.1.2",
+  };
+
+  const emptyNewPersonalDiaryGroupChunk = {
+    id: `${chunkPrefixes["personalDiaryGroupChunks"]}${v4()}`,
+    userID: userId,
+    encryptedContent: emptyEncryptedContent,
+    tx: Date.now(),
+    version: "0.1.2",
+  };
+
+  const timeTrackingInsertHelperVals = getInsertStringFromObject(
+    emptyNewTimeTrackingChunk
+  );
+  console.log("XLF111", timeTrackingInsertHelperVals.queryString);
+  const timeTrackingChunkPromise = db.runAsync(
+    `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
+    [...timeTrackingInsertHelperVals.values]
+  );
+
+  const dayPlannerInsertHelperVals = getInsertStringFromObject(
+    emptyNewDayPlannerChunk
+  );
+  const dayPlannerChunkPromise = db.runAsync(
+    `INSERT INTO dayPlannerChunks  ${dayPlannerInsertHelperVals.queryString}`,
+    dayPlannerInsertHelperVals.values
+  );
+
+  const personalDiaryInsertHelperVals = getInsertStringFromObject(
+    emptyNewPersonalDiaryChunk
+  );
+  const personalDiaryChunkPromise = db.runAsync(
+    `INSERT INTO personalDiaryChunks ${personalDiaryInsertHelperVals.queryString}`,
+    personalDiaryInsertHelperVals.values
+  );
+
+  const personalDiaryGroupInsertHelperVals = getInsertStringFromObject(
+    emptyNewPersonalDiaryGroupChunk
+  );
+  const personalDiaryGroupChunkPromise = db.runAsync(
+    `INSERT INTO personalDiaryGroups ${personalDiaryGroupInsertHelperVals.queryString}`,
+    personalDiaryGroupInsertHelperVals.values
+  );
+
+  return Promise.all([
+    timeTrackingChunkPromise,
+    dayPlannerChunkPromise,
+    personalDiaryChunkPromise,
+    personalDiaryGroupChunkPromise,
+  ]);
+}
+
 async function createNewAccountBasics() {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
   const newUserDataApi = useNewUserData.getState();
@@ -159,6 +255,8 @@ async function createNewAccountBasics() {
     const featureConfigPartials = await encryptFeatureConfigs(
       newSymmetricKey.jwk
     );
+
+    await createEmptyChunks(newSymmetricKey.jwk, userId);
 
     await SecureStore.setItemAsync("tempSymmetricKey", newSymmetricKey.jwk);
     await SecureStore.setItemAsync("tempPrivateKey", newKeyPair.privateKey);

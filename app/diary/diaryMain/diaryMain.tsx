@@ -100,6 +100,17 @@ function DiaryMain() {
     dataRetrivalAPI
       .appendEntry("personalDiaryGroups", newGroup, personalDiaryNotes)
       .then((data) => {
+        const chunkIdInsertedInto = data.insertedIntoChunk || null;
+        if (chunkIdInsertedInto) {
+          ///Update the chunk mapping
+          const newMapping = { ...diaryApi.groupChunkMapping };
+          newMapping[chunkIdInsertedInto] = [
+            ...(newMapping[chunkIdInsertedInto] || []),
+            newGroup.groupID,
+          ];
+          diaryApi.setGroupsChunkMapping(newMapping);
+        }
+
         console.log("New group created successfully:", data);
       })
       .catch((error) => {

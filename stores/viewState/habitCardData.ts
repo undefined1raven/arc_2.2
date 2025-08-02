@@ -7,6 +7,8 @@ type HabitCardDataType = {
 
 interface HabitCardData {
   derivedData: HabitCardDataType | null;
+  hasLoadedData: boolean;
+  setHasLoadedData: (hasLoadedData: boolean) => void;
   trackedIds: string[] | null;
   setTrackedIds: (ids: string[]) => void;
   hasTrackedIds: boolean;
@@ -16,6 +18,10 @@ interface HabitCardData {
 
 const useHabitCardDataApi = create<HabitCardData>((set, get) => ({
   derivedData: null,
+  hasLoadedData: false,
+  setHasLoadedData: (hasLoadedData) => {
+    set({ hasLoadedData });
+  },
   hasTrackedIds: false,
   setHasTrackedIds: (hasTrackedIds) => {
     set({ hasTrackedIds });

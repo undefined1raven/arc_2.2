@@ -19,6 +19,7 @@ import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useActiveUser } from "@/stores/activeUser";
+import { AddIcon } from "@/components/deco/AddIcon";
 
 // Memoized components
 const HabitIcon = memo(
@@ -210,7 +211,6 @@ const HabitCard = memo(() => {
         )
         .then((data) => {
           const habitData: HabitCardDataType = [];
-
           // Filter and sort data once
           const filteredData = data.payload
             .filter(
@@ -265,14 +265,19 @@ const HabitCard = memo(() => {
 
             habitData.push({ activityName, streakData });
           }
-
+          habitCardDataApi.setHasLoadedData(true);
           habitCardDataApi.setDerivedData(habitData);
         })
         .catch((error) => {
           console.error("Error retrieving habit data:", error);
         });
     },
-    [timeConstants, taskMap, getDateFromTimestamp]
+    [
+      timeConstants,
+      taskMap,
+      getDateFromTimestamp,
+      habitCardDataApi.setHasLoadedData,
+    ]
   );
 
   useEffect(() => {
@@ -339,33 +344,67 @@ const HabitCard = memo(() => {
         backgroundColor: globalStyle.color + layoutCardLikeBackgroundOpacity,
       }}
     >
-      {habitCardDataApi.derivedData === null && (
-        <ActivityIndicator color={globalStyle.color} />
-      )}
-      {habitCardDataApi.derivedData?.length === 0 && (
-        <Selection
-          onMultiSelection={handleSelection}
-          values={filteredTasks}
-          labelKeys={["itme", "name"]}
-          multiselectMatchKeys={["itme", "taskID"]}
-          value={habitCardTrackedIds}
-          multiselect={true}
-          customSelectionButton={(props: { onClick: () => void }) => (
-            <Button
-              fontSize={globalStyle.regularMobileFont}
-              label="Choose activities to track habits for"
-              onClick={props.onClick}
+      {habitCardDataApi.derivedData === null &&
+        habitCardDataApi.hasLoadedData === false &&
+        habitCardDataApi.hasTrackedIds === false && (
+          <ActivityIndicator color={globalStyle.color} />
+        )}
+      {habitCardDataApi.derivedData === null &&
+        habitCardDataApi.hasLoadedData === true && (
+          <>
+            <Text
+              style={{ zIndex: 1 }}
+              label="No Data"
+              color={globalStyle.errorColor}
+              fontSize={globalStyle.mediumMobileFont}
+            />
+            <AddIcon
+              width={30}
+              height={15}
+              color={globalStyle.errorColor}
+              style={{ zIndex: 1, transform: [{ rotate: "45deg" }] }}
+            />
+            <AddIcon
+              width={"50%"}
+              height={150}
+              color={globalStyle.errorColor + "08"}
               style={{
-                height: 50,
-                width: 240,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                zIndex: 0,
+                position: "absolute",
+                transform: [{ rotate: "45deg" }],
               }}
-            ></Button>
-          )}
-        />
-      )}
+            />
+          </>
+        )}
+
+      {habitCardDataApi.hasTrackedIds === true &&
+        habitCardDataApi.trackedIds === null && (
+          <Selection
+            onMultiSelection={handleSelection}
+            values={filteredTasks}
+            labelKeys={["itme", "name"]}
+            multiselectMatchKeys={["itme", "taskID"]}
+            value={habitCardTrackedIds}
+            multiselect={true}
+            customSelectionButton={(props: { onClick: () => void }) => (
+              <Button
+                fontSize={globalStyle.regularMobileFont}
+                label="Tap to choose activities to track habits for"
+                onClick={props.onClick}
+                style={{
+                  height: "100%",
+                  paddingLeft: 10,
+                  paddingRight: 10,
+                  width: "100%",
+                  display: "flex",
+                  borderWidth: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              ></Button>
+            )}
+          />
+        )}
       {habitCardDataApi.derivedData !== null && (
         <>
           <View
@@ -382,7 +421,10 @@ const HabitCard = memo(() => {
               flexShrink: 0,
             }}
           >
-            <Text label="Habits" />
+            <Text
+              label="Habit Tracker"
+              fontSize={globalStyle.regularMobileFont}
+            />
             <Selection
               onMultiSelection={handleSelection}
               values={filteredTasks}

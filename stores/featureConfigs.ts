@@ -88,11 +88,11 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
 
                     break;
                   case "personalDiary":
-                    personalDiaryFeatureConfig = [
-                      ...personalDiaryFeatureConfig,
-                      ...parsedData,
-                    ];
-
+                    //We currently dont use personal diary feature config
+                    // personalDiaryFeatureConfig = [
+                    //   ...personalDiaryFeatureConfig,
+                    //   ...parsedData,
+                    // ];
                     break;
                   default:
                     console.error("Unknown feature config type", type);
