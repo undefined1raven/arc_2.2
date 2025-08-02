@@ -1,6 +1,8 @@
 import * as SQLite from "expo-sqlite";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { secureStoreKeyNames } from "../constants/secureStoreKeyNames";
+import { useActiveUser } from "@/stores/activeUser";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
   error: null | string;
@@ -85,6 +87,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
 async function NukeLocalData() {
   const db = await SQLite.openDatabaseAsync("localCache");
+  const userId = useActiveUser.getState().activeUser.userId;
   db.runAsync("DROP TABLE users");
   db.runAsync("DROP TABLE userData");
   db.runAsync("DROP TABLE timeTrackingChunks");
@@ -101,6 +104,7 @@ async function NukeLocalData() {
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.activeSymmetricKey
   );
+  AsyncStorage.removeItem(`${userId}-habitCardData`);
   SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.privateKey);
   SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.symmetricKey);
   SecureStore.deleteItemAsync(secureStoreKeyNames.accountConfig.pin);

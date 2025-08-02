@@ -10,7 +10,7 @@ interface HabitCardData {
   hasLoadedData: boolean;
   setHasLoadedData: (hasLoadedData: boolean) => void;
   trackedIds: string[] | null;
-  setTrackedIds: (ids: string[]) => void;
+  setTrackedIds: (ids: string[] | null) => void;
   hasTrackedIds: boolean;
   setHasTrackedIds: (hasTrackedIds: boolean) => void;
   setDerivedData: (data: HabitCardDataType) => void;

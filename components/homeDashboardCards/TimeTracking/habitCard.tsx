@@ -187,7 +187,7 @@ const HabitCard = memo(() => {
           const habitDataApi = useHabitCardDataApi.getState();
           habitDataApi.setTrackedIds(parsedData);
         } else {
-          habitCardDataApi.setTrackedIds([]);
+          habitCardDataApi.setTrackedIds(null);
         }
         habitCardDataApi.setHasTrackedIds(true);
       } catch (error) {
@@ -201,7 +201,9 @@ const HabitCard = memo(() => {
   const getHabitData = useCallback(
     (trackedIds: string[]) => {
       const dataRetrivalAPI = dataRetrivalApi.getState();
-
+      if (!trackedIds || trackedIds.length === 0) {
+        return;
+      }
       dataRetrivalAPI
         .getDataInTimeRange(
           "timeTrackingChunks",
@@ -381,10 +383,10 @@ const HabitCard = memo(() => {
         habitCardDataApi.trackedIds === null && (
           <Selection
             onMultiSelection={handleSelection}
-            values={filteredTasks}
+            values={filteredTasks || []}
             labelKeys={["itme", "name"]}
             multiselectMatchKeys={["itme", "taskID"]}
-            value={habitCardTrackedIds}
+            value={habitCardTrackedIds || []}
             multiselect={true}
             customSelectionButton={(props: { onClick: () => void }) => (
               <Button
@@ -427,10 +429,10 @@ const HabitCard = memo(() => {
             />
             <Selection
               onMultiSelection={handleSelection}
-              values={filteredTasks}
+              values={filteredTasks || []}
               labelKeys={["itme", "name"]}
               multiselectMatchKeys={["itme", "taskID"]}
-              value={habitCardTrackedIds}
+              value={habitCardTrackedIds || []}
               multiselect={true}
               customSelectionButton={(props: { onClick: () => void }) => (
                 <Button
