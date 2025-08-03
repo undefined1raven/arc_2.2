@@ -11,6 +11,7 @@ import { getInsertStringFromObject } from "./db/dbUtils";
 function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
+import * as Crypto from "expo-crypto";
 
 async function getNewRecoveryCodes(symmetricKeyData: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -222,6 +223,36 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
   ]);
 }
 
+async function generateSecretKey(): Promise<{
+  status: "success" | "error";
+  payload: string | null;
+  error?: any;
+}> {
+  ///Get a lot of crypto secure bytes
+  const secretKey = Crypto.getRandomBytes(512);
+
+  // Convert to hex string
+  const hexString = Array.from(secretKey)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Hash the hex string
+  return Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    hexString,
+    {
+      encoding: Crypto.CryptoEncoding.BASE64,
+    }
+  )
+    .then((hashedKey) => {
+      return { status: "success", payload: hashedKey };
+    })
+    .catch((error) => {
+      console.error("Error generating secret key", error);
+      return { status: "error", payload: null, error: error };
+    });
+}
+
 async function createNewAccountBasics() {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
   const newUserDataApi = useNewUserData.getState();
@@ -272,7 +303,17 @@ async function createNewAccountBasics() {
   } catch (error) {
     console.error("Error creating new account basics", error);
   }
-  return userDataGlobal;
+
+  const secretKeyResponse = await generateSecretKey();
+
+  if (secretKeyResponse.status === "success") {
+    return {
+      userData: userDataGlobal,
+      secretKey: "ARC-SK-" + secretKeyResponse.payload,
+    };
+  } else {
+    return { userData: null, secretKey: null };
+  }
 }
 
 export default createNewAccountBasics;

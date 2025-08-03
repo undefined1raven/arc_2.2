@@ -26,15 +26,25 @@ import Animated, {
 import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
+import { CopyDeco } from "@/components/deco/CopyDeco";
+import { useMemo } from "react";
+import * as Clipboard from "expo-clipboard";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const newUserDataApi = useNewUserData();
 
+  const textToSave = useMemo(() => {
+    return (
+      newUserDataApi.recoveryCodes.join(" , ") +
+      `, 0.1.1, [do not share these with anyone and keep them in a safe place][account_id:${newUserDataApi.userData?.id}]`
+    );
+  }, [newUserDataApi.recoveryCodes, newUserDataApi.userData]);
+
   const recoveryCodeRenderItem = ({ item }: { item: string }) => {
     return (
       <Text
-        fontSize={16}
+        fontSize={14}
         backgroundColor={globalStyle.color + "20"}
         style={{ width: "100%", marginBottom: 10, height: 50 }}
         label={item}
@@ -47,7 +57,6 @@ export default function Main() {
     <>
       <ThemedView style={styles.container}>
         <>
-          <SimpleHeader></SimpleHeader>
           {newUserDataApi.isGeneratingKeysAndConfig ? (
             <>
               <View
@@ -82,7 +91,7 @@ export default function Main() {
               >
                 <Text
                   textAlign="left"
-                  label="One-time Setup [1/2]"
+                  label="One-time Setup [1/3]"
                   style={{
                     height: "100%",
                     width: "100%",
@@ -124,35 +133,61 @@ export default function Main() {
                 entering={FadeInDown}
                 style={{ height: "20%", width: "100%" }}
               >
-                <Button
-                  onClick={() => {
-                    const textToSave =
-                      newUserDataApi.recoveryCodes.join(" , ") +
-                      `, 0.1.1, [do not share these with anyone and keep them in a safe place][account_id:${newUserDataApi.userData?.id}]`;
-
-                    const fileName = `ARCRecoveryCodes-${Date.now()}-${
-                      newUserDataApi.userData?.id
-                    }.txt`;
-                    saveFile(fileName, textToSave).then((res) => {
-                      console.log("File saved", res);
-                    });
-                  }}
-                  textAlign="left"
-                  label="Download"
+                <View
                   style={{
+                    flexDirection: "row",
                     width: "100%",
                     height: "35%",
                     marginBottom: 10,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "flex-end",
                   }}
                 >
-                  <DownloadDeco style={{ height: 45 }}></DownloadDeco>
-                </Button>
+                  <Button
+                    onClick={() => {
+                      const fileName = `ARCRecoveryCodes-${Date.now()}-${
+                        newUserDataApi.userData?.id
+                      }.txt`;
+                      saveFile(fileName, textToSave).then((res) => {
+                        console.log("File saved", res);
+                      });
+                    }}
+                    textAlign="left"
+                    label="Download"
+                    style={{
+                      flex: 1,
+                      height: "100%",
+                      marginRight: 5,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <DownloadDeco style={{ height: 45 }}></DownloadDeco>
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      Clipboard.setStringAsync(textToSave);
+                    }}
+                    textAlign="left"
+                    label=""
+                    style={{
+                      flex: 1,
+                      height: "100%",
+                      marginLeft: 5,
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingRight: 5,
+                      paddingLeft: 5,
+                    }}
+                  >
+                    <Text label="Copy"></Text>
+                    <CopyDeco style={{ height: 45 }}></CopyDeco>
+                  </Button>
+                </View>
                 <Button
                   onClick={() => {
-                    router.push("/setAccountPin/page");
+                    router.push("/secretKey/page");
                   }}
                   textAlign="left"
                   label="Continue"

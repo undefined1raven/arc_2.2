@@ -4,6 +4,8 @@ import { create } from "zustand";
 interface NewUserData {
   recoveryCodes: string[];
   setRecoveryCodes: (recoveryCodes: string[]) => void;
+  secretKey: string | null;
+  setSecretKey: (secretKey: string) => void;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
     id: string;
@@ -29,6 +31,10 @@ interface NewUserData {
 }
 
 const useNewUserData = create<NewUserData>((set, get) => ({
+  secretKey: null,
+  setSecretKey(secretKey) {
+    set({ secretKey });
+  },
   userData: null,
   recoveryCodes: [],
   setRecoveryCodes: (recoveryCodes) => {

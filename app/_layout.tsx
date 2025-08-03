@@ -55,6 +55,7 @@ export default function RootLayout() {
     "/settings/accountSettings/backupSettings",
     "/timeTrackingStats/statsDayView/timeTrackingDayView",
     "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
+    "/secretKey/page",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -209,6 +210,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="secretKey/page"
                   options={{ headerShown: false }}
                 />
               </Stack>

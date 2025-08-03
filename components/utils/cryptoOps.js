@@ -381,105 +381,133 @@ function stringToCharCodeArray(str) {
 Given some key material and some random salt
 derive an AES-KW key using PBKDF2.
 */
-    function getKey(keyMaterial, salt) {
-      return window.crypto.subtle.deriveKey(
-        {
-          name: "PBKDF2",
-          salt: salt,
-          iterations: 100000,
-          hash: "SHA-256",
-        },
-        keyMaterial,
-        { name: "AES-CBC", length: 256 },
-        true,
-        ["wrapKey", "unwrapKey"]
-      );
-    }
+// Derive AES-KW key using PBKDF2 from raw password keyMaterial and salt
+function getKey(keyMaterial, salt) {
+  return window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 100000, // tune as needed
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-KW", length: 256 }, // AES Key Wrap algorithm
+    true,
+    ["wrapKey", "unwrapKey"]
+  );
+}
 
-    async function wrapKey(args) {
-      const password = args.password;
-      const importedKey = await importCryptoKey({
-        jwkKeyData: args.jwkKeyData,
-        keyType: args.keyType,
-      });
-      if (!importedKey?.payload?.key) {
-        return returnErrorResponse("Error importing key");
-      }
-      const key = importedKey.payload.key;
-      const hashedPassword = await digestMessage(password);
-      // get the key encryption key
-      const keyMaterial = await getKeyMaterial(hashedPassword);
-      let salt = window.crypto.getRandomValues(new Uint8Array(16));
-      const wrappingKey = await getKey(keyMaterial, salt);
-      const iv = window.crypto.getRandomValues(new Uint8Array(16));
-      let keyFormat = args.keyType === "private" ? "jwk" : "raw";
-      return window.crypto.subtle
-        .wrapKey(keyFormat, key, wrappingKey, {
-          name: "AES-CBC",
-          iv: iv,
-        })
-        .then((wrappedKey) => {
-          return {
-            status: "success",
-            payload: {
-              wrappedKey: ab2str(wrappedKey),
-              salt: ab2str(salt),
-              iv: ab2str(iv),
-            },
-          };
-        })
-        .catch((e) => {
-          return returnErrorResponse(e);
-        });
-    }
+async function wrapKey(args) {
+  const password = args.password;
+
+  // Import the raw password as key material for PBKDF2
+  const encoder = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  // Import the key you want to wrap (private/public/raw), assuming importCryptoKey returns the WebCrypto Key
+  const importedKey = await importCryptoKey({
+    jwkKeyData: args.jwkKeyData,
+    keyType: args.keyType,
+  });
+  if (!importedKey?.payload?.key) {
+    return returnErrorResponse("Error importing key");
+  }
+  const key = importedKey.payload.key;
+
+  // Generate random salt for PBKDF2
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+
+  // Derive wrapping key with AES-KW
+  const wrappingKey = await getKey(keyMaterial, salt);
+
+  // Key format for wrapKey call depends on key type
+  const keyFormat = args.keyType === "private" ? "jwk" : "raw";
+
+  try {
+    const wrappedKey = await window.crypto.subtle.wrapKey(
+      keyFormat,
+      key,
+      wrappingKey,
+      "AES-KW" // Use AES-KW for wrapping (no IV needed)
+    );
+
+    return {
+      status: "success",
+      payload: {
+        wrappedKey: ab2str(wrappedKey),
+        salt: ab2str(salt),
+      },
+    };
+  } catch (e) {
+    return returnErrorResponse(e);
+  }
+}
     ////[End] Wrap Key
 
     /////[Start] Unwrap Key
-    function str2ab(str) {
-      const buf = new ArrayBuffer(str.length);
-      const bufView = new Uint8Array(buf);
-      for (let i = 0, strLen = str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-      }
-      return buf;
+function str2ab(str) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+async function unwrapKey(args) {
+  const wrappedKey = str2ab(args.wrappedKey);
+  const password = args.password;
+  const salt = str2ab(args.salt);
+
+  // Import raw password as key material for PBKDF2
+  const encoder = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  // Derive unwrapping key using AES-KW
+  const unwrappingKey = await getKey(keyMaterial, salt);
+
+  try {
+    const unwrappedKey = await window.crypto.subtle.unwrapKey(
+      // Key format depends on your use case; assuming "jwk" here, adjust as needed
+      args.keyType === "private" ? "jwk" : "raw",
+      wrappedKey,
+      unwrappingKey,
+      "AES-KW", // unwrap using AES Key Wrap
+      // The algorithm of the key being unwrapped — adjust as needed, e.g. "AES-GCM"
+      { name: "AES-GCM" },
+      true,
+      ["encrypt", "decrypt"]
+    );
+
+    const exportCryptoKeyResponse = await exportCryptoKey(unwrappedKey);
+    if (exportCryptoKeyResponse.status === "error") {
+      return returnErrorResponse("Error exporting unwrapped key");
     }
 
-    async function unwrapKey(args) {
-      const wrappedKey = str2ab(args.wrappedKey);
-      const password = args.password;
-      const salt = str2ab(args.salt);
-      const iv = str2ab(args.iv);
-      const hashedPassword = await digestMessage(password);
-      const keyMaterial = await getKeyMaterial(hashedPassword);
-      const unwrappingKey = await getKey(keyMaterial, salt);
-      return window.crypto.subtle
-        .unwrapKey(
-          "raw",
-          wrappedKey,
-          unwrappingKey,
-          { name: "AES-CBC", iv: iv },
-          { name: "AES-GCM" },
-          true,
-          ["encrypt", "decrypt"]
-        )
-        .catch((e) => {
-          return returnErrorResponse(e);
-        })
-        .then(async (key) => {
-          const exportCryptoKeyResponse = await exportCryptoKey(key);
-          if(exportCryptoKeyResponse.status === "error") {
-            return returnErrorResponse("Error exporting unwrapped key");
-          }
-          const exportedKey = exportCryptoKeyResponse.payload.jwk;
-          try{
-            const parsedKey = JSON.parse(exportedKey);
-            return { status: "success", payload: { key: parsedKey } };
-            }
-          catch(e) {
-            return returnErrorResponse(e);
-          }
-        });
+    const exportedKey = exportCryptoKeyResponse.payload.jwk;
+    try {
+      const parsedKey = JSON.parse(exportedKey);
+      return { status: "success", payload: { key: parsedKey } };
+    } catch (e) {
+      return returnErrorResponse(e);
     }
+  } catch (e) {
+    return returnErrorResponse(e);
+  }
+}
+
 
     /////[End] Unwrap Key
 

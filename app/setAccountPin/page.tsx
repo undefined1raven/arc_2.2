@@ -82,7 +82,7 @@ export default function Main() {
     }
     cryptoOpsApi
       .performOperation("wrapKey", {
-        password: newPin,
+        password: newPin + newUserDataApi.secretKey,
         jwkKeyData: symmetricKeyJwk,
         keyType: "symmetric",
       })
@@ -98,6 +98,10 @@ export default function Main() {
               console.error("Error encoding wrapped symmetric key");
               return;
             }
+            console.log(
+              "Saving new user with wrapped symmetric key",
+              wrappedSymKey
+            );
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
               wrappedSymKey
@@ -184,7 +188,6 @@ export default function Main() {
       <>
         <ThemedView style={styles.container}>
           <>
-            <SimpleHeader></SimpleHeader>
             {newUserDataApi.isGeneratingKeysAndConfig ? (
               <>
                 <View
@@ -219,7 +222,7 @@ export default function Main() {
                 >
                   <Text
                     textAlign="left"
-                    label="One-time Setup [2/2]"
+                    label="One-time Setup [3/3]"
                     style={{
                       height: "100%",
                       width: "100%",
@@ -258,6 +261,9 @@ export default function Main() {
                     }}
                   >
                     <Text
+                      fontSize={globalStyle.mediumMobileFont}
+                      numberOfLines={50}
+                      ellipsizeMode="middle"
                       textAlign="left"
                       label="You can use this pin to better protect your data as well as a recovery method"
                       style={{
