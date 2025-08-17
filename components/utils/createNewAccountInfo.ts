@@ -185,7 +185,6 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
   const timeTrackingInsertHelperVals = getInsertStringFromObject(
     emptyNewTimeTrackingChunk
   );
-  console.log("XLF111", timeTrackingInsertHelperVals.queryString);
   const timeTrackingChunkPromise = db.runAsync(
     `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
     [...timeTrackingInsertHelperVals.values]

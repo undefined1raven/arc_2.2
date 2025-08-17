@@ -148,7 +148,7 @@ export default function Main() {
                 );
                 await SecureStore.setItemAsync(
                   secureStoreKeyNames.accountConfig.pin,
-                  newPin,
+                  newPin + newUserDataApi.secretKey,
                   {
                     requireAuthentication: true,
                     authenticationPrompt:
