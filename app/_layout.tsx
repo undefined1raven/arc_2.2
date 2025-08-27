@@ -36,6 +36,8 @@ export default function RootLayout() {
   const navMenuDisallowedPaths = [
     "/NewAccountMain/page",
     "/login/localLogin/localLogin",
+    "/login/localLogin/passphrasePage",
+    "/login/localLogin/pinPage",
     "/downloadRecoveryCodes/page",
     "/setAccountPin/page",
     "/localAccountAuth/localAccountAuth",
@@ -126,6 +128,14 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="login/localLogin/localLogin"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="login/localLogin/passphrasePage"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="login/localLogin/pinPage"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
