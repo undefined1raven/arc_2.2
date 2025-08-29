@@ -25,36 +25,23 @@ import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
+import { BottomMenu } from "./common/bottomMenu";
+import { useOfflineLoginTempStore } from "@/stores/offlineLoginTempStore";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
+  const offlineLoginTempStore = useOfflineLoginTempStore();
 
-  const bottomInset = useSafeAreaInsets().bottom;
+  const [pin, setPin] = useState<null | string>(null);
+  const [isPinValid, setIsPinValid] = useState(false);
 
-  ////File state
-  const [fileName, setFileName] = useState("");
-
-  ////UI State
-  const [isLoadingFile, setIsLoadingFile] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [hasFile, setHasFile] = useState(false);
-
-  const [pin, setpin] = useState("");
-
-  function writeBackupToDB(wait?: boolean) {
-    if (wait) {
-      return Promise.all(promiseArray);
+  useEffect(() => {
+    if (pin !== null && pin.length >= 4 && pin.length <= 6) {
+      setIsPinValid(true);
     } else {
-      Promise.all(promiseArray)
-        .then((res) => {
-          Updates.reloadAsync();
-        })
-        .catch((e) => {
-          setShowError(true);
-          console.log(e);
-        });
+      setIsPinValid(false);
     }
-  }
+  }, [pin]);
 
   return (
     <>
@@ -86,55 +73,20 @@ function LocalLogin() {
           keyboardType="numeric"
           secureTextEntry={true}
           onChange={(e) => {
-            const text = e.nativeEvent.text;
-            setpin(text);
+            const pin = e.nativeEvent.text;
+            offlineLoginTempStore.setPin(pin);
+            setPin(pin);
           }}
         ></TextInput>
+        <BottomMenu
+          canGoForward={isPinValid}
+          onNextButton={() => {
+            if (isPinValid) {
+              router.push("/login/localLogin/passphrasePage");
+            }
+          }}
+        ></BottomMenu>
       </ThemedView>
-      <View
-        style={{
-          position: "absolute",
-          bottom: bottomInset,
-          width: "100%",
-          height: 50,
-          display: "flex",
-          flexDirection: "row",
-          marginLeft: 10,
-          marginRight: 10,
-          justifyContent: "space-between",
-        }}
-      >
-        <Button
-          onClick={() => {
-            router.back();
-          }}
-          style={{
-            height: "100%",
-            width: "50%",
-            display: "flex",
-            alignItems: "center",
-            borderWidth: 0,
-            justifyContent: "center",
-            borderRightWidth: 1,
-            borderTopRightRadius: 0,
-            borderBottomRightRadius: 0,
-          }}
-        >
-          <Text label="Cancel"></Text>
-        </Button>
-        <Button
-          style={{
-            height: "100%",
-            width: "50%",
-            borderWidth: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <ArrowDeco height={35}></ArrowDeco>
-        </Button>
-      </View>
     </>
   );
 }

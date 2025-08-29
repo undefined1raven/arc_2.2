@@ -9,7 +9,9 @@ export const DatabaseBackupApi = {
   },
 
   // Simple export - no additional encryption needed
-  exportDatabase: async (): Promise<{
+  exportDatabase: async (
+    shareMode: boolean
+  ): Promise<{
     status: "success" | "error";
     message: string;
   }> => {
@@ -35,12 +37,35 @@ export const DatabaseBackupApi = {
         to: tempBackupPath,
       });
 
-      // Share the encrypted database file
-      await Sharing.shareAsync(tempBackupPath, {
-        mimeType: "application/x-sqlite3",
-        dialogTitle: "Save Encrypted Database Backup",
-        UTI: "public.database",
-      });
+      if (shareMode) {
+        // Share the encrypted database file
+        await Sharing.shareAsync(tempBackupPath, {
+          mimeType: "application/x-sqlite3",
+          dialogTitle: "Save Encrypted Database Backup",
+          UTI: "public.database",
+        });
+      } else {
+        // Save to device's Downloads folder or Documents
+        const downloadsPath = `${FileSystem.documentDirectory}../Downloads/${backupFilename}`;
+        const documentsPath = `${FileSystem.documentDirectory}${backupFilename}`;
+
+        try {
+          // Try Downloads folder first
+          await FileSystem.copyAsync({
+            from: tempBackupPath,
+            to: downloadsPath,
+          });
+        } catch {
+          // Fallback to Documents folder
+          console.log(documentsPath);
+          await FileSystem.copyAsync({
+            from: tempBackupPath,
+            to: documentsPath,
+          }).catch((e) => {
+            console.log(e);
+          });
+        }
+      }
 
       // Cleanup
       await FileSystem.deleteAsync(tempBackupPath, { idempotent: true });

@@ -201,9 +201,19 @@ function AccountSettingsMain() {
         <View style={{ width: "100%", height: "100%" }}>
           <View style={{ display: "flex", flexGrow: 1, gap: 10 }}>
             <Button
+              onLongPress={() => {
+                DatabaseBackupApi.exportDatabase(false)
+                  .then((result) => {
+                    if (result.success) {
+                      console.log("Backup exported successfully:", result);
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error exporting backup:", error);
+                  });
+              }}
               onClick={() => {
-                console.log("XLF BACKSUPS");
-                DatabaseBackupApi.exportDatabase()
+                DatabaseBackupApi.exportDatabase(false)
                   .then((result) => {
                     if (result.success) {
                       console.log("Backup exported successfully:", result);
