@@ -55,6 +55,7 @@ export default function RootLayout() {
     "/timeTracking/editCategory/editCategorySelection",
     "/timeTracking/editCategory/editCategory",
     "/settings/accountSettings/backupSettings",
+    "/settings/accountSettings/accountKeys",
     "/timeTrackingStats/statsDayView/timeTrackingDayView",
     "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
     "/secretKey/page",
@@ -200,6 +201,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="settings/accountSettings/backupSettings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/accountSettings/accountKeys"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

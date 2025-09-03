@@ -15,6 +15,7 @@ import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { Dropdown } from "@/components/deco/Dropdown";
+import { SimpleFooter } from "@/components/common/SimpleFooter";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -36,6 +37,12 @@ function AccountSettingsMain() {
       title: "Backup",
       description: "Make a backup of your data",
       goTo: "/settings/accountSettings/backupSettings",
+    },
+    {
+      name: "keyManagement",
+      title: "Key Management",
+      description: "Manage your account keys",
+      goTo: "/settings/accountSettings/accountKeys",
     },
   ];
 
@@ -87,37 +94,7 @@ function AccountSettingsMain() {
             renderItem={({ item }) => renderItem(item)}
             data={settingOptions}
           ></FlashList>
-          <Text
-            textAlign="left"
-            label="Settings / Account Settings"
-            style={{
-              flexShrink: 0,
-              width: "100%",
-              height: 65,
-              paddingLeft: 90,
-              backgroundColor:
-                globalStyle.color + layoutCardLikeBackgroundOpacity,
-            }}
-          ></Text>
-          <Button
-            onClick={() => {
-              router.back();
-            }}
-            style={{
-              borderRadius: 0,
-              borderWidth: 0,
-              borderRightWidth: 1,
-              position: "absolute",
-              bottom: 0,
-              width: 80,
-              height: 65,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
-          </Button>
+          <SimpleFooter label="Settings / Account Settings"></SimpleFooter>
         </View>
       </ThemedView>
     </>
