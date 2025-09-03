@@ -1,8 +1,7 @@
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { Rect } from "@shopify/react-native-skia";
 import * as React from "react";
 import { View } from "react-native";
-import Svg, { SvgProps, Path } from "react-native-svg";
+import Svg, { SvgProps, Path, Rect } from "react-native-svg";
 const KeyDeco = (props: SvgProps) => {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const colorActual = props.color ? props.color : globalStyle.color;

@@ -1,6 +1,6 @@
 import SimpleLoadingScreen from "@/components/common/SimpleLoadingScreen";
 import { ThemedView } from "@/components/ThemedView";
-import { useCallback, useEffect, useState } from "react";
+import { act, useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -19,6 +19,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
@@ -76,23 +77,17 @@ function localAccountAuth() {
                 setIsCheckingPin(false);
                 return;
               }
-              SecureStore.setItemAsync(
-                secureStoreKeyNames.accountConfig.activeSymmetricKey,
+              const activeKeyAPI = useActiveKeys.getState();
+              activeKeyAPI.setActiveSymmetricKey(
                 JSON.stringify(unwrappedKey.payload.key)
-              )
+              );
+              useFeatureConfigs
+                .getState()
+                .decryptFeatureConfigs()
                 .then(() => {
-                  useFeatureConfigs
-                    .getState()
-                    .decryptFeatureConfigs()
-                    .then(() => {
-                      router.replace("/home/home");
-                    })
-                    .catch((e) => {});
+                  router.replace("/home/home");
                 })
-                .catch((e) => {
-                  console.log("Error setting key", e);
-                  setIsCheckingPin(false);
-                });
+                .catch((e) => {});
             } else {
               setIsCheckingPin(false);
             }

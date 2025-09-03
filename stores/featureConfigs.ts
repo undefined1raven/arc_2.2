@@ -9,6 +9,7 @@ import {
 } from "@/constants/CommonTypes";
 import { useCryptoOpsQueue } from "./cryptoOpsQueue";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
+import { useActiveKeys } from "./decryptedKeys";
 interface IFeatureConfigs {
   decryptFeatureConfigs: () => Promise<void>;
   timeTrackingFeatureConfig: any | null;
@@ -32,9 +33,8 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
   decryptFeatureConfigs: async () => {
     const activeUserId = useActiveUser.getState().activeUser.userId;
     const cryptoOpsApi = useCryptoOpsQueue.getState();
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
     if (typeof key !== "string") {
       console.error("Key is not a string");
       return;
