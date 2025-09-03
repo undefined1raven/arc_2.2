@@ -6,10 +6,13 @@ import { CheckBox } from "@/components/common/CheckBox";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import Button from "@/components/common/Button";
-import { TextInput } from "react-native-gesture-handler";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useEffect, useState } from "react";
+import TextInput from "@/components/common/TextInput";
+import { router } from "expo-router";
+import { useActiveKeys } from "@/stores/decryptedKeys";
+import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
 
 function Home() {
   const globalStyle = useGlobalStyleStore((r) => r.globalStyle);
@@ -24,6 +27,24 @@ function Home() {
       newPinLength >= 4 && newPinLength <= 6 && !isNaN(Number(newPin))
     );
   }, [newPin]);
+
+  useEffect(() => {
+    const activeKeyAPI = useActiveKeys.getState();
+    if (typeof activeKeyAPI.activeSymmetricKey !== "string") {
+      return;
+    }
+    getNewRecoveryCodes(activeKeyAPI.activeSymmetricKey)
+      .then((codes) => {})
+      .catch((e) => {});
+  }, []);
+
+  useEffect(() => {
+    if (newPin === confirmPin && newPin.length >= 4 && newPin.length <= 6) {
+      setCanContinue(true);
+    } else {
+      setCanContinue(false);
+    }
+  }, [newPin, confirmPin]);
 
   ///Flow state
   const [canContinue, setCanContinue] = useState(false);
@@ -200,7 +221,7 @@ function Home() {
             >
               <Button
                 onClick={() => {
-                  // handlePinSubmit();
+                  router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
                 }}
                 disabled={canContinue ? false : true}
                 textAlign="left"
@@ -222,52 +243,6 @@ function Home() {
                   width={55}
                 ></ArrowDeco>
               </Button>
-            </Animated.View>
-            <Animated.View
-              style={{
-                width: "100%",
-                height: 30,
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "flex-start",
-              }}
-            >
-              <Animated.View
-                style={{
-                  width: 30,
-                  height: "100%",
-                  zIndex: 2,
-                }}
-              >
-                <CheckBox
-                  hitSlop={15}
-                  checked={false}
-                  checkedColor={globalStyle.color + "AA"}
-                  uncheckedColor={globalStyle.color + "10"}
-                  onChange={(e) => {
-                    setUseBiometricAuth(e);
-                  }}
-                  style={{ width: "100%", height: "100%" }}
-                ></CheckBox>
-              </Animated.View>
-              <Animated.View
-                style={{
-                  flexGrow: 1,
-                  height: "100%",
-                }}
-              >
-                <Text
-                  textAlign="left"
-                  label="Use biometric authentication"
-                  style={{
-                    height: "100%",
-                    width: "100%",
-                    marginBottom: 5,
-                    paddingLeft: 10,
-                  }}
-                ></Text>
-              </Animated.View>
             </Animated.View>
           </Animated.View>
         </>

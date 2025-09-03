@@ -60,6 +60,8 @@ export default function RootLayout() {
     "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
     "/secretKey/page",
     "/settings/keyRegenerationFlow/newPinPage",
+    "/settings/keyRegenerationFlow/newRecoveryCodes",
+    "/settings/keyRegenerationFlow/newPassphrasePage",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -209,6 +211,11 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="settings/keyRegenerationFlow/newRecoveryCodes"
+                  options={{ headerShown: false }}
+                />
+
+                <Stack.Screen
                   name="settings/keyRegenerationFlow/newPinPage"
                   options={{ headerShown: false }}
                 />
@@ -230,6 +237,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/keyRegenerationFlow/newPassphrasePage"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

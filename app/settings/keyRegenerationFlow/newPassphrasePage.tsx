@@ -28,10 +28,23 @@ import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
 import { CopyDeco } from "@/components/deco/CopyDeco";
+import { useEffect, useState } from "react";
+import { generateSecretKey } from "@/components/utils/createNewAccountInfo";
+import { useActiveUser } from "@/stores/activeUser";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
-  const newUserDataApi = useNewUserData();
+  const [newPassphrase, setNewPassphrase] = useState<null | string>(null);
+  const activeUserApi = useActiveUser((r) => r.activeUser);
+  useEffect(() => {
+    generateSecretKey()
+      .then((res) => {
+        if (res.status === "success") {
+          setNewPassphrase(res.payload);
+        }
+      })
+      .catch((e) => {});
+  }, []);
 
   return (
     <>
@@ -46,7 +59,7 @@ export default function Main() {
         >
           <Text
             textAlign="left"
-            label="One-time Setup [2/3]"
+            label="Regenerate Key [3/3]"
             style={{
               height: "100%",
               width: "100%",
@@ -89,7 +102,7 @@ export default function Main() {
               padding: 10,
               paddingRight: 15,
             }}
-            label={newUserDataApi.secretKey || "."}
+            label={newPassphrase ?? "..."}
             textAlign="left"
           ></Text>
         </Animated.View>
@@ -108,13 +121,11 @@ export default function Main() {
             <Button
               onClick={() => {
                 const fileName = `ARC-PK-${Date.now()}-${
-                  newUserDataApi.userData?.id
+                  activeUserApi.userId
                 }.txt`;
-                saveFile(fileName, newUserDataApi.secretKey ?? "").then(
-                  (res) => {
-                    console.log("File saved", res);
-                  }
-                );
+                saveFile(fileName, newPassphrase ?? "...").then((res) => {
+                  console.log("File saved", res);
+                });
               }}
               textAlign="left"
               label="Download"
@@ -131,7 +142,7 @@ export default function Main() {
             </Button>
             <Button
               onClick={() => {
-                Clipboard.setStringAsync(newUserDataApi.secretKey ?? "");
+                Clipboard.setStringAsync(newPassphrase ?? "...");
               }}
               textAlign="left"
               label=""

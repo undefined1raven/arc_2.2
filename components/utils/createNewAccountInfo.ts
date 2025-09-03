@@ -316,3 +316,4 @@ async function createNewAccountBasics() {
 }
 
 export default createNewAccountBasics;
+export { getNewRecoveryCodes, generateSecretKey };
