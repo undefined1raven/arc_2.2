@@ -6,6 +6,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { FooterComponent } from "react-native-screens/lib/typescript/components/ScreenFooter";
 import { SimpleFooter } from "@/components/common/SimpleFooter";
 import { KeyDeco } from "@/components/deco/KeyDeco";
+import { router } from "expo-router";
 function AccountKeys() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
 
@@ -28,6 +29,9 @@ function AccountKeys() {
           }}
         >
           <Button
+            onClick={() => {
+              router.push("/settings/keyRegenerationFlow/newPinPage");
+            }}
             style={{
               top: "0%",
               width: "100%",

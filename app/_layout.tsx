@@ -59,6 +59,7 @@ export default function RootLayout() {
     "/timeTrackingStats/statsDayView/timeTrackingDayView",
     "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
     "/secretKey/page",
+    "/settings/keyRegenerationFlow/newPinPage",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -205,6 +206,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="settings/accountSettings/accountKeys"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/keyRegenerationFlow/newPinPage"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
