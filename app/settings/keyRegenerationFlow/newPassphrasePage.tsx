@@ -28,9 +28,20 @@ import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
 import { CopyDeco } from "@/components/deco/CopyDeco";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { generateSecretKey } from "@/components/utils/createNewAccountInfo";
 import { useActiveUser } from "@/stores/activeUser";
+import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
+import { useActiveKeys } from "@/stores/decryptedKeys";
+import {
+  getPrivateKey,
+  getSymmetricKey,
+  secureStoreKeyNames,
+} from "@/components/utils/constants/secureStoreKeyNames";
+import * as SecureStore from "expo-secure-store";
+import * as Updates from "expo-updates";
+import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
+import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -45,6 +56,84 @@ export default function Main() {
       })
       .catch((e) => {});
   }, []);
+
+  const regenerateKey = useCallback(() => {
+    const keyRegenTempStoreAPI = keyRegenTempStore.getState();
+    const activeKeyAPI = useActiveKeys.getState();
+    const newPIN = keyRegenTempStoreAPI.pin;
+    const activeUserId = activeUserApi.userId;
+    const plainKey = activeKeyAPI.activeSymmetricKey;
+    const cryptoOpsApi = useCryptoOpsQueue.getState();
+    if (
+      activeUserId === null ||
+      newPIN === null ||
+      newPassphrase === null ||
+      plainKey === null
+    ) {
+      return;
+    }
+    const newKeyWrapPassword = newPIN + newPassphrase;
+
+    const hasBioAuth = SecureStore.getItem(
+      secureStoreKeyNames.accountConfig.useBiometricAuth
+    );
+
+    if (hasBioAuth) {
+      cryptoOpsApi
+        .performOperation("wrapKey", {
+          password: newKeyWrapPassword,
+          jwkKeyData: plainKey,
+          keyType: "symmetric",
+        })
+        .then(async (res) => {
+          if (res.status !== "success") {
+            return;
+          }
+          async function basicSecureStoreSave(userId: string) {
+            const wrappedSymKey = encodeWrappedSymkey(res.payload);
+            if (wrappedSymKey === null) {
+              console.error("Error encoding wrapped symmetric key");
+              return;
+            }
+            console.log("Saving new wrapped symmetric key");
+            await SecureStore.setItemAsync(
+              getSymmetricKey(userId),
+              wrappedSymKey
+            );
+          }
+
+          const wrappedSymKey = encodeWrappedSymkey(res.payload);
+          if (wrappedSymKey === null) {
+            console.error("Error encoding wrapped symmetric key");
+            return;
+          }
+
+          await SecureStore.setItemAsync(
+            getSymmetricKey(activeUserId),
+            wrappedSymKey
+          )
+            .then(async () => {
+              ///Restart app
+              await SecureStore.setItemAsync(
+                secureStoreKeyNames.accountConfig.pin,
+                newKeyWrapPassword,
+                {
+                  requireAuthentication: true,
+                  authenticationPrompt:
+                    "Authenticate to use your screen lock to unlock",
+                }
+              );
+              Updates.reloadAsync();
+            })
+            .catch(async (err) => {
+              basicSecureStoreSave(activeUserId);
+            });
+        })
+        .catch((err) => {
+          console.error("Error wrapping symmetric key:", err);
+        });
+    }
+  }, [newPassphrase]);
 
   return (
     <>
@@ -164,10 +253,10 @@ export default function Main() {
           </View>
           <Button
             onClick={() => {
-              router.push("/setAccountPin/page");
+              regenerateKey();
             }}
             textAlign="left"
-            label="Continue"
+            label="Regenerate Key"
             textStyle={{ paddingLeft: 7 }}
             style={{
               width: "100%",

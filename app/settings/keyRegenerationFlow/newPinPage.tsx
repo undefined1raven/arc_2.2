@@ -13,6 +13,7 @@ import TextInput from "@/components/common/TextInput";
 import { router } from "expo-router";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
+import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
 
 function Home() {
   const globalStyle = useGlobalStyleStore((r) => r.globalStyle);
@@ -221,6 +222,8 @@ function Home() {
             >
               <Button
                 onClick={() => {
+                  const keyRegenTempStoreAPI = keyRegenTempStore.getState();
+                  keyRegenTempStoreAPI.setPin(newPin);
                   router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
                 }}
                 disabled={canContinue ? false : true}

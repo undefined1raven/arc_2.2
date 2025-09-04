@@ -98,10 +98,7 @@ export default function Main() {
               console.error("Error encoding wrapped symmetric key");
               return;
             }
-            console.log(
-              "Saving new user with wrapped symmetric key",
-              wrappedSymKey
-            );
+            console.log("Saving new user with wrapped symmetric key");
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
               wrappedSymKey
