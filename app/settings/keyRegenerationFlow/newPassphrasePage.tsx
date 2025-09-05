@@ -42,11 +42,13 @@ import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
 import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
+import { useSQLiteContext } from "expo-sqlite";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const [newPassphrase, setNewPassphrase] = useState<null | string>(null);
   const activeUserApi = useActiveUser((r) => r.activeUser);
+  const db = useSQLiteContext();
   useEffect(() => {
     generateSecretKey()
       .then((res) => {
@@ -56,6 +58,21 @@ export default function Main() {
       })
       .catch((e) => {});
   }, []);
+
+  const updateUserPIK = useCallback(
+    async (PIKBackup: string) => {
+      if (typeof PIKBackup !== "string" || PIKBackup.length === 0) {
+        return;
+      }
+      db.runAsync(`UPDATE users SET PIKBackup = ? WHERE id = ?`, [
+        PIKBackup,
+        activeUserApi.userId,
+      ]).catch((e) => {
+        console.error("Error updating PIKBackup in DB:", e);
+      });
+    },
+    [activeUserApi.userId]
+  );
 
   const regenerateKey = useCallback(() => {
     const keyRegenTempStoreAPI = keyRegenTempStore.getState();
@@ -113,8 +130,9 @@ export default function Main() {
             wrappedSymKey
           )
             .then(async () => {
+              const updatePIKPromise = updateUserPIK(wrappedSymKey);
               ///Restart app
-              await SecureStore.setItemAsync(
+              const updateSecureStorePromise = SecureStore.setItemAsync(
                 secureStoreKeyNames.accountConfig.pin,
                 newKeyWrapPassword,
                 {
@@ -123,7 +141,14 @@ export default function Main() {
                     "Authenticate to use your screen lock to unlock",
                 }
               );
-              Updates.reloadAsync();
+
+              Promise.all([updatePIKPromise, updateSecureStorePromise])
+                .then(() => {
+                  Updates.reloadAsync();
+                })
+                .catch((err) => {
+                  basicSecureStoreSave(activeUserId);
+                });
             })
             .catch(async (err) => {
               basicSecureStoreSave(activeUserId);
