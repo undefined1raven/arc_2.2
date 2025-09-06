@@ -260,7 +260,7 @@ function AccountSettingsMain() {
                   });
               }}
               onClick={() => {
-                DatabaseBackupApi.exportDatabase(false)
+                DatabaseBackupApi.exportDatabase(true)
                   .then((result) => {
                     if (result.success) {
                       console.log("Backup exported successfully:", result);
