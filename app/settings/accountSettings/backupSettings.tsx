@@ -248,24 +248,9 @@ function AccountSettingsMain() {
               </View>
             </View>
             <Button
-              onLongPress={() => {
-                DatabaseBackupApi.exportDatabase(false)
-                  .then((result) => {
-                    if (result.success) {
-                      console.log("Backup exported successfully:", result);
-                    }
-                  })
-                  .catch((error) => {
-                    console.error("Error exporting backup:", error);
-                  });
-              }}
               onClick={() => {
-                DatabaseBackupApi.exportDatabase(true)
-                  .then((result) => {
-                    if (result.success) {
-                      console.log("Backup exported successfully:", result);
-                    }
-                  })
+                DatabaseBackupApi.exportDatabase()
+                  .then((result) => {})
                   .catch((error) => {
                     console.error("Error exporting backup:", error);
                   });
