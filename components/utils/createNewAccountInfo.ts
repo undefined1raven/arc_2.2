@@ -12,6 +12,7 @@ function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
 import * as Crypto from "expo-crypto";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 async function getNewRecoveryCodes(symmetricKeyData: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -288,8 +289,10 @@ async function createNewAccountBasics() {
 
     await createEmptyChunks(newSymmetricKey.jwk, userId);
 
-    await SecureStore.setItemAsync("tempSymmetricKey", newSymmetricKey.jwk);
-    await SecureStore.setItemAsync("tempPrivateKey", newKeyPair.privateKey);
+    const activeKeysAPI = useActiveKeys.getState();
+    activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
+    activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
+
     const userData = {
       id: userId,
       signupTime: signupTime,

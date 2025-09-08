@@ -1,8 +1,5 @@
 import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
-import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
-import { CheckBox } from "@/components/common/CheckBox";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import Button from "@/components/common/Button";

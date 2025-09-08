@@ -18,7 +18,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import TextInput from "@/components/common/TextInput";
 import { CheckBox } from "@/components/common/CheckBox";
-import { useCallback, useEffect, useState } from "react";
+import { act, useCallback, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import {
   getPrivateKey,
@@ -30,6 +30,7 @@ import { saveNewUser } from "@/components/utils/db/saveNewUser";
 import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
 import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { reloadAsync } from "expo-updates";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -68,12 +69,10 @@ export default function Main() {
     if (typeof userId !== "string") {
       return;
     }
-    const symmetricKeyJwk = await SecureStore.getItemAsync(
-      secureStoreKeyNames.temporary.symmetricKey
-    );
-    const privateKeyJwk = await SecureStore.getItemAsync(
-      secureStoreKeyNames.temporary.privateKey
-    );
+
+    const activeKeysAPI = useActiveKeys.getState();
+    const symmetricKeyJwk = activeKeysAPI.activeSymmetricKey;
+    const privateKeyJwk = activeKeysAPI.activePrivateKey;
     if (
       typeof symmetricKeyJwk !== "string" ||
       typeof privateKeyJwk !== "string"
