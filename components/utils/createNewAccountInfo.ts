@@ -293,6 +293,19 @@ async function createNewAccountBasics() {
     activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
     activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
 
+    const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
+      "encrypt",
+      {
+        keyType: "symmetric",
+        key: newSymmetricKey.jwk,
+        charCodeData: stringToCharCodeArray(newKeyPair.privateKey),
+      }
+    );
+
+    if (encryptedPrivateKeyRes.status !== "success") {
+      console.error("Failed to encrypt private key");
+      return;
+    }
     const userData = {
       id: userId,
       signupTime: signupTime,
@@ -300,6 +313,7 @@ async function createNewAccountBasics() {
       version: "0.0.1",
       ...RCKPartial,
       ...featureConfigPartials,
+      PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),
     };
     userDataGlobal = userData;
   } catch (error) {
