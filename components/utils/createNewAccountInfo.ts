@@ -11,6 +11,8 @@ import { getInsertStringFromObject } from "./db/dbUtils";
 function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
+import * as Crypto from "expo-crypto";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 async function getNewRecoveryCodes(symmetricKeyData: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -184,7 +186,6 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
   const timeTrackingInsertHelperVals = getInsertStringFromObject(
     emptyNewTimeTrackingChunk
   );
-  console.log("XLF111", timeTrackingInsertHelperVals.queryString);
   const timeTrackingChunkPromise = db.runAsync(
     `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
     [...timeTrackingInsertHelperVals.values]
@@ -220,6 +221,36 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
     personalDiaryChunkPromise,
     personalDiaryGroupChunkPromise,
   ]);
+}
+
+async function generateSecretKey(): Promise<{
+  status: "success" | "error";
+  payload: string | null;
+  error?: any;
+}> {
+  ///Get a lot of crypto secure bytes
+  const secretKey = Crypto.getRandomBytes(512);
+
+  // Convert to hex string
+  const hexString = Array.from(secretKey)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Hash the hex string
+  return Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    hexString,
+    {
+      encoding: Crypto.CryptoEncoding.BASE64,
+    }
+  )
+    .then((hashedKey) => {
+      return { status: "success", payload: hashedKey };
+    })
+    .catch((error) => {
+      console.error("Error generating secret key", error);
+      return { status: "error", payload: null, error: error };
+    });
 }
 
 async function createNewAccountBasics() {
@@ -258,8 +289,23 @@ async function createNewAccountBasics() {
 
     await createEmptyChunks(newSymmetricKey.jwk, userId);
 
-    await SecureStore.setItemAsync("tempSymmetricKey", newSymmetricKey.jwk);
-    await SecureStore.setItemAsync("tempPrivateKey", newKeyPair.privateKey);
+    const activeKeysAPI = useActiveKeys.getState();
+    activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
+    activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
+
+    const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
+      "encrypt",
+      {
+        keyType: "symmetric",
+        key: newSymmetricKey.jwk,
+        charCodeData: stringToCharCodeArray(newKeyPair.privateKey),
+      }
+    );
+
+    if (encryptedPrivateKeyRes.status !== "success") {
+      console.error("Failed to encrypt private key");
+      return;
+    }
     const userData = {
       id: userId,
       signupTime: signupTime,
@@ -267,12 +313,24 @@ async function createNewAccountBasics() {
       version: "0.0.1",
       ...RCKPartial,
       ...featureConfigPartials,
+      PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),
     };
     userDataGlobal = userData;
   } catch (error) {
     console.error("Error creating new account basics", error);
   }
-  return userDataGlobal;
+
+  const secretKeyResponse = await generateSecretKey();
+
+  if (secretKeyResponse.status === "success") {
+    return {
+      userData: userDataGlobal,
+      secretKey: "ARC-SK-" + secretKeyResponse.payload,
+    };
+  } else {
+    return { userData: null, secretKey: null };
+  }
 }
 
 export default createNewAccountBasics;
+export { getNewRecoveryCodes, generateSecretKey };

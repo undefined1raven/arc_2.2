@@ -23,6 +23,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
 import { HexDeco } from "@/components/deco/HexDeco";
+import { SimpleFooter } from "@/components/common/SimpleFooter";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -210,38 +211,7 @@ function AccountSettingsMain() {
             renderItem={({ item }) => renderItem(item)}
             data={availableThemes}
           ></FlashList>
-          <Text
-            textAlign="left"
-            label="Settings / Account Settings / Theme"
-            style={{
-              flexShrink: 0,
-              width: "100%",
-              height: 65,
-              paddingLeft: 90,
-              marginTop: 10,
-              backgroundColor:
-                globalStyle.color + layoutCardLikeBackgroundOpacity,
-            }}
-          ></Text>
-          <Button
-            onClick={() => {
-              router.back();
-            }}
-            style={{
-              borderRadius: 0,
-              borderWidth: 0,
-              borderRightWidth: 1,
-              position: "absolute",
-              bottom: 0,
-              width: 80,
-              height: 65,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
-          </Button>
+          <SimpleFooter label="Settings / Account Settings / Theme"></SimpleFooter>
         </View>
       </ThemedView>
     </>

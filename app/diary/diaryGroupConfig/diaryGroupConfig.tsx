@@ -216,6 +216,7 @@ function DiaryGroupConfig() {
                       };
                       updateGroupPropertyInstant(updatedGroup);
                     }}
+                    style={{ zIndex: -1 }}
                     closeness={selectedGroup.metadata.ring}
                   ></RingSelector>
                 </View>

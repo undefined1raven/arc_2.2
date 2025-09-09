@@ -18,7 +18,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import TextInput from "@/components/common/TextInput";
 import { CheckBox } from "@/components/common/CheckBox";
-import { useCallback, useEffect, useState } from "react";
+import { act, useCallback, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import {
   getPrivateKey,
@@ -30,6 +30,7 @@ import { saveNewUser } from "@/components/utils/db/saveNewUser";
 import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
 import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { reloadAsync } from "expo-updates";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -68,12 +69,10 @@ export default function Main() {
     if (typeof userId !== "string") {
       return;
     }
-    const symmetricKeyJwk = await SecureStore.getItemAsync(
-      secureStoreKeyNames.temporary.symmetricKey
-    );
-    const privateKeyJwk = await SecureStore.getItemAsync(
-      secureStoreKeyNames.temporary.privateKey
-    );
+
+    const activeKeysAPI = useActiveKeys.getState();
+    const symmetricKeyJwk = activeKeysAPI.activeSymmetricKey;
+    const privateKeyJwk = activeKeysAPI.activePrivateKey;
     if (
       typeof symmetricKeyJwk !== "string" ||
       typeof privateKeyJwk !== "string"
@@ -82,7 +81,7 @@ export default function Main() {
     }
     cryptoOpsApi
       .performOperation("wrapKey", {
-        password: newPin,
+        password: newPin + newUserDataApi.secretKey,
         jwkKeyData: symmetricKeyJwk,
         keyType: "symmetric",
       })
@@ -98,6 +97,7 @@ export default function Main() {
               console.error("Error encoding wrapped symmetric key");
               return;
             }
+            console.log("Saving new user with wrapped symmetric key");
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
               wrappedSymKey
@@ -144,7 +144,7 @@ export default function Main() {
                 );
                 await SecureStore.setItemAsync(
                   secureStoreKeyNames.accountConfig.pin,
-                  newPin,
+                  newPin + newUserDataApi.secretKey,
                   {
                     requireAuthentication: true,
                     authenticationPrompt:
@@ -184,7 +184,6 @@ export default function Main() {
       <>
         <ThemedView style={styles.container}>
           <>
-            <SimpleHeader></SimpleHeader>
             {newUserDataApi.isGeneratingKeysAndConfig ? (
               <>
                 <View
@@ -219,7 +218,7 @@ export default function Main() {
                 >
                   <Text
                     textAlign="left"
-                    label="One-time Setup [2/2]"
+                    label="One-time Setup [3/3]"
                     style={{
                       height: "100%",
                       width: "100%",
@@ -258,6 +257,9 @@ export default function Main() {
                     }}
                   >
                     <Text
+                      fontSize={globalStyle.mediumMobileFont}
+                      numberOfLines={50}
+                      ellipsizeMode="middle"
                       textAlign="left"
                       label="You can use this pin to better protect your data as well as a recovery method"
                       style={{

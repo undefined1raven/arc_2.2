@@ -6,17 +6,19 @@ import { Dropdown } from "../deco/Dropdown";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { Component } from "react";
 
 function SimpleFooter(props: {
   label: string;
   showEnteringAnimation?: boolean;
   onBackButtonClick?: () => void;
+  icon?: Component;
 }) {
   const globalStyle = useGlobalStyleStore((g) => g.globalStyle);
 
   return (
     <Animated.View
-      entering={props.showEnteringAnimation ? FadeInDown : undefined}
+      entering={props.showEnteringAnimation === false ? undefined : FadeInDown}
       style={{ width: "100%", height: 65 }}
     >
       <Text

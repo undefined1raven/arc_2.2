@@ -36,6 +36,8 @@ export default function RootLayout() {
   const navMenuDisallowedPaths = [
     "/NewAccountMain/page",
     "/login/localLogin/localLogin",
+    "/login/localLogin/passphrasePage",
+    "/login/localLogin/pinPage",
     "/downloadRecoveryCodes/page",
     "/setAccountPin/page",
     "/localAccountAuth/localAccountAuth",
@@ -53,8 +55,13 @@ export default function RootLayout() {
     "/timeTracking/editCategory/editCategorySelection",
     "/timeTracking/editCategory/editCategory",
     "/settings/accountSettings/backupSettings",
+    "/settings/accountSettings/accountKeys",
     "/timeTrackingStats/statsDayView/timeTrackingDayView",
     "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
+    "/secretKey/page",
+    "/settings/keyRegenerationFlow/newPinPage",
+    "/settings/keyRegenerationFlow/newRecoveryCodes",
+    "/settings/keyRegenerationFlow/newPassphrasePage",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -128,6 +135,14 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="login/localLogin/passphrasePage"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="login/localLogin/pinPage"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="timeTrackingFeatureConfig/EditActivities"
                   options={{ headerShown: false }}
                 />
@@ -192,6 +207,19 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="settings/accountSettings/accountKeys"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/keyRegenerationFlow/newRecoveryCodes"
+                  options={{ headerShown: false }}
+                />
+
+                <Stack.Screen
+                  name="settings/keyRegenerationFlow/newPinPage"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="timeTracking/timeTrackingSettingsMain"
                   options={{ headerShown: false }}
                 />
@@ -209,6 +237,14 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/keyRegenerationFlow/newPassphrasePage"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="secretKey/page"
                   options={{ headerShown: false }}
                 />
               </Stack>

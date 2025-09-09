@@ -445,6 +445,7 @@ derive an AES-KW key using PBKDF2.
     }
 
     async function unwrapKey(args) {
+      console.log("Unwrap args", args);
       const wrappedKey = str2ab(args.wrappedKey);
       const password = args.password;
       const salt = str2ab(args.salt);

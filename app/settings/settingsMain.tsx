@@ -36,7 +36,7 @@ function SettingsMain() {
       icon: DayPlannerIcon,
       title: "Customize day planner",
       description: "Change colors",
-      goTo: "",
+      goTo: "/dayPlanner/statusEditor/statusEditor",
     },
     {
       name: "personalDiary",

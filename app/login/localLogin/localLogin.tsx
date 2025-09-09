@@ -22,9 +22,11 @@ import {
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 import TextInput from "@/components/common/TextInput";
 import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
+import { useOfflineLoginTempStore } from "@/stores/offlineLoginTempStore";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
+  const offlineLoginTempStore = useOfflineLoginTempStore();
 
   ////File state
   const [fileName, setFileName] = useState("");
@@ -33,8 +35,6 @@ function LocalLogin() {
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [showError, setShowError] = useState(false);
   const [hasFile, setHasFile] = useState(false);
-
-  const [pin, setpin] = useState("");
 
   function writeBackupToDB(wait?: boolean) {
     if (wait) {
@@ -66,6 +66,7 @@ function LocalLogin() {
         ></Text>
         <Text
           textAlign="left"
+          numberOfLines={8}
           fontSize={globalStyle.regularMobileFont}
           style={{ width: "85%", marginBottom: "10%" }}
           label="The file you’re looking for looks something like this if you haven’t renamed it"
@@ -78,14 +79,18 @@ function LocalLogin() {
             marginBottom: "10%",
           }}
         >
-          <Text label="xyz.arc.backup.txt"></Text>
+          <Text label="arc-backup-x-y.db"></Text>
         </Animated.View>
         <Button
           onClick={async () => {
-            if (hasFile) {
+            if (
+              hasFile &&
+              offlineLoginTempStore.pin &&
+              offlineLoginTempStore.passphrase
+            ) {
               await SecureStore.setItemAsync(
                 secureStoreKeyNames.accountConfig.pin,
-                pin,
+                offlineLoginTempStore.pin + offlineLoginTempStore.passphrase,
                 {
                   requireAuthentication: true,
                   authenticationPrompt:
@@ -169,15 +174,6 @@ function LocalLogin() {
             ></Text>
           )}
         </Animated.View>
-        <TextInput
-          style={{ width: "80%", height: "6%" }}
-          keyboardType="numeric"
-          secureTextEntry={true}
-          onChange={(e) => {
-            const text = e.nativeEvent.text;
-            setpin(text);
-          }}
-        ></TextInput>
       </ThemedView>
     </>
   );

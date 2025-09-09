@@ -41,6 +41,26 @@ export const DatabaseBackupApi = {
         dialogTitle: "Save Encrypted Database Backup",
         UTI: "public.database",
       });
+      // Save to device's Downloads folder or Documents
+      const downloadsPath = `${FileSystem.documentDirectory}../Downloads/${backupFilename}`;
+      const documentsPath = `${FileSystem.documentDirectory}${backupFilename}`;
+
+      // try {
+      //   // Try Downloads folder first
+      //   await FileSystem.copyAsync({
+      //     from: tempBackupPath,
+      //     to: downloadsPath,
+      //   });
+      // } catch {
+      //   // Fallback to Documents folder
+      //   console.log(documentsPath);
+      //   await FileSystem.copyAsync({
+      //     from: tempBackupPath,
+      //     to: documentsPath,
+      //   }).catch((e) => {
+      //     console.log(e);
+      //   });
+      // }
 
       // Cleanup
       await FileSystem.deleteAsync(tempBackupPath, { idempotent: true });

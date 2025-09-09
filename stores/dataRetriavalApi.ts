@@ -17,6 +17,7 @@ import { chunkPrefixes } from "@/constants/chunkPrefixes";
 import { useStatusIndicatorStore } from "./statusIndicatorStore";
 import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
 import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFromData";
+import { useActiveKeys } from "./decryptedKeys";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -109,9 +110,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (typeof latestChunk.encryptedContent !== "string") {
       return { status: "error", error: "Invalid chunk data" };
     }
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
+
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
@@ -341,9 +342,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "Invalid table name" };
     }
 
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
+
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
@@ -532,9 +533,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "Invalid table name" };
     }
 
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
+
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
@@ -688,9 +689,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "Invalid table name" };
     }
 
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
+
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
@@ -861,9 +862,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (typeof latestChunk.encryptedContent !== "string") {
       return { status: "error", error: "Invalid chunk data" };
     }
-    const key = await SecureStore.getItemAsync(
-      secureStoreKeyNames.accountConfig.activeSymmetricKey
-    );
+    const activeKeyAPI = useActiveKeys.getState();
+    const key = activeKeyAPI.activeSymmetricKey;
+
     if (key === null) {
       return { status: "error", error: "No key found" };
     }

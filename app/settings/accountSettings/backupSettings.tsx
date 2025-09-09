@@ -18,6 +18,8 @@ import { useActiveUser } from "@/stores/activeUser";
 import { HexDeco } from "@/components/deco/HexDeco";
 import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 import { NukeLocalData } from "@/components/utils/db/checkTables";
+import { ArrowDeco } from "@/components/deco/ArrowDeco";
+import { SimpleFooter } from "@/components/common/SimpleFooter";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -199,16 +201,56 @@ function AccountSettingsMain() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
-          <View style={{ display: "flex", flexGrow: 1, gap: 10 }}>
+          <View
+            style={{
+              display: "flex",
+              flexGrow: 1,
+              gap: 15,
+              justifyContent: "flex-end",
+            }}
+          >
+            <View>
+              <Button
+                onDoubleClick={() => {
+                  NukeLocalData();
+                  Updates.reloadAsync();
+                }}
+                borderColor={globalStyle.errorColor}
+                textStyle={{ color: globalStyle.errorTextColor }}
+                style={{ height: 50 }}
+                label="Delete local data [double tap]"
+              ></Button>
+              <View
+                style={{
+                  width: "100%",
+                  height: 60,
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <ArrowDeco
+                  style={{ transform: [{ rotate: "-90deg" }] }}
+                  width={30}
+                  height={25}
+                  color={globalStyle.errorColor}
+                ></ArrowDeco>
+                <Text color={globalStyle.errorColor} label="Danger Zone"></Text>
+                <View
+                  style={{
+                    marginLeft: 10,
+                    flexGrow: 1,
+                    height: 1,
+                    backgroundColor: globalStyle.errorColor,
+                  }}
+                ></View>
+              </View>
+            </View>
             <Button
               onClick={() => {
-                console.log("XLF BACKSUPS");
                 DatabaseBackupApi.exportDatabase()
-                  .then((result) => {
-                    if (result.success) {
-                      console.log("Backup exported successfully:", result);
-                    }
-                  })
+                  .then((result) => {})
                   .catch((error) => {
                     console.error("Error exporting backup:", error);
                   });
@@ -216,49 +258,10 @@ function AccountSettingsMain() {
               style={{ height: 50 }}
               label="Export Backup"
             ></Button>
-            <Button
-              onDoubleClick={() => {
-                NukeLocalData();
-                Updates.reloadAsync();
-              }}
-              borderColor={globalStyle.errorColor}
-              textStyle={{ color: globalStyle.errorTextColor }}
-              style={{ height: 50 }}
-              label="Delete local data [double tap]"
-            ></Button>
           </View>
-          <Text
-            textAlign="left"
-            label="Settings / Account Settings / Backups"
-            style={{
-              flexShrink: 0,
-              width: "100%",
-              height: 65,
-              paddingLeft: 90,
-              marginTop: 10,
-              backgroundColor:
-                globalStyle.color + layoutCardLikeBackgroundOpacity,
-            }}
-          ></Text>
-          <Button
-            onClick={() => {
-              router.back();
-            }}
-            style={{
-              borderRadius: 0,
-              borderWidth: 0,
-              borderRightWidth: 1,
-              position: "absolute",
-              bottom: 0,
-              width: 80,
-              height: 65,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
-          </Button>
+          <View style={{ marginTop: 10 }}>
+            <SimpleFooter label="Settings / Account Settings / Backups"></SimpleFooter>
+          </View>
         </View>
       </ThemedView>
     </>

@@ -17,7 +17,7 @@ export default function Main() {
         <Button
           fontSize={globalStyle.largeMobileFont}
           onClick={() => {
-            router.push("/login/localLogin/localLogin");
+            router.push("/login/localLogin/pinPage");
           }}
           style={styles.button}
           label="Login"
