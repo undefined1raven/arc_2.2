@@ -13,6 +13,8 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
 import { useActiveUser } from "@/stores/activeUser";
 import { useSQLiteContext } from "expo-sqlite";
+import { getPrivateKey } from "@/components/utils/constants/secureStoreKeyNames";
+import * as SecureStore from "expo-secure-store";
 
 function AccountKeys() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -71,7 +73,11 @@ function AccountKeys() {
               "UPDATE users SET publicKey = ?, PSKBackup = ? WHERE id = ?;",
               [publicKey, armoredPrivateKey, currentUserId]
             )
-              .then(() => {
+              .then(async () => {
+                await SecureStore.setItemAsync(
+                  getPrivateKey(currentUserId),
+                  armoredPrivateKey
+                );
                 setKeyRegenStatus("success");
               })
               .catch((e) => {

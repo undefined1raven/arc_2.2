@@ -4,6 +4,7 @@ import { act, useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import {
+  getPrivateKey,
   getSymmetricKey,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
@@ -20,6 +21,7 @@ import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useActiveKeys } from "@/stores/decryptedKeys";
+import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
@@ -59,7 +61,7 @@ function localAccountAuth() {
       try {
         const decodedWrappedKey = decodeWrappedSymkey(wrappedKeyArg);
         if (decodedWrappedKey === null) {
-          console.log("Error decoding wrapped key");
+          console.error("Error decoding wrapped key");
           setIsCheckingPin(false);
           return;
         }
@@ -70,24 +72,68 @@ function localAccountAuth() {
             iv: decodedWrappedKey.iv,
             password: pin,
           })
-          .then((unwrappedKey) => {
-            if (unwrappedKey.status === "success") {
+          .then(async (unwrappedKey) => {
+            const activeUserApi = useActiveUser.getState();
+            const userId = activeUserApi.activeUser.userId;
+            if (
+              unwrappedKey.status === "success" &&
+              typeof userId === "string"
+            ) {
               if (unwrappedKey.payload.key.status === "error") {
-                console.log("Error unwrapping key", unwrappedKey.payload.key);
+                console.error("Error unwrapping key", unwrappedKey.payload.key);
                 setIsCheckingPin(false);
                 return;
               }
+
               const activeKeyAPI = useActiveKeys.getState();
-              activeKeyAPI.setActiveSymmetricKey(
-                JSON.stringify(unwrappedKey.payload.key)
+              const symKey = JSON.stringify(unwrappedKey.payload.key);
+              activeKeyAPI.setActiveSymmetricKey(symKey);
+
+              const armoredPrivateKey = await SecureStore.getItemAsync(
+                getPrivateKey(userId)
               );
+
+              if (typeof armoredPrivateKey !== "string") {
+                console.error("No private key found in secure store");
+              } else {
+                try {
+                  const privateKeyDecryptionRes =
+                    await cryptoOpsApi.performOperation("decrypt", {
+                      charCodeData: armoredPrivateKey ?? "[]",
+                      key: symKey,
+                      keyType: "symmetric",
+                    });
+
+                  if (privateKeyDecryptionRes.status !== "success") {
+                    console.error(
+                      "Error decrypting private key",
+                      privateKeyDecryptionRes
+                    );
+                  }
+
+                  const decryptedPayload =
+                    privateKeyDecryptionRes.payload.decrypted;
+                  const decryptedEncodedStringData =
+                    "[" + decryptedPayload + "]";
+                  const encodedArray = JSON.parse(
+                    decryptedEncodedStringData
+                  ) as number[];
+                  const decodedPrivateKey = charCodeArrayToString(encodedArray);
+                  activeKeyAPI.setActivePrivateKey(decodedPrivateKey);
+                } catch (e) {
+                  console.error("Error decoding private key", e);
+                }
+              }
+
               useFeatureConfigs
                 .getState()
                 .decryptFeatureConfigs()
                 .then(() => {
                   router.replace("/home/home");
                 })
-                .catch((e) => {});
+                .catch((e) => {
+                  console.error("Error decrypting feature configs", e);
+                });
             } else {
               setIsCheckingPin(false);
             }
@@ -97,7 +143,7 @@ function localAccountAuth() {
             setIsCheckingPin(false);
           });
       } catch (e) {
-        console.log("Error unwrapping key", e);
+        console.error("Error unwrapping key", e);
         setIsCheckingPin(false);
       }
     },

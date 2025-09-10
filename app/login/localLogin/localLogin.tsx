@@ -83,14 +83,13 @@ function LocalLogin() {
         </Animated.View>
         <Button
           onClick={async () => {
-            if (
-              hasFile &&
-              offlineLoginTempStore.pin &&
-              offlineLoginTempStore.passphrase
-            ) {
+            if (hasFile && offlineLoginTempStore.pin) {
               await SecureStore.setItemAsync(
                 secureStoreKeyNames.accountConfig.pin,
-                offlineLoginTempStore.pin + offlineLoginTempStore.passphrase,
+                offlineLoginTempStore.pin +
+                  (offlineLoginTempStore.passphrase
+                    ? offlineLoginTempStore.passphrase
+                    : ""),
                 {
                   requireAuthentication: true,
                   authenticationPrompt:
@@ -117,8 +116,13 @@ function LocalLogin() {
                     return;
                   }
                   const db = await SQLite.openDatabaseAsync("localCache");
-                  const userData: { id: string; PIKBackup: string } | null =
-                    await db.getFirstAsync("SELECT id, PIKBackup FROM users;");
+                  const userData: {
+                    id: string;
+                    PIKBackup: string;
+                    PSKBackup: string;
+                  } | null = await db.getFirstAsync(
+                    "SELECT id, PIKBackup, PSKBackup FROM users;"
+                  );
                   db.closeAsync();
                   if (
                     typeof userData === "object" &&
@@ -128,6 +132,10 @@ function LocalLogin() {
                     SecureStore.setItemAsync(
                       getSymmetricKey(userData.id),
                       userData.PIKBackup
+                    );
+                    SecureStore.setItemAsync(
+                      getPrivateKey(userData.id),
+                      userData.PSKBackup
                     );
                     setIsLoadingFile(false);
                     setShowError(false);
