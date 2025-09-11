@@ -18,6 +18,9 @@ dist/
 android/app/build/
 ios/build/
 
+# Misc
+constants/app_id.ts
+
 # Large files
 *.zip
 *.tar.gz

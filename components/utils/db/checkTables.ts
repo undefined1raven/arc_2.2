@@ -8,13 +8,14 @@ export type CheckTablesReturnSig = {
   error: null | string;
   isEmpty?: boolean;
   userId?: string;
+  accountType: "local" | "online" | null;
 };
 
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await SQLite.openDatabaseAsync("localCache");
   var promiseArray: Promise<any>[] = [];
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL, accountType TEXT);"
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -66,14 +67,17 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     .then(() => {
       return db
         .getFirstAsync("SELECT * FROM users;")
-        .then((firstUser) => {
+        .then((firstUser: any) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
+          const accountType: "local" | "online" | null =
+            firstUser?.accountType ?? "local";
           return {
             status: "success",
             error: null,
             isEmpty: isEmpty,
             userId: userId,
+            accountType: accountType,
           };
         })
         .catch((e) => {

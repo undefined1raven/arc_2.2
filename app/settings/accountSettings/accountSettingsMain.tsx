@@ -44,6 +44,12 @@ function AccountSettingsMain() {
       description: "Manage your account keys",
       goTo: "/settings/accountSettings/accountKeys",
     },
+    {
+      name: "accountType",
+      title: "Account Type",
+      description: "Choose whether to use a local or cloud account",
+      goTo: "/settings/accountSettings/accountType",
+    },
   ];
 
   const renderItem = useCallback((item: SettingOption) => {
