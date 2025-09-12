@@ -42,7 +42,6 @@ function AccountKeys() {
               globalStyle.color + layoutCardLikeBackgroundOpacity,
             justifyContent: "flex-start",
             alignItems: "center",
-            marginBottom: 10,
             display: "flex",
             flexDirection: "row",
             gap: 10,
@@ -50,11 +49,13 @@ function AccountKeys() {
           }}
         >
           <Text
+            style={{ fontSize: 25 }}
             textAlign="center"
-            label={activeUserAccountType === "online" ? "ONLINE" : "LOCAL"}
+            label={activeUserAccountType === "online" ? "Online" : "Local"}
           ></Text>
         </View>
         <Button
+          backgroundColor={globalStyle.colorAltLight}
           label={`Switch to ${
             activeUserAccountType === "online" ? "local" : "online"
           } account`}
