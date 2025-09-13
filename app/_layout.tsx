@@ -256,6 +256,8 @@ export default function RootLayout() {
               </Stack>
               <StatusBar style="auto" />
               <StatusIndicators></StatusIndicators>
+              <OnlineSyncHandler></OnlineSyncHandler>
+
               {activeUserAccountType === "online" && (
                 <OnlineSyncHandler></OnlineSyncHandler>
               )}

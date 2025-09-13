@@ -20,6 +20,7 @@ ios/build/
 
 # Misc
 constants/app_id.ts
+constants/API_URL.ts
 
 # Large files
 *.zip

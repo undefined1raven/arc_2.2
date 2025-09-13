@@ -1,3 +1,4 @@
+import { API_URL } from "@/constants/API_URL";
 import { APP_ID } from "@/constants/app_id";
 import axios from "axios";
 import { useEffect } from "react";
@@ -5,9 +6,9 @@ import { useEffect } from "react";
 function OnlineSyncHandler() {
   useEffect(() => {
     axios
-      .post("http://localhost:3000/api/test", {
+      .post(`${API_URL}/account/createOnlineAccountFromLocal`, {
         data: {
-          app_id: APP_ID,
+          appID: APP_ID,
         },
       })
       .then((r) => {
