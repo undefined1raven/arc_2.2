@@ -300,31 +300,24 @@ function stringToCharCodeArray(str) {
       } catch (e) {
         return returnErrorResponse(e);
       }
-      console.log("FML2-0", parsedCharCodeData)
       if (parsedCharCodeData === null) {
         return returnErrorResponse("Error parsing char code data");
       }else if((parsedCharCodeData.cipher === undefined || parsedCharCodeData.iv === undefined) && args.keyType === "symmetric") {
-      console.log("FML3-0")
         return returnErrorResponse("Error parsing char code data");
       }
-      console.log("FML4-0")
       if (args.keyType === "private") {
-      console.log("FML5-0")
         const importPayload = await importCryptoKey({
           jwkKeyData: args.key,
           keyType: "private",
         });
-      console.log("FML6-0")
         if (!importPayload?.payload?.key) {
           return returnErrorResponse("Error importing private key");
         }
-      console.log("FML7-0");
         const key = importPayload.payload.key;
-      console.log("FML7-A", key);
-        return window.crypto.subtle
-          .decrypt({ name: "RSA-OAEP" }, key, str2ab(charCodeArrayToString(parsedCharCodeData)))
+        const arrayBuffer = str2ab(charCodeArrayToString(parsedCharCodeData));  
+      return window.crypto.subtle
+          .decrypt({ name: "RSA-OAEP" }, key, arrayBuffer)
           .then((plaintext) => {
-      console.log("FML8-0")
             const decoder = new TextDecoder();
             return {
               status: "success",

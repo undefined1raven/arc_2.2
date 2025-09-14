@@ -52,18 +52,19 @@ function AccountKeys() {
         if (r.data.success) {
           console.log("Account type changed to online");
           const challengeStr = r.data.challenge;
-          const charCodeData = JSON.stringify(
-            stringToCharCodeArray(challengeStr)
-          );
-          console.log("ACT_SW_CR", charCodeData);
           cryptoAPI
             .performOperation("decrypt", {
               keyType: "private",
-              charCodeData: charCodeData,
+              charCodeData: challengeStr,
               key: activePrivateKey,
             })
             .then((decryptResponse) => {
-              console.log("ACT_SW_VR", decryptResponse);
+              if (decryptResponse.status === "success") {
+                const decryptedString = stringToCharCodeArray(
+                  decryptResponse.payload.decrypted
+                );
+                console.log("ACT_SW_VR  | WORKED", decryptedString);
+              }
             })
             .catch((e) => {
               console.log("ACT_SW_DER", e);
