@@ -57,13 +57,26 @@ function AccountKeys() {
               keyType: "private",
               charCodeData: challengeStr,
               key: activePrivateKey,
+              decoding: "base64",
             })
             .then((decryptResponse) => {
               if (decryptResponse.status === "success") {
-                const decryptedString = stringToCharCodeArray(
-                  decryptResponse.payload.decrypted
-                );
+                const decryptedString = decryptResponse.payload.decrypted;
                 console.log("ACT_SW_VR  | WORKED", decryptedString);
+                axios
+                  .post(`${API_URL}/account/verifyOnlineAccountCreation`, {
+                    data: {
+                      appID: APP_ID,
+                      userData: userData,
+                      challengeResponse: decryptedString,
+                    },
+                  })
+                  .then((r) => {
+                    console.log(r.data);
+                  })
+                  .catch((e) => {
+                    console.log(e);
+                  });
               }
             })
             .catch((e) => {

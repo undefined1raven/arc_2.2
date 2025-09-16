@@ -135,6 +135,7 @@ function localAccountAuth() {
                   console.error("Error decrypting feature configs", e);
                 });
             } else {
+              console.error("Something went wrong");
               setIsCheckingPin(false);
             }
           })

@@ -79,6 +79,7 @@ export default function Main() {
     ) {
       return;
     }
+
     cryptoOpsApi
       .performOperation("wrapKey", {
         password: newPin + newUserDataApi.secretKey,
@@ -86,6 +87,11 @@ export default function Main() {
         keyType: "symmetric",
       })
       .then(async (res) => {
+        const armoredPrivateKey = newUserDataApi?.userData?.PSKBackup || null;
+        if (typeof armoredPrivateKey !== "string") {
+          console.error("EPKM error");
+          return;
+        }
         if (res.status === "success") {
           async function basicSecureStoreSave(userId: string) {
             if (typeof privateKeyJwk !== "string") {
@@ -102,9 +108,11 @@ export default function Main() {
               getSymmetricKey(userId),
               wrappedSymKey
             );
+
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
-              privateKeyJwk
+              //@ts-expect-error
+              armoredPrivateKey
             );
             await SecureStore.setItemAsync(
               secureStoreKeyNames.accountConfig.useBiometricAuth,
@@ -125,7 +133,7 @@ export default function Main() {
           } else {
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
-              privateKeyJwk
+              armoredPrivateKey
             );
             const wrappedSymKey = encodeWrappedSymkey(res.payload);
             if (wrappedSymKey === null) {
