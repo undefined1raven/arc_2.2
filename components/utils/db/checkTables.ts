@@ -25,7 +25,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Time tracking chunks
   const arcChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER);"
+    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
   );
   promiseArray.push(arcChunksTablePromise);
   const arcChunksDerivedDataTablePromise = db.runAsync(
@@ -35,7 +35,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Day planner chunks
   const tessChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER);"
+    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
   );
   promiseArray.push(tessChunksTablePromise);
   const tessChunksDerivedDataTablePromise = db.runAsync(
@@ -45,7 +45,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Personal Diary chunks
   const SIDChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
   );
   const sidChunksDerivedDataTablePromise = db.runAsync(
     "CREATE TABLE IF NOT EXISTS personalDiaryDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
@@ -53,7 +53,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   promiseArray.push(sidChunksDerivedDataTablePromise);
   promiseArray.push(SIDChunksTablePromise);
   const SIDGruopsChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
   );
   promiseArray.push(SIDGruopsChunksTablePromise);
 

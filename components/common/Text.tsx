@@ -23,7 +23,7 @@ type ButtonProps = {
   textAlign: "left" | "right" | "center";
   textAlignVertical: "center" | "top" | "bottom";
   numberOfLines?: number;
-  ellipsizeMode?: "head" | "middle" | "tail" | "clip";
+  ellipsizeMode?: "head" | "middle" | "tail" | "clip" | null;
 };
 
 function Text({
@@ -50,7 +50,7 @@ function Text({
       }}
     >
       <RNText
-        ellipsizeMode={ellipsizeMode}
+        ellipsizeMode={ellipsizeMode ?? undefined}
         numberOfLines={numberOfLines}
         style={{
           textAlign: textAlign ? textAlign : "center",

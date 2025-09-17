@@ -24,6 +24,7 @@ import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import { Host, Portal } from "react-native-portalize";
 import { useActiveUser } from "@/stores/activeUser";
 import { OnlineSyncHandler } from "@/components/functional/OnlineSyncHandler";
+import { HashColumnMigration } from "@/components/utils/db/migrations/HashColumnMigration";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -216,7 +217,6 @@ export default function RootLayout() {
                   name="settings/keyRegenerationFlow/newRecoveryCodes"
                   options={{ headerShown: false }}
                 />
-
                 <Stack.Screen
                   name="settings/keyRegenerationFlow/newPinPage"
                   options={{ headerShown: false }}
@@ -253,10 +253,14 @@ export default function RootLayout() {
                   name="settings/accountSettings/accountType"
                   options={{ headerShown: false }}
                 />
+                <Stack.Screen
+                  name="settings/devInfo/devInfoMain"
+                  options={{ headerShown: false }}
+                />
               </Stack>
               <StatusBar style="auto" />
               <StatusIndicators></StatusIndicators>
-              <OnlineSyncHandler></OnlineSyncHandler>
+              <HashColumnMigration></HashColumnMigration>
 
               {activeUserAccountType === "online" && (
                 <OnlineSyncHandler></OnlineSyncHandler>

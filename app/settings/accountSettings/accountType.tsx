@@ -48,9 +48,7 @@ function AccountKeys() {
         },
       })
       .then((r) => {
-        console.log("ACT_SW_R", r.data);
         if (r.data.success) {
-          console.log("Account type changed to online");
           const challengeStr = r.data.challenge;
           cryptoAPI
             .performOperation("decrypt", {
@@ -62,7 +60,6 @@ function AccountKeys() {
             .then((decryptResponse) => {
               if (decryptResponse.status === "success") {
                 const decryptedString = decryptResponse.payload.decrypted;
-                console.log("ACT_SW_VR  | WORKED", decryptedString);
                 axios
                   .post(`${API_URL}/account/verifyOnlineAccountCreation`, {
                     data: {

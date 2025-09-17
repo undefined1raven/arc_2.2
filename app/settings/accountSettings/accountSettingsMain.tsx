@@ -50,6 +50,12 @@ function AccountSettingsMain() {
       description: "Choose whether to use a local or cloud account",
       goTo: "/settings/accountSettings/accountType",
     },
+    {
+      name: "devInfo",
+      title: "Dev Info",
+      description: "Development Information",
+      goTo: "/settings/devInfo/devInfoMain",
+    },
   ];
 
   const renderItem = useCallback((item: SettingOption) => {
@@ -97,6 +103,7 @@ function AccountSettingsMain() {
         <View style={{ width: "100%", height: "100%" }}>
           <FlashList
             inverted={true}
+            estimatedItemSize={102}
             renderItem={({ item }) => renderItem(item)}
             data={settingOptions}
           ></FlashList>
