@@ -22,7 +22,12 @@ function dayPlanner() {
 
     ///Get the data for the active day. Has priority over recent days.
     dataRetriavalAPI
-      .getDataInTimeRange("dayPlannerChunks", null, null, 1)
+      .getDataInTimeRange(
+        "dayPlannerChunks",
+        Date.now() - 24 * 60 * 60 * 1000,
+        null,
+        1
+      )
       .then((res) => {
         if (res.status === "success") {
           const data = res.payload;

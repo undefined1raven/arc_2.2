@@ -1,6 +1,7 @@
 import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
 import Text from "@/components/common/Text";
+import TextInput from "@/components/common/TextInput";
 import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { TrashIcon } from "@/components/deco/TrashIcon";
@@ -360,6 +361,60 @@ function statusEditor() {
             setIsPickingStatus(true);
           }}
         >
+          <View
+            style={{
+              width: "100%",
+              height: 55,
+              marginBottom: 10,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "space-between",
+              borderWidth: 1,
+              borderRadius: globalStyle.borderRadius,
+              borderColor: getCurrentColors().color,
+            }}
+          >
+            <TextInput
+              defaultValue={"Example Task"}
+              onChange={(e) => {}}
+              textAlign="left"
+              color={getCurrentColors().textColor}
+              style={{
+                position: "absolute",
+                left: 0,
+                flexGrow: 1,
+                height: "100%",
+                backgroundColor: "#00000000",
+                borderWidth: 0,
+                width: "64%",
+              }}
+            ></TextInput>
+            <Button
+              style={{
+                width: "35%",
+                position: "absolute",
+                right: 10,
+                height: "100%",
+                borderWidth: 0,
+              }}
+              androidRippleColor={null}
+            ></Button>
+            <Text
+              style={{
+                width: "35%",
+                position: "absolute",
+                right: 10,
+                height: "50%",
+                paddingBottom: 3,
+                paddingTop: 3,
+                zIndex: -1,
+              }}
+              color={getCurrentColors().textColor}
+              label={"Example"}
+              backgroundColor={getCurrentColors().color + 35}
+              fontSize={15}
+            ></Text>
+          </View>
           <FeatureConfigValueInput
             value={statusToEdit?.completionEffect.toString() || ""}
             onChange={(e) => {

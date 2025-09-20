@@ -50,7 +50,7 @@ function Text({
       }}
     >
       <RNText
-        ellipsizeMode={ellipsizeMode ?? undefined}
+        ellipsizeMode={ellipsizeMode ? ellipsizeMode : undefined}
         numberOfLines={numberOfLines}
         style={{
           textAlign: textAlign ? textAlign : "center",

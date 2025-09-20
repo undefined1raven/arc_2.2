@@ -63,6 +63,34 @@ function TimeTrackingDataExplorer() {
       });
   }, []);
 
+  const renderFocusTooltip = useCallback(
+    (item: { label: string; value: number }) => {
+      return (
+        <View
+          style={{
+            width: "100%",
+            height: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: globalStyle.borderRadius,
+            backgroundColor: globalStyle.color,
+          }}
+        >
+          <Text
+            style={{ padding: 2, width: "100%", height: "100%" }}
+            textAlign="center"
+            color={globalStyle.textColorInactive}
+            fontSize={globalStyle.smallMobileFont}
+            ellipsizeMode={undefined}
+            label={`${item.value}h`}
+          ></Text>
+        </View>
+      );
+    },
+    []
+  );
+
   const renderItem = useCallback(
     ({ item, index }) => {
       const task = timeTrackingFC.find((t) => t.itme.taskID === item);
@@ -141,7 +169,7 @@ function TimeTrackingDataExplorer() {
           >
             <View
               style={{
-                flex: 1,
+                flex: 2,
                 width: "100%",
                 display: "flex",
                 alignItems: "center",
@@ -180,17 +208,24 @@ function TimeTrackingDataExplorer() {
                   {...getChartColorProps(timeTrackingDataExplorer.viewState)}
                   {...getChartPointColors(timeTrackingDataExplorer.viewState)}
                   {...getDataSetMaxValue(timeTrackingDataExplorer.viewState)}
-                  curvature={0.1}
+                  curvature={0.03}
                   curved={true}
                   width={screenSize.width - 40}
-                  height={screenSize.height / 2 - 80}
+                  height={screenSize.height / 2 + 50}
                   showVerticalLines
                   verticalLinesColor={globalStyle.color + "30"}
                   rulesColor={globalStyle.color + "30"}
                   initialSpacing={0}
                   dataPointsHeight={2}
                   dataPointsWidth={2}
+                  focusEnabled={true}
+                  showStripOnFocus
+                  focusedDataPointColor={globalStyle.colorAltLight}
+                  focusedDataPointLabelComponent={renderFocusTooltip}
+                  showTextOnFocus
                   textFontSize={10}
+                  stripColor={globalStyle.colorAccent}
+                  stripWidth={1}
                   yAxisLabelSuffix="h"
                   yAxisTextStyle={{
                     fontSize: globalStyle.mediumMobileFont,
@@ -230,6 +265,7 @@ function TimeTrackingDataExplorer() {
                   marginLeft: 10,
                   marginRight: 10,
                   marginBottom: 10,
+                  marginTop: 10,
                 }}
               >
                 <FlashList
