@@ -162,13 +162,13 @@ function devInfoMain() {
             data={listData}
           ></FlashList>
         </View>
-        {/* <Button
+        <Button
           onClick={async () => {
-            await checkChunkTableAndComputeHash("timeTrackingChunks", false);
-            await checkChunkTableAndComputeHash("dayPlannerChunks", false);
-            await checkChunkTableAndComputeHash("personalDiaryChunks", false);
-            await checkChunkTableAndComputeHash("personalDiaryGroups", false);
-            await checkChunkTableAndComputeHash("featureConfigChunks", false);
+            await checkChunkTableAndComputeHash("timeTrackingChunks");
+            await checkChunkTableAndComputeHash("dayPlannerChunks");
+            await checkChunkTableAndComputeHash("personalDiaryChunks");
+            await checkChunkTableAndComputeHash("personalDiaryGroups");
+            await checkChunkTableAndComputeHash("featureConfigChunks");
 
             setTimeout(() => {
               refreshData();
@@ -183,7 +183,7 @@ function devInfoMain() {
             height: 60,
             zIndex: 1,
           }}
-        ></Button> */}
+        ></Button>
       </ThemedView>
     </>
   );

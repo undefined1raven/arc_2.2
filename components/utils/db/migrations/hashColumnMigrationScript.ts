@@ -45,7 +45,7 @@ async function checkChunkTableAndComputeHash(tableName: string) {
   } catch (e) {}
 
   const existingChunks: ARC_ChunksType[] = await db.getAllAsync(
-    `SELECT id, encryptedContent FROM ${tableName}`
+    `SELECT id, encryptedContent FROM ${tableName} WHERE hash IS NULL`
   );
 
   const hashPromises: any[] = [];
