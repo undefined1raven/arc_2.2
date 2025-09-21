@@ -377,6 +377,7 @@ function statusEditor() {
             <TextInput
               defaultValue={"Example Task"}
               onChange={(e) => {}}
+              readOnly={true}
               textAlign="left"
               color={getCurrentColors().textColor}
               style={{

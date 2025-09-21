@@ -65,6 +65,7 @@ export default function RootLayout() {
     "/settings/keyRegenerationFlow/newRecoveryCodes",
     "/settings/keyRegenerationFlow/newPassphrasePage",
     "/settings/accountSettings/accountType",
+    "/dayPlanner/historicDayView",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -255,6 +256,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="settings/devInfo/devInfoMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dayPlanner/historicDayView"
                   options={{ headerShown: false }}
                 />
               </Stack>
