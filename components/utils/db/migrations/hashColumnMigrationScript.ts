@@ -36,7 +36,7 @@ async function checkChunkTableAndComputeHash(tableName: string) {
       (tableName: { name: string }) => tableName.name === "hash"
     )
   ) {
-    // return;
+    return;
   }
 
   //If no hash column is present, create it, fetch all chunks and set the hash for each by using the encryptedContent

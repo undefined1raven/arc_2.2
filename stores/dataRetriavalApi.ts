@@ -117,6 +117,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
+
     const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
       keyType: "symmetric",
       charCodeData: latestChunk.encryptedContent,
@@ -152,8 +153,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         );
       } else {
         query = db.runAsync(
-          `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
-          [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ?, hash = ? WHERE userID = ? AND id = ?`,
+          [
+            newChunk.encryptedContent,
+            newChunk.tx,
+            newChunkHash,
+            activeUserId,
+            newChunk.id,
+          ]
         );
       }
 
@@ -190,14 +197,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       ) {
         query = db.runAsync(
           `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, timeRangeStart, timeRangeEnd, hash) VALUES (${"?, ".repeat(
-            6
+            7
           )} ?);`,
           Object.values(newChunk)
         );
       } else {
         query = db.runAsync(
           `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, hash) VALUES (${"?, ".repeat(
-            4
+            5
           )} ?);`,
           Object.values(newChunk)
         );
