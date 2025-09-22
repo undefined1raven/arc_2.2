@@ -164,11 +164,11 @@ function devInfoMain() {
         </View>
         <Button
           onClick={async () => {
-            await checkChunkTableAndComputeHash("timeTrackingChunks");
-            await checkChunkTableAndComputeHash("dayPlannerChunks");
-            await checkChunkTableAndComputeHash("personalDiaryChunks");
-            await checkChunkTableAndComputeHash("personalDiaryGroups");
-            await checkChunkTableAndComputeHash("featureConfigChunks");
+            await checkChunkTableAndComputeHash("timeTrackingChunks", true);
+            await checkChunkTableAndComputeHash("dayPlannerChunks", true);
+            await checkChunkTableAndComputeHash("personalDiaryChunks"), true;
+            await checkChunkTableAndComputeHash("personalDiaryGroups", true);
+            await checkChunkTableAndComputeHash("featureConfigChunks", true);
 
             setTimeout(() => {
               refreshData();

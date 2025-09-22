@@ -18,13 +18,18 @@ const updateChunksInBatches = async (
     ]);
   });
 
-  await Promise.allSettled(chunkUpdatePromises);
+  await Promise.allSettled(chunkUpdatePromises)
+    .catch((r) => console.error(r))
+    .then((r) => {});
 
   // Recurse for the next batch
   await updateChunksInBatches(db, tableName, remaining, batchSize);
 };
 
-async function checkChunkTableAndComputeHash(tableName: string) {
+async function checkChunkTableAndComputeHash(
+  tableName: string,
+  stopIfColumnExists: undefined | boolean = undefined
+) {
   const db = await SQLite.openDatabaseAsync("localCache");
   //Not prone to injections since this fn is only called with constant vals in this component
   const columnsInTable = await db.getAllAsync(
@@ -36,7 +41,9 @@ async function checkChunkTableAndComputeHash(tableName: string) {
       (tableName: { name: string }) => tableName.name === "hash"
     )
   ) {
-    return;
+    if (stopIfColumnExists === undefined) {
+      return;
+    }
   }
 
   //If no hash column is present, create it, fetch all chunks and set the hash for each by using the encryptedContent
@@ -45,7 +52,7 @@ async function checkChunkTableAndComputeHash(tableName: string) {
   } catch (e) {}
 
   const existingChunks: ARC_ChunksType[] = await db.getAllAsync(
-    `SELECT id, encryptedContent FROM ${tableName} WHERE hash IS NULL`
+    `SELECT id, encryptedContent, tx, hash FROM ${tableName} WHERE hash IS NULL`
   );
 
   const hashPromises: any[] = [];
