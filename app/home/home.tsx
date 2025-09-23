@@ -3,7 +3,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { AfterInteractions } from "react-native-interactions";
 import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
-
 function Home() {
   return (
     <>

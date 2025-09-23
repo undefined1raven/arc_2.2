@@ -23,12 +23,12 @@ export default function Main() {
     const activeUserApiState = useActiveUser.getState();
     checkTables()
       .then(async (res: CheckTablesReturnSig) => {
-        console.log("XLF UID", res);
         if (res.status === "success" && res.isEmpty) {
           activeUserApiState.setActiveUser({
             hasChecked: true,
             isLoggedIn: false,
             userId: null,
+            accountType: null,
           });
           SplashScreen.hideAsync();
           router.replace("/NewAccountMain/page");
@@ -66,6 +66,7 @@ export default function Main() {
             hasChecked: true,
             isLoggedIn: true,
             userId: res.userId,
+            accountType: res.accountType,
           });
           router.replace("/localAccountAuth/localAccountAuth");
         }

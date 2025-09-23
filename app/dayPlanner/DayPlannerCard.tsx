@@ -4,6 +4,7 @@ import Text from "@/components/common/Text";
 import { BackupFileDeco } from "@/components/deco/BackupFileDeco";
 import CalendarDeco from "@/components/deco/CalendarDeco";
 import { EditDeco } from "@/components/deco/EditDeco";
+import { ListDeco } from "@/components/deco/ListDeco";
 import { StatsDeco } from "@/components/deco/StatsDeco";
 import { dayPlannerChunkSize } from "@/components/utils/constants/chunking";
 import { computeDayPlannerCompletion } from "@/components/utils/dataProcessing/computeDayPlannerCompletion";
@@ -20,7 +21,10 @@ import React, { useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
-function DayPlannerCard() {
+function DayPlannerCard(props: {
+  onSwitchDisplayMode: (newMode: "list" | "visual") => void;
+  currentSwitchDisplayMode: "list" | "visual";
+}) {
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (store) => store.dayPlannerFeatureConfig
   );
@@ -173,15 +177,27 @@ function DayPlannerCard() {
           >
             <Button
               onClick={() => {
+                const currentDisplayMode = props.currentSwitchDisplayMode;
+                props.onSwitchDisplayMode(
+                  currentDisplayMode === "list" ? "visual" : "list"
+                );
+              }}
+              style={styles.contextButtonStyle}
+            >
+              {props.currentSwitchDisplayMode === "visual" ? (
+                <ListDeco width={35} height={15}></ListDeco>
+              ) : (
+                <StatsDeco width={35} height={25}></StatsDeco>
+              )}
+            </Button>
+            <Button
+              onClick={() => {
                 router.push("/dayPlanner/statusEditor/statusEditor");
               }}
               style={styles.contextButtonStyle}
             >
               <EditDeco width={35} height={25}></EditDeco>
             </Button>
-            {/* <Button onClick={() => {}} style={styles.contextButtonStyle}>
-              <StatsDeco width={35} height={25}></StatsDeco>
-            </Button> */}
           </View>
         </View>
       )}

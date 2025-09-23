@@ -62,9 +62,9 @@ function LocalLogin() {
         <BottomMenu
           canGoForward={hasValidPassphrase}
           onNextButton={() => {
-            if (hasValidPassphrase) {
-              router.push("/login/localLogin/localLogin");
-            }
+            // if (hasValidPassphrase) {
+            router.push("/login/localLogin/localLogin");
+            // }
           }}
         ></BottomMenu>
       </ThemedView>

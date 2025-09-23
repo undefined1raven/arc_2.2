@@ -3,10 +3,11 @@ import { NavMenuBar } from "@/components/ui/NavMenuBar";
 import { TessDayLogType } from "@/constants/CommonTypes";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { DayPlannerCard } from "./DayPlannerCard";
 import { DayPlannerChart } from "@/components/ui/dayPlanner/DayPlannerChart";
+import { DayPlannerHistoryListView } from "@/components/ui/dayPlanner/DayPlannerHistoryListView";
 
 function dayPlanner() {
   const dataRetriavalAPI = dataRetrivalApi();
@@ -14,6 +15,7 @@ function dayPlanner() {
   const dayPlannerActiveDay = useDayPlannerActiveDay(
     (store) => store.activeDay
   );
+  const [displayMode, setDisplayMode] = useState<"list" | "visual">("visual");
 
   useEffect(() => {
     if (dayPlannerActiveDay !== undefined) {
@@ -22,7 +24,12 @@ function dayPlanner() {
 
     ///Get the data for the active day. Has priority over recent days.
     dataRetriavalAPI
-      .getDataInTimeRange("dayPlannerChunks", null, null, 1)
+      .getDataInTimeRange(
+        "dayPlannerChunks",
+        Date.now() - 24 * 60 * 60 * 1000,
+        null,
+        1
+      )
       .then((res) => {
         if (res.status === "success") {
           const data = res.payload;
@@ -62,8 +69,18 @@ function dayPlanner() {
 
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
-      {dayPlannerApi.recentDays.length > 0 && <DayPlannerChart />}
-      <DayPlannerCard></DayPlannerCard>
+      {dayPlannerApi.recentDays.length > 0 && displayMode === "visual" && (
+        <DayPlannerChart />
+      )}
+      {dayPlannerApi.recentDays.length > 0 && displayMode === "list" && (
+        <DayPlannerHistoryListView></DayPlannerHistoryListView>
+      )}
+      <DayPlannerCard
+        onSwitchDisplayMode={(newStatus) => {
+          setDisplayMode(newStatus);
+        }}
+        currentSwitchDisplayMode={displayMode}
+      ></DayPlannerCard>
     </ThemedView>
   );
 }

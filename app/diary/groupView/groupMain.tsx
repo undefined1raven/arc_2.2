@@ -109,11 +109,11 @@ function DiaryGroupMain() {
       version: "0.1.1",
     };
     const dataRetrivalAPI = dataRetrivalApi.getState();
-    dataRetrivalAPI.appendEntry(
-      "personalDiaryChunks",
-      newNote,
-      personalDiaryNotes
-    );
+    dataRetrivalAPI
+      .appendEntry("personalDiaryChunks", newNote, personalDiaryNotes)
+      .catch((e) => {
+        console.log(e);
+      });
     const newNotes = [...diaryApi.notes, newNote];
     diaryApi.setNotes(newNotes);
   }, [selectedGroup, diaryApi.notes]);

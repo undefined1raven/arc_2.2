@@ -76,6 +76,7 @@ function Button({
       }
       android_disableSound={true}
       style={{
+        backgroundColor: backgroundColor ? backgroundColor : undefined,
         borderRadius: globalStyles.globalStyle.borderRadius,
         borderWidth: 1,
         borderColor: borderColor

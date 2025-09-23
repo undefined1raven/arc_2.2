@@ -2,8 +2,9 @@ import { create } from "zustand";
 
 interface ActiveUser {
   hasChecked: boolean;
-  isLoggedIn: boolean;
+  isLoggedIn: boolean; //Unused
   userId: string | null;
+  accountType: "local" | "online" | null;
 }
 
 interface IActiveUser {
@@ -16,6 +17,7 @@ const useActiveUser = create<IActiveUser>((set, get) => ({
     hasChecked: false,
     isLoggedIn: false,
     userId: null,
+    accountType: null,
   },
   setActiveUser: (user: ActiveUser) => set({ activeUser: user }),
 }));

@@ -10,6 +10,16 @@ function charCodeArrayToString(charCodeArray) {
   return str;
 }
 
+function _arrayBufferToBase64( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+}
+
 function stringToCharCodeArray(str) {
     let stringActual = str;
     if (str === undefined) {
@@ -302,9 +312,10 @@ function stringToCharCodeArray(str) {
       }
       if (parsedCharCodeData === null) {
         return returnErrorResponse("Error parsing char code data");
-      }else if(parsedCharCodeData.cipher === undefined || parsedCharCodeData.iv === undefined) {
+      }else if((parsedCharCodeData.cipher === undefined || parsedCharCodeData.iv === undefined) && args.keyType === "symmetric") {
         return returnErrorResponse("Error parsing char code data");
       }
+      const bufferDecodeMode = args.decoding ? args.decoding : null;
       if (args.keyType === "private") {
         const importPayload = await importCryptoKey({
           jwkKeyData: args.key,
@@ -314,13 +325,25 @@ function stringToCharCodeArray(str) {
           return returnErrorResponse("Error importing private key");
         }
         const key = importPayload.payload.key;
-        return window.crypto.subtle
-          .decrypt({ name: "RSA-OAEP" }, key, cipherFromCharCodes)
+        const arrayBuffer = str2ab(charCodeArrayToString(parsedCharCodeData));  
+      return window.crypto.subtle
+          .decrypt({ name: "RSA-OAEP" }, key, arrayBuffer)
           .then((plaintext) => {
-            const decoder = new TextDecoder();
-            return decoder.decode(plaintext);
+            let decodedData;
+
+            if(bufferDecodeMode === null){
+              const decoder = new TextDecoder();
+                decodedData = decoder.decode(plaintext)
+              }else if(bufferDecodeMode === "base64"){
+                decodedData = _arrayBufferToBase64(plaintext)
+              }
+            return {
+              status: "success",
+              payload: { decrypted: decodedData },
+            };
           })
           .catch((e) => {
+            console.log("Something fucked up", e)
             return returnErrorResponse(e);
           });
       } else if (args.keyType === "symmetric") {

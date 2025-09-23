@@ -8,13 +8,14 @@ export type CheckTablesReturnSig = {
   error: null | string;
   isEmpty?: boolean;
   userId?: string;
+  accountType: "local" | "online" | null;
 };
 
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await SQLite.openDatabaseAsync("localCache");
   var promiseArray: Promise<any>[] = [];
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL, accountType TEXT);"
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -24,7 +25,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Time tracking chunks
   const arcChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER);"
+    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
   );
   promiseArray.push(arcChunksTablePromise);
   const arcChunksDerivedDataTablePromise = db.runAsync(
@@ -34,7 +35,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Day planner chunks
   const tessChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER);"
+    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
   );
   promiseArray.push(tessChunksTablePromise);
   const tessChunksDerivedDataTablePromise = db.runAsync(
@@ -44,7 +45,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   //Personal Diary chunks
   const SIDChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
   );
   const sidChunksDerivedDataTablePromise = db.runAsync(
     "CREATE TABLE IF NOT EXISTS personalDiaryDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
@@ -52,7 +53,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   promiseArray.push(sidChunksDerivedDataTablePromise);
   promiseArray.push(SIDChunksTablePromise);
   const SIDGruopsChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
   );
   promiseArray.push(SIDGruopsChunksTablePromise);
 
@@ -66,14 +67,17 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     .then(() => {
       return db
         .getFirstAsync("SELECT * FROM users;")
-        .then((firstUser) => {
+        .then((firstUser: any) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
+          const accountType: "local" | "online" | null =
+            firstUser?.accountType ?? "local";
           return {
             status: "success",
             error: null,
             isEmpty: isEmpty,
             userId: userId,
+            accountType: accountType,
           };
         })
         .catch((e) => {

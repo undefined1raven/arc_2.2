@@ -380,7 +380,8 @@ const HabitCard = memo(() => {
         )}
 
       {habitCardDataApi.hasTrackedIds === true &&
-        habitCardDataApi.trackedIds === null && (
+        (habitCardDataApi.trackedIds === null ||
+          habitCardDataApi.trackedIds?.length === 0) && (
           <Selection
             onMultiSelection={handleSelection}
             values={filteredTasks || []}

@@ -22,16 +22,18 @@ import { useNavMenuApi } from "@/stores/navMenuApi";
 import { StatusIndicators } from "@/components/ui/StatusIndicators";
 import KeyboardVisible from "@/components/functional/KeyboardStatus";
 import { Host, Portal } from "react-native-portalize";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
-import themeColors from "@/constants/colors";
+import { OnlineSyncHandler } from "@/components/functional/OnlineSyncHandler";
+import { HashColumnMigration } from "@/components/utils/db/migrations/HashColumnMigration";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const navMenuApi = useNavMenuApi();
   const pathname = usePathname();
+  const activeUserAccountType = useActiveUser(
+    (state) => state?.activeUser?.accountType ?? null
+  );
 
   const navMenuDisallowedPaths = [
     "/NewAccountMain/page",
@@ -62,6 +64,8 @@ export default function RootLayout() {
     "/settings/keyRegenerationFlow/newPinPage",
     "/settings/keyRegenerationFlow/newRecoveryCodes",
     "/settings/keyRegenerationFlow/newPassphrasePage",
+    "/settings/accountSettings/accountType",
+    "/dayPlanner/historicDayView",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -214,7 +218,6 @@ export default function RootLayout() {
                   name="settings/keyRegenerationFlow/newRecoveryCodes"
                   options={{ headerShown: false }}
                 />
-
                 <Stack.Screen
                   name="settings/keyRegenerationFlow/newPinPage"
                   options={{ headerShown: false }}
@@ -247,9 +250,26 @@ export default function RootLayout() {
                   name="secretKey/page"
                   options={{ headerShown: false }}
                 />
+                <Stack.Screen
+                  name="settings/accountSettings/accountType"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings/devInfo/devInfoMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dayPlanner/historicDayView"
+                  options={{ headerShown: false }}
+                />
               </Stack>
               <StatusBar style="auto" />
               <StatusIndicators></StatusIndicators>
+              <HashColumnMigration></HashColumnMigration>
+
+              {activeUserAccountType === "online" && (
+                <OnlineSyncHandler></OnlineSyncHandler>
+              )}
               {navMenuApi.showMenu &&
                 navMenuDisallowedPaths.includes(pathname) === false && (
                   <NavMenuBar></NavMenuBar>

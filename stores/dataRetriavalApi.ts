@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { v4 } from "uuid";
+import * as Crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import * as SecureStore from "expo-secure-store";
 import { secureStoreKeyNames } from "@/components/utils/constants/secureStoreKeyNames";
@@ -116,6 +117,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (key === null) {
       return { status: "error", error: "No key found" };
     }
+
     const decryptionResults = await cryptoOpsApi.performOperation("decrypt", {
       keyType: "symmetric",
       charCodeData: latestChunk.encryptedContent,
@@ -125,27 +127,40 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: decryptionResults.payload };
     }
 
-    function updateChunk(newChunk: ARC_ChunksType) {
+    async function updateChunk(newChunk: ARC_ChunksType) {
       let query: Promise<any> | null = null;
+
+      const newChunkHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        newChunk.encryptedContent
+      );
+
       if (
         tableName === "dayPlannerChunks" ||
         tableName === "timeTrackingChunks"
       ) {
         query = db.runAsync(
-          `UPDATE ${tableName} SET encryptedContent = ?, tx = ?, timeRangeStart = ?, timeRangeEnd = ? WHERE userID = ? AND id = ?`,
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ?, timeRangeStart = ?, timeRangeEnd = ?, hash = ? WHERE userID = ? AND id = ?`,
           [
             newChunk.encryptedContent,
             newChunk.tx,
             newChunk.timeRangeStart,
             newChunk.timeRangeEnd,
+            newChunkHash,
             activeUserId,
             newChunk.id,
           ]
         );
       } else {
         query = db.runAsync(
-          `UPDATE ${tableName} SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
-          [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
+          `UPDATE ${tableName} SET encryptedContent = ?, tx = ?, hash = ? WHERE userID = ? AND id = ?`,
+          [
+            newChunk.encryptedContent,
+            newChunk.tx,
+            newChunkHash,
+            activeUserId,
+            newChunk.id,
+          ]
         );
       }
 
@@ -165,22 +180,31 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         });
     }
 
-    function insertChunk(newChunk: ARC_ChunksType) {
+    async function insertChunk(newChunk: ARC_ChunksType) {
       let query: Promise<any> | null = null;
+
+      const newChunkHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        newChunk.encryptedContent
+      );
+
+      //@ts-expect-error
+      newChunk["hash"] = newChunkHash;
+
       if (
         tableName === "dayPlannerChunks" ||
         tableName === "timeTrackingChunks"
       ) {
         query = db.runAsync(
-          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, timeRangeStart, timeRangeEnd) VALUES (${"?, ".repeat(
-            6
+          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, timeRangeStart, timeRangeEnd, hash) VALUES (${"?, ".repeat(
+            7
           )} ?);`,
           Object.values(newChunk)
         );
       } else {
         query = db.runAsync(
-          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version) VALUES (${"?, ".repeat(
-            4
+          `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, hash) VALUES (${"?, ".repeat(
+            5
           )} ?);`,
           Object.values(newChunk)
         );
@@ -625,13 +649,26 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         cipher: encryptionResults.payload.cipher,
         iv: encryptionResults.payload.iv,
       };
+      const encryptedContentStr = JSON.stringify(encryptedContent);
+
+      const newChunkHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        encryptedContentStr
+      );
+
       const updatedChunk = {
         ...encryptedChunk,
-        encryptedContent: JSON.stringify(encryptedContent),
+        encryptedContent: encryptedContentStr,
+        hash: newChunkHash,
       };
       const savePromise = db.runAsync(
-        `UPDATE ${tableName} SET encryptedContent = ? WHERE userID = ? AND id = ?`,
-        [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
+        `UPDATE ${tableName} SET encryptedContent = ?, hash = ? WHERE userID = ? AND id = ?`,
+        [
+          updatedChunk.encryptedContent,
+          updatedChunk.hash,
+          activeUserId,
+          updatedChunk.id,
+        ]
       );
       return savePromise
         .then((result) => {
@@ -805,14 +842,27 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         cipher: encryptionResults.payload.cipher,
         iv: encryptionResults.payload.iv,
       };
+      const encryptedContentStr = JSON.stringify(encryptedContent);
+
+      const newChunkHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        encryptedContentStr
+      );
+
       const updatedChunk = {
         ...dataMatchChunk,
-        encryptedContent: JSON.stringify(encryptedContent),
+        encryptedContent: encryptedContentStr,
+        hash: newChunkHash,
       };
 
       const savePromise = db.runAsync(
-        `UPDATE featureConfigChunks SET encryptedContent = ? WHERE userID = ? AND id = ?`,
-        [updatedChunk.encryptedContent, activeUserId, updatedChunk.id]
+        `UPDATE featureConfigChunks SET encryptedContent = ?, hash = ? WHERE userID = ? AND id = ?`,
+        [
+          updatedChunk.encryptedContent,
+          updatedChunk.hash,
+          activeUserId,
+          updatedChunk.id,
+        ]
       );
       return savePromise
         .then((result) => {
@@ -877,11 +927,22 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: decryptionResults.payload };
     }
 
-    function updateChunk(newChunk: FeatureConfigChunkType) {
+    async function updateChunk(newChunk: FeatureConfigChunkType) {
+      const newChunkHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        newChunk.encryptedContent
+      );
+
       return db
         .runAsync(
-          `UPDATE featureConfigChunks SET encryptedContent = ?, tx = ? WHERE userID = ? AND id = ?`,
-          [newChunk.encryptedContent, newChunk.tx, activeUserId, newChunk.id]
+          `UPDATE featureConfigChunks SET encryptedContent = ?, tx = ?, hash = ? WHERE userID = ? AND id = ?`,
+          [
+            newChunk.encryptedContent,
+            newChunk.tx,
+            newChunkHash,
+            activeUserId,
+            newChunk.id,
+          ]
         )
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
