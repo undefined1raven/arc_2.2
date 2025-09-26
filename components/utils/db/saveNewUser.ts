@@ -1,6 +1,7 @@
 import { useNewUserData } from "@/stores/newUserData";
 import * as SQLite from "expo-sqlite";
 import { v4 } from "uuid";
+import * as Crypto from "expo-crypto";
 async function saveNewUser(PIKBackup: string) {
   console.log("------------SAVING NEW USER", Date.now());
 
@@ -8,29 +9,35 @@ async function saveNewUser(PIKBackup: string) {
   const newUserData = newUserDataApi.userData;
   const db = await SQLite.openDatabaseAsync("localCache");
 
-  function getFeatureConfigChunk(
+  async function getFeatureConfigChunk(
     encryptedContent: string,
     type: "timeTracking" | "personalDiary" | "dayPlanner"
   ) {
+    const encryptedContentHash = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      encryptedContent
+    );
+
     return {
       id: `FC-${v4()}`,
       userID: newUserData?.id,
       encryptedContent: encryptedContent,
       tx: Date.now(),
       type: type,
-      version: "0.1.0",
+      version: "0.1.2",
+      hash: encryptedContentHash,
     };
   }
 
-  const timeTrackingFCChunk = getFeatureConfigChunk(
+  const timeTrackingFCChunk = await getFeatureConfigChunk(
     newUserData?.timeTrackingFeatureConfig ?? "",
     "timeTracking"
   );
-  const personalDiaryFCChunk = getFeatureConfigChunk(
+  const personalDiaryFCChunk = await getFeatureConfigChunk(
     newUserData?.diaryFeatureConfig ?? "",
     "personalDiary"
   );
-  const dayPlannerFCChunk = getFeatureConfigChunk(
+  const dayPlannerFCChunk = await getFeatureConfigChunk(
     newUserData?.dayPlannerFeatureConfig ?? "",
     "dayPlanner"
   );
@@ -45,8 +52,8 @@ async function saveNewUser(PIKBackup: string) {
   newFCChunks.forEach((chunk) => {
     const savePromise = db
       .runAsync(
-        `INSERT INTO featureConfigChunks (id, userID, encryptedContent, tx, type, version) VALUES (${"?, ".repeat(
-          5
+        `INSERT INTO featureConfigChunks (id, userID, encryptedContent, tx, type, version, hash) VALUES (${"?, ".repeat(
+          6
         )} ?);`,
         Object.values(chunk)
       )

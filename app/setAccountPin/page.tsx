@@ -14,7 +14,6 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useNewUserData } from "@/stores/newUserData";
 import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import Text from "@/components/common/Text";
-import SimpleHeader from "@/components/common/SimpleHeader";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import TextInput from "@/components/common/TextInput";
@@ -35,64 +34,83 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import { getInsertStringFromObject } from "@/components/utils/db/dbUtils";
 import { chunkPrefixes } from "@/constants/chunkPrefixes";
 import * as SQLite from "expo-sqlite";
-import { ARC_ChunksType } from "@/constants/CommonTypes";
+import {
+  ARC_ChunksType,
+  SID_ChunksType,
+  SIDGroups_ChunksType,
+  Tess_ChunksType,
+} from "@/constants/CommonTypes";
+import * as Crypto from "expo-crypto";
 
-async function createEmptyChunks(jwkKeyData: string, userId: string) {
+async function createEmptyEncryptedChunkContent(jwkKeyData: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
-  const db = await SQLite.openDatabaseAsync("localCache");
   const emptyEncryptedArray = await cryptoOpsApi.performOperation("encrypt", {
     keyType: "symmetric",
     key: jwkKeyData,
     charCodeData: stringToCharCodeArray(JSON.stringify([])),
   });
 
-  if (emptyEncryptedArray.status !== "success") {
-    console.error("Failed to create empty encrypted array");
-    return;
-  }
-
   const emptyEncryptedContent = JSON.stringify(emptyEncryptedArray.payload);
+
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    emptyEncryptedContent
+  );
+
+  return { content: emptyEncryptedContent, hash: hash };
+}
+
+async function createEmptyChunks(jwkKeyData: string, userId: string) {
+  const db = await SQLite.openDatabaseAsync("localCache");
+
+  const empty1 = await createEmptyEncryptedChunkContent(jwkKeyData);
+  const empty2 = await createEmptyEncryptedChunkContent(jwkKeyData);
+  const empty3 = await createEmptyEncryptedChunkContent(jwkKeyData);
+  const empty4 = await createEmptyEncryptedChunkContent(jwkKeyData);
 
   const emptyNewTimeTrackingChunk: ARC_ChunksType = {
     id: `${chunkPrefixes["timeTrackingChunks"]}${v4()}`,
     userID: userId,
-    encryptedContent: emptyEncryptedContent,
+    encryptedContent: empty1.content,
     tx: Date.now(),
     timeRangeStart: Date.now(),
     timeRangeEnd: Date.now(),
     version: "0.1.2",
+    hash: empty1.hash,
   };
 
-  const emptyNewDayPlannerChunk: ARC_ChunksType = {
+  const emptyNewDayPlannerChunk: Tess_ChunksType = {
     id: `${chunkPrefixes["dayPlannerChunks"]}${v4()}`,
     userID: userId,
-    encryptedContent: emptyEncryptedContent,
+    encryptedContent: empty2.content,
     tx: Date.now(),
     timeRangeStart: Date.now(),
     timeRangeEnd: Date.now(),
     version: "0.1.2",
+    hash: empty2.hash,
   };
 
-  const emptyNewPersonalDiaryChunk = {
+  const emptyNewPersonalDiaryChunk: SID_ChunksType = {
     id: `${chunkPrefixes["personalDiaryChunks"]}${v4()}`,
     userID: userId,
-    encryptedContent: emptyEncryptedContent,
+    encryptedContent: empty3.content,
     tx: Date.now(),
     version: "0.1.2",
+    hash: empty3.hash,
   };
 
-  const emptyNewPersonalDiaryGroupChunk = {
+  const emptyNewPersonalDiaryGroupChunk: SIDGroups_ChunksType = {
     id: `${chunkPrefixes["personalDiaryGroupChunks"]}${v4()}`,
     userID: userId,
-    encryptedContent: emptyEncryptedContent,
+    encryptedContent: empty4.content,
     tx: Date.now(),
     version: "0.1.2",
+    hash: empty4.hash,
   };
 
   const timeTrackingInsertHelperVals = getInsertStringFromObject(
     emptyNewTimeTrackingChunk
   );
-  console.log("From here 3", ...timeTrackingInsertHelperVals.values);
   const timeTrackingChunkPromise = db.runAsync(
     `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
     [...timeTrackingInsertHelperVals.values]

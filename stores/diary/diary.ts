@@ -25,7 +25,9 @@ const useDiaryData = create<IDiary>()((set, get) => ({
   noteChunkMapping: null,
   setNoteChunkMapping: (
     noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null
-  ) => set({ noteChunkMapping }),
+  ) => {
+    set({ noteChunkMapping });
+  },
   setNotes: (notes: SIDNoteType[] | null) => set({ notes }),
   groups: null,
   setGroups: (groups: SIDGroupType[] | null) => set({ groups }),

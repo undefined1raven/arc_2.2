@@ -59,7 +59,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 
   ////Feature config tables
   const featureConfigChunks = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS featureConfigChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, type TEXT NOT NULL, version TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS featureConfigChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, type TEXT NOT NULL, version TEXT NOT NULL, hash TEXT);"
   );
   promiseArray.push(featureConfigChunks);
 

@@ -255,7 +255,9 @@ function DiaryMain() {
         .then((data) => {
           const notes = data.payload as any as SIDNoteType[];
           //@ts-ignore
-          diaryApi.setNoteChunkMapping(data.dataChunkMapping);
+          diaryApi.setNoteChunkMapping(
+            data.dataChunkMapping ? data.dataChunkMapping : {}
+          );
           diaryApi.setNotes(notes);
         })
         .catch((error) => {
@@ -267,8 +269,10 @@ function DiaryMain() {
         .getDataInTimeRange("personalDiaryGroups", null, null, null)
         .then((data) => {
           const groups = data.payload as any as SIDGroupType[];
-          //@ts-ignore
-          diaryApi.setGroupsChunkMapping(data.dataChunkMapping);
+          diaryApi.setGroupsChunkMapping(
+            //@ts-ignore
+            data.dataChunkMapping ? data.dataChunkMapping : {}
+          );
           diaryApi.setGroups(groups);
         })
         .catch((error) => {

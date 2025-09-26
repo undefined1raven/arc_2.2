@@ -177,6 +177,7 @@ type ARC_ChunksType = {
   version: "0.1.1" | "0.1.2";
   timeRangeStart: number | null;
   timeRangeEnd: number | null;
+  hash: string;
 };
 
 type Tess_ChunksType = {
@@ -187,6 +188,7 @@ type Tess_ChunksType = {
   version: "0.1.1" | "0.1.2";
   timeRangeStart: number | null;
   timeRangeEnd: number | null;
+  hash: string;
 };
 
 type SID_ChunksType = {
@@ -195,6 +197,7 @@ type SID_ChunksType = {
   encryptedContent: string;
   tx: number;
   version: "0.1.1" | "0.1.2";
+  hash: string;
 };
 
 type SIDGroups_ChunksType = {
@@ -203,6 +206,7 @@ type SIDGroups_ChunksType = {
   encryptedContent: string;
   tx: number;
   version: "0.1.1" | "0.1.2";
+  hash: string;
 };
 
 type SIDGroupType = {

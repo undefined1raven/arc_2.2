@@ -111,6 +111,17 @@ function DiaryGroupMain() {
     const dataRetrivalAPI = dataRetrivalApi.getState();
     dataRetrivalAPI
       .appendEntry("personalDiaryChunks", newNote, personalDiaryNotes)
+      .then((res) => {
+        ///Update the chunk mapping
+        const chunkIdInsertedInto = res.insertedIntoChunk || null;
+        const newMapping = diaryApi.noteChunkMapping
+          ? { ...diaryApi.noteChunkMapping }
+          : {};
+        newMapping[chunkIdInsertedInto] = [
+          ...(newMapping[chunkIdInsertedInto] || []),
+          newNote.noteID,
+        ];
+      })
       .catch((e) => {
         console.log(e);
       });
