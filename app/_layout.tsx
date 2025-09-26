@@ -265,7 +265,6 @@ export default function RootLayout() {
               </Stack>
               <StatusBar style="auto" />
               <StatusIndicators></StatusIndicators>
-              <HashColumnMigration></HashColumnMigration>
 
               {activeUserAccountType === "online" && (
                 <OnlineSyncHandler></OnlineSyncHandler>

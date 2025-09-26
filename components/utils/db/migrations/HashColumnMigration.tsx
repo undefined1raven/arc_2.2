@@ -1,17 +1,35 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect } from "react";
-import { checkChunkTableAndComputeHash } from "./hashColumnMigrationScript";
-
+import * as Crypto from "expo-crypto";
 function HashColumnMigration() {
+  const db = useSQLiteContext();
   useEffect(() => {
-    /////IMPORTANT: IT IS IMPERATIVE TO RUN THAT FUNCTION SEQUENTIALLY FOR EACH TABLE. RUNNING IT IN PARALLEL WILL RESULT IN SOME CHUNKS NOT GETTING THEIR HASH SAVED DUE TO SOME CONUCRENCY ISSUE WITH SQLITE
-    async function callFn() {
-      await checkChunkTableAndComputeHash("timeTrackingChunks");
-      await checkChunkTableAndComputeHash("dayPlannerChunks");
-      await checkChunkTableAndComputeHash("personalDiaryChunks");
-      await checkChunkTableAndComputeHash("personalDiaryGroups");
-      await checkChunkTableAndComputeHash("featureConfigChunks");
+    async function genHashesForTable(tableName: string) {
+      const affectedRows = await db.getAllAsync(
+        `SELECT id, hash, encryptedContent, tx FROM ${tableName} WHERE hash IS NULL`
+      );
+
+      if (affectedRows.length === 0) {
+        return;
+      }
+
+      for (let ix = 0; ix < affectedRows.length; ix++) {
+        const ec = affectedRows[ix].encryptedContent;
+        const cid = affectedRows[ix].id;
+        const hash = await Crypto.digestStringAsync(
+          Crypto.CryptoDigestAlgorithm.SHA256,
+          ec
+        );
+        await db.runAsync(`UPDATE ${tableName} SET hash = ? WHERE id = ?`, [
+          hash,
+          cid,
+        ]);
+      }
     }
-    callFn();
+    genHashesForTable("timeTrackingChunks");
+    genHashesForTable("dayPlannerChunks");
+    genHashesForTable("personalDiaryChunks");
+    genHashesForTable("personalDiaryGroups");
   }, []);
 
   return null;

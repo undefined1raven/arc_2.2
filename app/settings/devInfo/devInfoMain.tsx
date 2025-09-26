@@ -8,7 +8,6 @@ import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import Text from "@/components/common/Text";
 import Button from "@/components/common/Button";
-import { checkChunkTableAndComputeHash } from "@/components/utils/db/migrations/hashColumnMigrationScript";
 
 function devInfoMain() {
   const [listData, setListData] = useState<
@@ -63,7 +62,6 @@ function devInfoMain() {
 
     const data = [...TTC, ...DPC, ...PDC, ...PDG, ...FCC];
 
-    const errors = data.filter((d) => typeof d.hash !== "string");
     //@ts-expect-error
     setListData(data);
   }, []);
@@ -164,12 +162,6 @@ function devInfoMain() {
         </View>
         <Button
           onClick={async () => {
-            await checkChunkTableAndComputeHash("timeTrackingChunks", true);
-            await checkChunkTableAndComputeHash("dayPlannerChunks", true);
-            await checkChunkTableAndComputeHash("personalDiaryChunks"), true;
-            await checkChunkTableAndComputeHash("personalDiaryGroups", true);
-            await checkChunkTableAndComputeHash("featureConfigChunks", true);
-
             setTimeout(() => {
               refreshData();
             }, 50);
