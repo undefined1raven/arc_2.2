@@ -14,6 +14,8 @@ const secureStoreKeyNames = {
   },
 };
 
+const noBioSKName = "noBSK";
+
 const getUserThemeKey = (userId: string) => {
   return `userTheme_${userId}`;
 };
@@ -34,6 +36,7 @@ const getPrivateKey = (userId: string) => {
 };
 
 export {
+  noBioSKName,
   secureStoreKeyNames,
   getPrivateKey,
   getSymmetricKey,

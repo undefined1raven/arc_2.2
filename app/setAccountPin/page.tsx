@@ -23,6 +23,7 @@ import * as SecureStore from "expo-secure-store";
 import {
   getPrivateKey,
   getSymmetricKey,
+  noBioSKName,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
@@ -148,6 +149,13 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
   ]);
 }
 
+async function saveSecretKeyOnDevice(secretKey: string) {
+  if (typeof secretKey !== "string") {
+    return;
+  }
+  await SecureStore.setItemAsync(noBioSKName, secretKey);
+}
+
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const newUserDataApi = useNewUserData();
@@ -246,13 +254,19 @@ export default function Main() {
                 console.error("Error saving new user", e);
               });
           }
+          if (typeof newUserDataApi.secretKey !== "string") {
+            return;
+          }
           if (useBiometricAuth === false) {
+            await saveSecretKeyOnDevice(newUserDataApi.secretKey);
             basicSecureStoreSave(userId);
           } else {
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
               armoredPrivateKey
             );
+            await saveSecretKeyOnDevice(newUserDataApi.secretKey);
+
             const wrappedSymKey = encodeWrappedSymkey(res.payload);
             if (wrappedSymKey === null) {
               console.error("Error encoding wrapped symmetric key");

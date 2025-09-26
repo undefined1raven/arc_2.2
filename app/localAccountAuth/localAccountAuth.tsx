@@ -6,6 +6,7 @@ import * as SecureStore from "expo-secure-store";
 import {
   getPrivateKey,
   getSymmetricKey,
+  noBioSKName,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import Button from "@/components/common/Button";
@@ -252,8 +253,14 @@ function localAccountAuth() {
                   SecureStore.getItemAsync(
                     getSymmetricKey(activeUserApi.activeUser.userId)
                   )
-                    .then((res) => {
-                      unwrapKeyAndSetState(inputPin, res ? res : "{}");
+                    .then(async (res) => {
+                      const localKey = await SecureStore.getItemAsync(
+                        noBioSKName
+                      );
+                      unwrapKeyAndSetState(
+                        inputPin + localKey,
+                        res ? res : "{}"
+                      );
                     })
                     .catch((e) => {
                       console.log("Error in native auth", e);
