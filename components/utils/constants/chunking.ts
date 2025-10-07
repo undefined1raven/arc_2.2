@@ -1,7 +1,7 @@
 const featureConfigChunkSize = 80;
-const timeTrackingChunkSize = 250;
-const dayPlannerChunkSize = 50;
-const personalDiaryNotes = 50;
+const timeTrackingChunkSize = 150;
+const dayPlannerChunkSize = 7;
+const personalDiaryNotes = 5;
 
 export {
   featureConfigChunkSize,
