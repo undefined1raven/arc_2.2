@@ -167,6 +167,7 @@ type FeatureConfigChunkType = {
   tx: number;
   version: "0.1.1";
   type: "timeTracking" | "dayPlanner" | "personalDiary";
+  hash: string;
 };
 
 type ARC_ChunksType = {

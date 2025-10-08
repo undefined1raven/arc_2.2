@@ -42,7 +42,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
     const db = await SQLite.openDatabaseAsync("localCache");
     const FCChunks: FeatureConfigChunkType[] = await db.getAllAsync(
       "SELECT * FROM featureConfigChunks WHERE userID = ? ",
-      [activeUserId, "timeTracking"]
+      [activeUserId]
     );
 
     const decryptionPromises: Promise<any>[] = [];
@@ -89,10 +89,10 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
                     break;
                   case "personalDiary":
                     //We currently dont use personal diary feature config
-                    // personalDiaryFeatureConfig = [
-                    //   ...personalDiaryFeatureConfig,
-                    //   ...parsedData,
-                    // ];
+                    personalDiaryFeatureConfig = [
+                      ...personalDiaryFeatureConfig,
+                      ...parsedData,
+                    ];
                     break;
                   default:
                     console.error("Unknown feature config type", type);

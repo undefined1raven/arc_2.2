@@ -19,6 +19,7 @@ import { useStatusIndicatorStore } from "./statusIndicatorStore";
 import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
 import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFromData";
 import { useActiveKeys } from "./decryptedKeys";
+import { featureConfigChunkSize } from "@/components/utils/constants/chunking";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -971,39 +972,100 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         }
 
         const appendedData = [...parsedData, rowData];
-        const encryptionResults = await cryptoOpsApi.performOperation(
-          "encrypt",
-          {
-            keyType: "symmetric",
-            key: key,
-            charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
+
+        if (appendedData.length > featureConfigChunkSize) {
+          const newData = [rowData];
+          const encryptionResults = await cryptoOpsApi.performOperation(
+            "encrypt",
+            {
+              keyType: "symmetric",
+              key: key,
+              charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
+            }
+          );
+          if (encryptionResults.status === "error") {
+            return { status: "error", error: encryptionResults.payload };
           }
-        );
-        if (encryptionResults.status === "error") {
-          return { status: "error", error: encryptionResults.payload };
-        }
-        const encryptedContent = {
-          cipher: encryptionResults.payload.cipher,
-          iv: encryptionResults.payload.iv,
-        };
-
-        const previousContentLength = latestChunk.encryptedContent.length;
-
-        const updatedChunk = {
-          ...latestChunk,
-          encryptedContent: JSON.stringify(encryptedContent),
-        };
-
-        const newContentLength = updatedChunk.encryptedContent.length;
-
-        if (newContentLength <= previousContentLength) {
-          return {
-            status: "error",
-            error: "Content length is not increasing",
+          const encryptedContent = {
+            cipher: encryptionResults.payload.cipher,
+            iv: encryptionResults.payload.iv,
           };
-        }
 
-        return updateChunk(updatedChunk);
+          const stringifiedEncryptedContent = JSON.stringify(encryptedContent);
+
+          const hash = await Crypto.digestStringAsync(
+            Crypto.CryptoDigestAlgorithm.SHA256,
+            stringifiedEncryptedContent
+          );
+
+          if (typeof hash !== "string" || hash.length === 0) {
+            return {
+              status: "error",
+              error: "Failed to generate hash for new chunk",
+            };
+          }
+
+          const newChunk: FeatureConfigChunkType = {
+            id: `FC-${v4()}`,
+            type: featureConfigType,
+            encryptedContent: JSON.stringify(encryptedContent),
+            userID: activeUserId,
+            tx: Date.now(),
+            version: "0.1.1",
+            hash: hash,
+          };
+
+          return db
+            .runAsync(
+              `INSERT INTO featureConfigChunks (id, type, encryptedContent, userID, tx, version, hash) VALUES (${"?, ".repeat(
+                6
+              )} ?);`,
+              Object.values(newChunk)
+            )
+            .then((result) => {
+              statusIndicatorApi.setIsSavingLocalData(false);
+              db.closeAsync();
+              return { status: "success", payload: result };
+            })
+            .catch((e) => {
+              db.closeAsync();
+              return { status: "error", error: e };
+            });
+        } else {
+          const encryptionResults = await cryptoOpsApi.performOperation(
+            "encrypt",
+            {
+              keyType: "symmetric",
+              key: key,
+              charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
+            }
+          );
+          if (encryptionResults.status === "error") {
+            return { status: "error", error: encryptionResults.payload };
+          }
+          const encryptedContent = {
+            cipher: encryptionResults.payload.cipher,
+            iv: encryptionResults.payload.iv,
+          };
+
+          const previousContentLength = latestChunk.encryptedContent.length;
+
+          const updatedChunk = {
+            ...latestChunk,
+            encryptedContent: JSON.stringify(encryptedContent),
+          };
+
+          const newContentLength = updatedChunk.encryptedContent.length;
+
+          if (newContentLength <= previousContentLength) {
+            return {
+              status: "error",
+              error: "Content length is not increasing",
+            };
+          }
+
+          return updateChunk(updatedChunk);
+        }
       } catch (e) {
         return { status: "error", error: "Failed to parse decrypted data" };
       }
