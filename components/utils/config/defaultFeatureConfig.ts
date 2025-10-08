@@ -290,10 +290,7 @@ const tessDefaultConfig: FeatureConfigTessType = [
   },
 ];
 
-const sidDefaultConfig: FeatureConfigSIDType = {
-  moodArray: [],
-  pinProtected: false,
-};
+const sidDefaultConfig: FeatureConfigSIDType = [];
 
 const defaultFeatureConfig: FeatureConfigType = {
   tess: tessDefaultConfig,

@@ -131,7 +131,12 @@ type SIDMoodType = {
   textDarkColor: ColorValueHex;
   score: number;
 };
-type FeatureConfigSIDType = { moodArray: SIDMoodType[]; pinProtected: boolean };
+type FeatureConfigSIDType = {
+  color: string;
+  id: string;
+  name: string;
+  show: boolean;
+}[];
 
 type FeatureConfigType = {
   arc: FeatureConfigArcType;

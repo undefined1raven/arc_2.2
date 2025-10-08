@@ -12,10 +12,12 @@ import { DiaryClosenessIndicator } from "@/components/ui/DiaryClosenessIndicator
 import { useCallback } from "react";
 import { useDiaryData } from "@/stores/diary/diary";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
-import { SIDGroupType } from "@/constants/CommonTypes";
+import { FeatureConfigSIDType, SIDGroupType } from "@/constants/CommonTypes";
 import { debounce } from "lodash";
 import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
+import { v4 } from "uuid";
+import { useData } from "@shopify/react-native-skia";
 function DiaryGroupConfig() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const selectedGroup = useSelectedDiaryGroup((s) => s.selectedGroup);
@@ -81,6 +83,26 @@ function DiaryGroupConfig() {
     ]
   );
 
+  const addNewStatus = useCallback(() => {
+    const newStatus: FeatureConfigSIDType[number] = {
+      color: "#FFFFFF",
+      id: `SID-${v4()}`,
+      name: "New Status",
+      show: true,
+    };
+
+    const newFeatureConfig = [...diaryFeatureConfig, newStatus];
+    const featureConfigApi = useFeatureConfigs.getState();
+    featureConfigApi.setPersonalDiaryFeatureConfig(newFeatureConfig);
+    const dataRetrievalApi = dataRetrivalApi.getState();
+    dataRetrievalApi
+      .appendFeatureConfigEntry("personalDiary", newStatus)
+      .then((r) => {})
+      .catch((e) => {
+        console.error("Error creating new status:", e);
+      });
+  }, [diaryFeatureConfig]);
+
   const updateGroupProperty = useCallback(
     debounce(updateGroupPropertyInstant, 300),
     [updateGroupPropertyInstant]
@@ -110,6 +132,8 @@ function DiaryGroupConfig() {
             ></FeatureConfigSelection>
             {selectedGroup.type === "person" && (
               <FeatureConfigSelection
+                showActionButton={true}
+                onActionButtonClick={addNewStatus}
                 label="Status"
                 value={
                   diaryFeatureConfig.find(
@@ -119,6 +143,7 @@ function DiaryGroupConfig() {
                 values={diaryFeatureConfig}
                 labelKeys={["name"]}
                 onChange={(e) => {
+                  console.log("Selected status:", e);
                   const updatedGroup: SIDGroupType = {
                     ...selectedGroup,
                     metadata: {

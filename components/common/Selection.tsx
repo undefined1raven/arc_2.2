@@ -6,10 +6,12 @@ import { Portal } from "react-native-portalize";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getValueByKeys } from "../utils/fn/geetValueByKeys";
 import { FlashList } from "@shopify/flash-list";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Animated, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Dropdown } from "../deco/Dropdown";
 import { HexDeco } from "../deco/HexDeco";
+import { AddIcon } from "../deco/AddIcon";
+import { FadeInDown } from "react-native-reanimated";
 
 function Selection({
   selectionBoxStyle = {},
@@ -22,6 +24,8 @@ function Selection({
   onMultiSelection = (values: any[]) => {},
   customSelectionButton = undefined,
   multiselectMatchKeys = [],
+  showActionButton = false,
+  onActionButtonClick = () => {},
 }: {
   selectionBoxStyle?: Object;
   values: any[];
@@ -33,6 +37,8 @@ function Selection({
   onMultiSelection?: (values: any[]) => void;
   customSelectionButton?: (props: { onClick: () => void }) => React.ReactNode;
   multiselectMatchKeys?: string[];
+  showActionButton?: boolean;
+  onActionButtonClick?: () => void;
 }) {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -125,7 +131,6 @@ function Selection({
                       item,
                       multiselectMatchKeys
                     );
-
                     isValueSelected = localSelectedValues.includes(itemValue);
                   } else {
                     isValueSelected = localSelectedValues.includes(item);
@@ -216,6 +221,48 @@ function Selection({
             style={{ height: 60, width: "100%" }}
             label={multiselect ? "Done" : "Close"}
           ></Button>
+          {showActionButton && (
+            <Animated.View
+              entering={FadeInDown.delay(150).duration(120)}
+              style={{
+                height: 45,
+                width: "20%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                position: "absolute",
+                bottom: 65,
+                right: 5,
+              }}
+            >
+              <Button
+                onClick={showActionButton ? onActionButtonClick : () => {}}
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                }}
+                label=""
+              >
+                <View
+                  style={{
+                    position: "absolute",
+                    width: "100%",
+                    borderRadius: globalStyle.borderRadius,
+                    height: "100%",
+                    backgroundColor: globalStyle.colorAltLight,
+                  }}
+                ></View>
+                <AddIcon height={20} width={20}></AddIcon>
+              </Button>
+            </Animated.View>
+          )}
         </View>
       </SafeAreaView>
     </Portal>

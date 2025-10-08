@@ -12,6 +12,8 @@ type Props = {
   inputProps?: { [key: string]: any };
   label: string;
   labelWidthPercentage?: number;
+  showActionButton?: boolean;
+  onActionButtonClick?: () => void;
 };
 
 function FeatureConfigSelection(props: Props) {
@@ -63,6 +65,8 @@ function FeatureConfigSelection(props: Props) {
           onSelection={(e) => {
             props.onChange(e);
           }}
+          showActionButton={props.showActionButton}
+          onActionButtonClick={props.onActionButtonClick}
           {...props.inputProps}
         ></Selection>
       </View>
