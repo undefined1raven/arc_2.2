@@ -43,7 +43,7 @@ function SettingsMain() {
       icon: PersonalDiaryIcon,
       title: "Personal diary",
       description: "Access control",
-      goTo: "",
+      goTo: "/diary/diaryFeatureConfig/diaryFeatureConfig",
     },
     {
       name: "accountSettings",

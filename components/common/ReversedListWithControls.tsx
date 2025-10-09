@@ -33,6 +33,8 @@ type ReversedListWithControlsProps = {
   extraData?: any;
   ItemSeparatorComponent?: React.ComponentType<any>;
   estimatedItemSize?: number;
+  searchBarPlaceholder?: string;
+  backButtonLabel?: string;
 };
 
 function ReversedListWithControls({
@@ -47,7 +49,9 @@ function ReversedListWithControls({
   extraData,
   onActionButtonClick = () => {},
   ItemSeparatorComponent,
+  backButtonLabel = "Back",
   estimatedItemSize = 55,
+  searchBarPlaceholder = "Search",
 }: ReversedListWithControlsProps) {
   const globalStyle = useGlobalStyleStore();
   const virtualKeyboardApi = useVirtualKeyboard();
@@ -179,7 +183,7 @@ function ReversedListWithControls({
         >
           <TextInput
             textAlign="left"
-            placeholder="Search activities or categories"
+            placeholder={searchBarPlaceholder}
             onChange={(e) => {
               const text = e.nativeEvent.text;
               setSearchFilter(text);
@@ -213,7 +217,7 @@ function ReversedListWithControls({
               alignItems: "center",
               marginLeft: 5,
             }}
-            label=""
+            label={backButtonLabel}
             onClick={onBackButtonClick}
           ></Button>
         )}
