@@ -18,6 +18,7 @@ import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { v4 } from "uuid";
 import { useData } from "@shopify/react-native-skia";
+import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 function DiaryGroupConfig() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const selectedGroup = useSelectedDiaryGroup((s) => s.selectedGroup);
@@ -118,6 +119,20 @@ function DiaryGroupConfig() {
               router.back();
             }}
           >
+            <FeatureConfigBooleanInput
+              label="Require lock screen to access"
+              value={selectedGroup.metadata?.requireLock || false}
+              onChange={(e) => {
+                const updatedGroup: SIDGroupType = {
+                  ...selectedGroup,
+                  metadata: {
+                    ...selectedGroup.metadata,
+                    requireLock: e,
+                  },
+                };
+                updateGroupPropertyInstant(updatedGroup);
+              }}
+            ></FeatureConfigBooleanInput>
             <FeatureConfigSelection
               label="Group Type"
               value={selectedGroup.type === "person" ? "Person" : "General"}

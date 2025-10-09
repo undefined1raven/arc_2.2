@@ -18,6 +18,7 @@ import { AddIcon } from "@/components/deco/AddIcon";
 import { v4 } from "uuid";
 import { personalDiaryNotes } from "@/components/utils/constants/chunking";
 import { TrashIcon } from "@/components/deco/TrashIcon";
+import * as SecureStore from "expo-secure-store";
 function DiaryMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -148,7 +149,23 @@ function DiaryMain() {
               }
               const selectedGroupAPI = useSelectedDiaryGroup.getState();
               selectedGroupAPI.setSelectedGroup(item);
-              router.push("/diary/groupView/groupMain");
+
+              const authSupported = SecureStore.canUseBiometricAuthentication();
+              ///Check if group is auth protected
+              if (item.metadata.requireLock && authSupported) {
+                SecureStore.setItemAsync("nothing", "nothing", {
+                  requireAuthentication: true,
+                  authenticationPrompt: "Authenticate to access",
+                })
+                  .then((r) => {
+                    router.push("/diary/groupView/groupMain");
+                  })
+                  .catch((e) => {
+                    console.error("Auth failed or cancelled", e);
+                  });
+              } else {
+                router.push("/diary/groupView/groupMain");
+              }
             }}
             style={{
               height: "100%",

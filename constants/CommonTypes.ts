@@ -225,6 +225,7 @@ type SIDGroupType = {
     alias: string;
     SID: string | null; //status id
     createdAt?: number;
+    requireLock?: boolean;
   };
   deleted?: boolean;
 };
