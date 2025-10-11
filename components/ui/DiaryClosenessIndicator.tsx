@@ -6,6 +6,7 @@ function DiaryClosenessIndicator(
   props: { closeness: number } & Partial<SVGStyleElement> & {
       width?: number;
       height?: number;
+      color?: string;
     }
 ) {
   const [cleanedProps, setCleanedProps] = useState(props);
@@ -36,7 +37,7 @@ function DiaryClosenessIndicator(
       xmlns="http://www.w3.org/2000/svg"
       {...cleanedProps}
     >
-      <G stroke={globalStyle.color}>
+      <G stroke={props.color ? props.color : globalStyle.color}>
         <G strokeOpacity={0.1} strokeWidth={0.444444} strokeDasharray="2 2">
           <Path d="M0.222222 19.7776H39.777822V20.222044H0.222222z" />
           <Path
@@ -47,7 +48,6 @@ function DiaryClosenessIndicator(
         <Circle
           cx={20}
           cy={19.9999}
-          color={globalStyle.color}
           r={4.2619}
           strokeOpacity={getRingOpacity(props.closeness, 0)}
         />
@@ -55,27 +55,23 @@ function DiaryClosenessIndicator(
           cx={20}
           strokeOpacity={getRingOpacity(props.closeness, 1)}
           cy={19.9999}
-          color={globalStyle.color}
           r={8.07143}
         />
         <Circle
           cx={20}
           cy={20.0001}
-          color={globalStyle.color}
           r={11.881}
           strokeOpacity={getRingOpacity(props.closeness, 2)}
         />
         <Circle
           cx={20}
           cy={19.9998}
-          color={globalStyle.color}
           r={15.6905}
           strokeOpacity={getRingOpacity(props.closeness, 3)}
         />
         <Circle
           cx={20}
           cy={20}
-          color={globalStyle.color}
           r={19.5}
           strokeOpacity={getRingOpacity(props.closeness, 4)}
         />

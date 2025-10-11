@@ -3,7 +3,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { useCallback, useEffect, useState } from "react";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useDiaryData } from "@/stores/diary/diary";
-import { SIDGroupType, SIDNoteType } from "@/constants/CommonTypes";
+import {
+  FeatureConfigSIDType,
+  SIDGroupType,
+  SIDNoteType,
+} from "@/constants/CommonTypes";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { DiaryClosenessIndicator } from "@/components/ui/DiaryClosenessIndicator";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -121,11 +125,34 @@ function DiaryMain() {
 
   const renderDiaryItem = useCallback(
     ({ item, index }: { item: SIDGroupType; index: number }) => {
-      const statusLabel =
-        personalDiaryFeatureConfig.find((r) => r.id === item.metadata.SID)
-          ?.name || "Unknown Status";
+      const statusObject: FeatureConfigSIDType[number] =
+        personalDiaryFeatureConfig.find((r) => r.id === item.metadata.SID);
+
+      const statusLabel = statusObject?.name || "Unknown status";
       const hasStatus = statusLabel !== "Unknown Status";
       const isPersonGroup = item.type === "person";
+
+      let color = globalStyle.color;
+      let textColor = globalStyle.textColor;
+
+      if (statusObject !== undefined) {
+        const theme = globalStyle.theme;
+        const colorScheme = globalStyle.colorScheme;
+        const userPrefferedColors = statusObject?.colors;
+        //@ts-ignore
+        if (typeof userPrefferedColors === "object") {
+          //@ts-ignore
+          const schemeColors = userPrefferedColors[colorScheme];
+          if (schemeColors) {
+            const themeColors = schemeColors[theme];
+            if (themeColors) {
+              color = themeColors.color;
+              textColor = themeColors.textColor;
+            }
+          }
+        }
+      }
+
       return (
         <View
           style={{
@@ -141,6 +168,7 @@ function DiaryMain() {
             onLongPress={() => {
               setLongSelectIndex(index);
             }}
+            borderColor={color}
             textStyle={{ textAlign: "left", paddingLeft: 10 }}
             onClick={() => {
               if (longSelectIndex === index) {
@@ -187,11 +215,16 @@ function DiaryMain() {
               marginLeft: 10,
             }}
           >
-            <Text label={item.metadata.alias} style={{ zIndex: -1 }}></Text>
+            <Text
+              color={textColor}
+              label={item.metadata.alias}
+              style={{ zIndex: -1 }}
+            ></Text>
             {hasStatus && isPersonGroup && (
               <Text
                 fontSize={globalStyle.mediumMobileFont}
                 label={statusLabel}
+                color={textColor}
                 style={{ zIndex: -1 }}
               ></Text>
             )}
@@ -240,15 +273,17 @@ function DiaryMain() {
                 <Text
                   fontSize={globalStyle.mediumMobileFont}
                   label={item.name}
-                  color={globalStyle.textColorAccent}
+                  color={textColor + "AA"}
                   style={{
                     zIndex: -1,
                   }}
                 ></Text>
                 {hasStatus && isPersonGroup && (
                   <DiaryClosenessIndicator
+                    color={color}
                     style={{
                       zIndex: -1,
+                      color: color,
                     }}
                     closeness={item.metadata.ring}
                   ></DiaryClosenessIndicator>

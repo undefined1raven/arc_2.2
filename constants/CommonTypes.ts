@@ -136,6 +136,7 @@ type FeatureConfigSIDType = {
   id: string;
   name: string;
   show: boolean;
+  colors: object;
 }[];
 
 type FeatureConfigType = {
