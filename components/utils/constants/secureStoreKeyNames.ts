@@ -14,6 +14,8 @@ const secureStoreKeyNames = {
   },
 };
 
+const authChallengeStack = "authChallengeStack";
+
 const noBioSKName = "noBSK";
 
 const getUserThemeKey = (userId: string) => {
@@ -42,4 +44,5 @@ export {
   getSymmetricKey,
   getUserDataKey,
   getUserThemeKey,
+  authChallengeStack,
 };

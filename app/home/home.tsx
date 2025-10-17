@@ -3,7 +3,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { AfterInteractions } from "react-native-interactions";
 import { HabitCard } from "@/components/homeDashboardCards/TimeTracking/habitCard";
+import { useEffect } from "react";
+import { requestAuthChallengeStack } from "@/components/utils/auth/authStackRequest";
 function Home() {
+  useEffect(() => {
+    requestAuthChallengeStack();
+  }, []);
+
   return (
     <>
       <ThemedView

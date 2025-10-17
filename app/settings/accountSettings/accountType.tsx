@@ -19,6 +19,8 @@ import {
   stringToCharCodeArray,
 } from "@/components/utils/fn/charOps";
 import { useActiveKeys } from "@/stores/decryptedKeys";
+import { API_URL } from "@/constants/API_URL";
+import { APP_ID } from "@/constants/app_id";
 
 function AccountKeys() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -28,61 +30,62 @@ function AccountKeys() {
   );
   const userId = useActiveUser((state) => state.activeUser.userId || null);
 
-  // const onChangeAccountType = useCallback(() => {
-  //   const activePrivateKey = useActiveKeys.getState().activePrivateKey;
-  //   if (!userId || !activePrivateKey) {
-  //     return;
-  //   }
-  //   const cryptoAPI = useCryptoOpsQueue.getState();
-  //   console.log("Changing account type");
-  //   const userData = db.getFirstSync("SELECT * FROM users WHERE id = ?", [
-  //     userId,
-  //   ]) as any;
-  //   axios
-  //     .post(`${API_URL}/account/createOnlineAccountFromLocal`, {
-  //       data: {
-  //         appID: APP_ID,
-  //         userData: userData,
-  //       },
-  //     })
-  //     .then((r) => {
-  //       if (r.data.success) {
-  //         const challengeStr = r.data.challenge;
-  //         cryptoAPI
-  //           .performOperation("decrypt", {
-  //             keyType: "private",
-  //             charCodeData: challengeStr,
-  //             key: activePrivateKey,
-  //             decoding: "base64",
-  //           })
-  //           .then((decryptResponse) => {
-  //             if (decryptResponse.status === "success") {
-  //               const decryptedString = decryptResponse.payload.decrypted;
-  //               axios
-  //                 .post(`${API_URL}/account/verifyOnlineAccountCreation`, {
-  //                   data: {
-  //                     appID: APP_ID,
-  //                     userData: userData,
-  //                     challengeResponse: decryptedString,
-  //                   },
-  //                 })
-  //                 .then((r) => {
-  //                   console.log(r.data);
-  //                 })
-  //                 .catch((e) => {
-  //                   console.log(e);
-  //                 });
-  //             }
-  //           })
-  //           .catch((e) => {
-  //             console.log("ACT_SW_DER", e);
-  //           });
-  //       }
-  //     })
-  //     .catch((e) => {
-  //       console.log("ACT_SW_R", e);
-  //     });
-  // }, [activeUserAccountType]);
+  const onChangeAccountType = useCallback(() => {
+    const activePrivateKey = useActiveKeys.getState().activePrivateKey;
+    if (!userId || !activePrivateKey) {
+      return;
+    }
+    const cryptoAPI = useCryptoOpsQueue.getState();
+    console.log("Changing account type");
+    const userData = db.getFirstSync("SELECT * FROM users WHERE id = ?", [
+      userId,
+    ]) as any;
+    axios
+      .post(`${API_URL}/account/createOnlineAccountFromLocal`, {
+        data: {
+          appID: APP_ID,
+          userData: userData,
+        },
+      })
+      .then((r) => {
+        if (r.data.success) {
+          const challengeStr = r.data.challenge;
+          cryptoAPI
+            .performOperation("decrypt", {
+              keyType: "private",
+              charCodeData: challengeStr,
+              key: activePrivateKey,
+              decoding: "base64",
+            })
+            .then((decryptResponse) => {
+              if (decryptResponse.status === "success") {
+                const decryptedString = decryptResponse.payload.decrypted;
+                console.log("ud", Object.keys(userData));
+                axios
+                  .post(`${API_URL}/account/verifyOnlineAccountCreation`, {
+                    data: {
+                      appID: APP_ID,
+                      userData: { ...userData, accountType: "online" },
+                      challengeResponse: decryptedString,
+                    },
+                  })
+                  .then((r) => {
+                    console.log(r.data);
+                  })
+                  .catch((e) => {
+                    console.log(e);
+                  });
+              }
+            })
+            .catch((e) => {
+              console.log("ACT_SW_DER", e);
+            });
+        }
+      })
+      .catch((e) => {
+        console.log("ACT_SW_R", e);
+      });
+  }, [activeUserAccountType]);
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
@@ -119,8 +122,7 @@ function AccountKeys() {
           ></Text>
         </View>
         <Button
-          // onClick={onChangeAccountType}
-          onClick={() => {}}
+          onClick={onChangeAccountType}
           backgroundColor={globalStyle.colorAltLight}
           label={`Switch to ${
             activeUserAccountType === "online" ? "local" : "online"
