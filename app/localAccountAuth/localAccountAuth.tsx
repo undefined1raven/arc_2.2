@@ -23,6 +23,10 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
+import {
+  checkAndSetDeviceId,
+  deleteDeviceId,
+} from "@/components/utils/auth/getDeviceId";
 
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
@@ -129,7 +133,9 @@ function localAccountAuth() {
               useFeatureConfigs
                 .getState()
                 .decryptFeatureConfigs()
-                .then(() => {
+                .then(async () => {
+                  await deleteDeviceId();
+                  checkAndSetDeviceId();
                   router.replace("/home/home");
                 })
                 .catch((e) => {

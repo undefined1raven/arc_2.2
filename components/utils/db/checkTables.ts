@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { secureStoreKeyNames } from "../constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
+import { checkAndSetDeviceId, deleteDeviceId } from "../auth/getDeviceId";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
   error: null | string;
@@ -115,10 +116,12 @@ async function NukeLocalData() {
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.useBiometricAuth
   );
+  await deleteDeviceId();
 }
 
 async function checkTables(): Promise<CheckTablesReturnSig> {
   // NukeLocalData();
+  await checkAndSetDeviceId();
 
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {

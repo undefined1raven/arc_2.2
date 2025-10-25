@@ -23,6 +23,10 @@ import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 import TextInput from "@/components/common/TextInput";
 import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 import { useOfflineLoginTempStore } from "@/stores/offlineLoginTempStore";
+import {
+  checkAndSetDeviceId,
+  deleteDeviceId,
+} from "@/components/utils/auth/getDeviceId";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -104,6 +108,8 @@ function LocalLogin() {
                     secureStoreKeyNames.accountConfig.useBiometricAuth,
                     "true"
                   );
+                  // await deleteDeviceId();
+                  // checkAndSetDeviceId();
                   Updates.reloadAsync();
                 });
               writeBackupToDB(false);

@@ -37,6 +37,8 @@ const getPrivateKey = (userId: string) => {
   return `privateKey_${userId}`;
 };
 
+const deviceId = `device_id`;
+
 export {
   noBioSKName,
   secureStoreKeyNames,
@@ -45,4 +47,5 @@ export {
   getUserDataKey,
   getUserThemeKey,
   authChallengeStack,
+  deviceId,
 };

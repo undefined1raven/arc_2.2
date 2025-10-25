@@ -9,6 +9,7 @@ import {
 } from "../constants/secureStoreKeyNames";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { useActiveKeys } from "@/stores/decryptedKeys";
+import { getDeviceId } from "./getDeviceId";
 
 async function processAndSaveChallengeStack(challengeStack: string[]) {
   const existingStack = await SecureStore.getItemAsync(authChallengeStack);
@@ -59,9 +60,10 @@ function requestAuthChallengeStack() {
     );
     return;
   }
+  const deviceId = getDeviceId();
   axios
     .post(`${API_URL}/auth/requestChallengeStack`, {
-      data: { appID: APP_ID, accountID: activeUserId },
+      data: { appID: APP_ID, accountID: activeUserId, deviceId: deviceId },
     })
     .then((response) => {
       const responseData = response.data;
