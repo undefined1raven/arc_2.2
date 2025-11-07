@@ -5,6 +5,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import {
   authChallengeStack,
+  deviceId,
   secureStoreKeyNames,
 } from "../constants/secureStoreKeyNames";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
@@ -21,7 +22,10 @@ async function processAndSaveChallengeStack(challengeStack: string[]) {
   const decryptionPromises: any[] = [];
 
   if (typeof activePrivateKey !== "string") {
-    return;
+    return {
+      status: "error",
+      error: "No active private key available for decryption.",
+    };
   }
 
   challengeStack.forEach((charCodeData) => {
@@ -45,25 +49,44 @@ async function processAndSaveChallengeStack(challengeStack: string[]) {
 
   if (isDecryptionSuccessful === false) {
     console.warn("Decryption of one or more challenges failed.");
+    return {
+      status: "error",
+      error: "Decryption of one or more challenges failed.",
+    };
   }
 
   const allValues = [...existingChallengeResponses, ...decryptedValues];
 
   await SecureStore.setItemAsync(authChallengeStack, JSON.stringify(allValues));
+
+  return {
+    status: "success",
+    challenges: allValues,
+  };
 }
 
-function requestAuthChallengeStack() {
+async function requestAuthChallengeStack(): Promise<
+  { status: "success"; challenges: string[] } | { status: "error"; error: any }
+> {
   const activeUserId = useActiveUser.getState().activeUser?.userId || null;
   if (typeof activeUserId !== "string") {
     console.log(
       "No active user ID found. Cannot request auth challenge stack."
     );
-    return;
+    return {
+      status: "error",
+      error: "No active user ID found.",
+    };
   }
-  const deviceId = getDeviceId();
-  axios
+  const currentDeviceId = await SecureStore.getItemAsync(deviceId);
+
+  return axios
     .post(`${API_URL}/auth/requestChallengeStack`, {
-      data: { appID: APP_ID, accountID: activeUserId, deviceId: deviceId },
+      data: {
+        appID: APP_ID,
+        accountID: activeUserId,
+        deviceId: currentDeviceId,
+      },
     })
     .then((response) => {
       const responseData = response.data;
@@ -72,15 +95,17 @@ function requestAuthChallengeStack() {
         !Array.isArray(responseData.challenges)
       ) {
         console.warn("Failed to retrieve valid challenge stack:", responseData);
-        return;
+        return {
+          status: "error",
+          error: "Failed to retrieve valid challenge stack:",
+        };
       }
-      processAndSaveChallengeStack(responseData.challenges);
+      return processAndSaveChallengeStack(responseData.challenges);
     })
     .catch((error) => {
       console.log("Error requesting auth challenge stack:", error);
+      return { status: "error", error: error };
     });
 }
 
-function getChallengeResponse() {}
-
-export { requestAuthChallengeStack, getChallengeResponse };
+export { requestAuthChallengeStack };

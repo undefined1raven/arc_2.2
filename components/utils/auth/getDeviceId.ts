@@ -9,8 +9,6 @@ function getDeviceId(): string | null {
 async function checkAndSetDeviceId() {
   const currentDeviceId = await SecureStore.getItemAsync(deviceId);
 
-  console.log("CDI", currentDeviceId);
-
   if (currentDeviceId === null || typeof currentDeviceId !== "string") {
     const newDeviceId = Crypto.randomUUID();
     console.log("Creating new device id");

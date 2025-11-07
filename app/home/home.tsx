@@ -15,38 +15,27 @@ import { APP_ID } from "@/constants/app_id";
 import { useActiveUser } from "@/stores/activeUser";
 import { getAuthToken } from "@/components/utils/auth/getAuthToken";
 import * as SecureStore from "expo-secure-store";
-import { authChallengeStack } from "@/components/utils/constants/secureStoreKeyNames";
+import {
+  authChallengeStack,
+  deviceId,
+} from "@/components/utils/constants/secureStoreKeyNames";
+import { authenticatedApiRequest } from "@/components/utils/api/apiRequest";
 
 function Home() {
   useEffect(() => {
-    requestAuthChallengeStack();
     const activeUserId = useActiveUser.getState().activeUser.userId;
-    getAuthToken()
-      .then((r) => {
-        const authToken = r;
-        if (authToken === null) {
-          console.log("No tokens");
-          return;
-        }
-        const deviceId = getDeviceId();
-        console.log(authToken, activeUserId, deviceId);
-        axios
-          .post(`${API_URL}/dataSync/requestMetadata`, {
-            data: {
-              authToken: authToken,
-              appID: APP_ID,
-              accountId: activeUserId,
-              deviceId: deviceId,
-            },
-          })
-          .then((r) => {
-            console.log(r, "2223");
-          })
-          .catch((e) => {
-            console.log(e, "2223");
-          });
+    const currentDeviceId = SecureStore.getItem(deviceId);
+
+    authenticatedApiRequest("/dataSync/requestMetadata", {
+      deviceId: currentDeviceId,
+      accountId: activeUserId,
+    })
+      .then((v) => {
+        console.log(v);
       })
-      .catch((e) => {});
+      .catch((e) => {
+        console.log("error", e);
+      });
   }, []);
 
   return (

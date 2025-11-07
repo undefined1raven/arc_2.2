@@ -134,8 +134,6 @@ function localAccountAuth() {
                 .getState()
                 .decryptFeatureConfigs()
                 .then(async () => {
-                  await deleteDeviceId();
-                  checkAndSetDeviceId();
                   router.replace("/home/home");
                 })
                 .catch((e) => {

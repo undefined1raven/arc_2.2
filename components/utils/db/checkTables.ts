@@ -1,7 +1,11 @@
 import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import { secureStoreKeyNames } from "../constants/secureStoreKeyNames";
+import * as Crypto from "expo-crypto";
+import {
+  deviceId,
+  secureStoreKeyNames,
+} from "../constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
 import { checkAndSetDeviceId, deleteDeviceId } from "../auth/getDeviceId";
 export type CheckTablesReturnSig = {
@@ -68,11 +72,16 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     .then(() => {
       return db
         .getFirstAsync("SELECT * FROM users;")
-        .then((firstUser: any) => {
+        .then(async (firstUser: any) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
           const accountType: "local" | "online" | null =
             firstUser?.accountType ?? "local";
+          const currentDeviceId = await SecureStore.getItemAsync(deviceId);
+          if (currentDeviceId === null || typeof currentDeviceId !== "string") {
+            const newDeviceId = Crypto.randomUUID();
+            await SecureStore.setItemAsync(deviceId, `ADI-${newDeviceId}`);
+          }
           return {
             status: "success",
             error: null,
@@ -121,7 +130,6 @@ async function NukeLocalData() {
 
 async function checkTables(): Promise<CheckTablesReturnSig> {
   // NukeLocalData();
-  await checkAndSetDeviceId();
 
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {
