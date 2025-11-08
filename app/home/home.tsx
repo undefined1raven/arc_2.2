@@ -22,22 +22,6 @@ import {
 import { authenticatedApiRequest } from "@/components/utils/api/apiRequest";
 
 function Home() {
-  useEffect(() => {
-    const activeUserId = useActiveUser.getState().activeUser.userId;
-    const currentDeviceId = SecureStore.getItem(deviceId);
-
-    authenticatedApiRequest("/dataSync/requestMetadata", {
-      deviceId: currentDeviceId,
-      accountId: activeUserId,
-    })
-      .then((v) => {
-        console.log(v);
-      })
-      .catch((e) => {
-        console.log("error", e);
-      });
-  }, []);
-
   return (
     <>
       <ThemedView

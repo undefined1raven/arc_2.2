@@ -29,7 +29,7 @@ async function authenticatedApiRequest(
   if (
     authTokens === null ||
     Array.isArray(authTokens) === false ||
-    authTokens.length < 2
+    authTokens.length < 5
   ) {
     const authChallengeResults = await requestAuthChallengeStack();
     if (authChallengeResults.status === "error") {
@@ -50,8 +50,8 @@ async function authenticatedApiRequest(
     return { fetchStatus: "error", error: "Failed to obtain auth tokens" };
   }
 
-  console.log("Using auth token:", authTokens[0]);
-
+  const unusedTokens = authTokens!.slice(1);
+  SecureStore.setItemAsync(authChallengeStack, JSON.stringify(unusedTokens));
   return axios
     .post(`${API_URL}${route}`, {
       data: {
@@ -64,11 +64,6 @@ async function authenticatedApiRequest(
       },
     })
     .then((response) => {
-      const unusedTokens = authTokens!.slice(1);
-      SecureStore.setItemAsync(
-        authChallengeStack,
-        JSON.stringify(unusedTokens)
-      );
       return { fetchStatus: "success", data: response.data };
     })
     .catch((error) => {

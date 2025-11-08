@@ -8,7 +8,7 @@ import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { act, useEffect } from "react";
 import { SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,6 +25,9 @@ import { Host, Portal } from "react-native-portalize";
 import { useActiveUser } from "@/stores/activeUser";
 import { OnlineSyncHandler } from "@/components/functional/OnlineSyncHandler";
 import { HashColumnMigration } from "@/components/utils/db/migrations/HashColumnMigration";
+import { useActiveKeys } from "@/stores/decryptedKeys";
+import { useFeatureConfigs } from "@/stores/featureConfigs";
+import { initialDataSync } from "@/components/utils/api/initialDataSync";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -79,11 +82,28 @@ export default function RootLayout() {
     OxaniumBold: require("../assets/fonts/Oxanium-Bold.ttf"),
   });
 
+  const activeUserId = useActiveUser((state) => state.activeUser.userId);
+  const symKey = useActiveKeys((state) => state.activeSymmetricKey);
+  const timeTrackingFeatureConifg = useFeatureConfigs(
+    (state) => state.timeTrackingFeatureConfig
+  );
+
   useEffect(() => {
     if (loaded) {
       NavigationBar.setPositionAsync("absolute");
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (
+      activeUserId &&
+      loaded &&
+      typeof symKey === "string" &&
+      timeTrackingFeatureConifg !== null
+    ) {
+      initialDataSync();
+    }
+  }, [activeUserId, symKey, timeTrackingFeatureConifg]);
 
   if (!loaded) {
     return null;
