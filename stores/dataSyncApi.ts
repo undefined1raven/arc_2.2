@@ -1,13 +1,31 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
+import * as Crypto from "expo-crypto";
+import { authenticatedApiRequest } from "@/components/utils/api/apiRequest";
+import { useActiveUser } from "./activeUser";
+import { deviceId } from "@/components/utils/constants/secureStoreKeyNames";
+import * as SecureStore from "expo-secure-store";
 
 type TransferType = "upload" | "download";
 type TaskStatus = "pending" | "in-progress" | "done" | "failed" | "canceled";
 
+interface IPayloadItem {
+  tableName:
+    | "dayPlanner"
+    | "timeTracking"
+    | "personalDiary"
+    | "personalDiaryGroups"
+    | "featureConfig";
+  encryptedContent?: string;
+  id: string; ///Chunk id
+  hash: string;
+  tx: number;
+}
+
 interface TransferTask {
   id: string;
   type: TransferType;
-  payload: any;
+  payload: IPayloadItem;
   status: TaskStatus;
   retries: number;
   progress: number;
@@ -15,7 +33,7 @@ interface TransferTask {
 }
 
 interface TransferState {
-  tasks: TransferTask[];
+  tasks: TransferTask;
   activeCount: number;
   maxConcurrent: number;
   enqueue: (
@@ -32,7 +50,14 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   maxConcurrent: 3, // limit number of simultaneous uploads/downloads
 
   enqueue: (task) => {
-    const newTask = { ...task, status: "pending", retries: 0, progress: 0 };
+    const newTask = {
+      ...task,
+      status: "pending",
+      retries: 0,
+      progress: 0,
+      id: Crypto.randomUUID(),
+    };
+    console.log("Enqueuing task:", newTask.id);
     set((state) => ({ tasks: [...state.tasks, newTask] }));
     get().runNext();
   },
@@ -88,18 +113,22 @@ async function handleUpload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
   const { payload } = task;
 
-  for (let i = 0; i < payload.chunks.length; i++) {
-    await uploadChunk(payload.chunks[i]);
-    updateTask(task.id, { progress: (i + 1) / payload.chunks.length });
-  }
+  console.log("Uploading chunk:", payload.id);
+  // Simulate upload with timeout
+
+  const activeUserId = useActiveUser.getState().activeUser.userId;
+  const currentDeviceId = SecureStore.getItem(deviceId);
+
+  authenticatedApiRequest("/dataSync/updateChunk", {
+    deviceId: currentDeviceId,
+    accountId: activeUserId,
+    ...payload,
+  });
 }
 
 async function handleDownload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
   const { payload } = task;
-
-  for (let i = 0; i < payload.urls.length; i++) {
-    // await downloadChunk(payload.urls[i]);
-    updateTask(task.id, { progress: (i + 1) / payload.urls.length });
-  }
 }
+
+export type { TransferTask };
