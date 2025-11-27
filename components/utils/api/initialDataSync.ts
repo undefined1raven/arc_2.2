@@ -126,6 +126,8 @@ async function initialDataSync() {
       const localMetadataResult: ChunkMetadataResult[] = results[0];
       const remoteMetadataFetchResult = results[1].data;
 
+      console.log("RMFT", remoteMetadataFetchResult);
+
       if (
         remoteMetadataFetchResult.error !== null ||
         remoteMetadataFetchResult.status !== "success" ||

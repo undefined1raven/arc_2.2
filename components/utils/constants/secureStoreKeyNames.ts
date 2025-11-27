@@ -14,7 +14,9 @@ const secureStoreKeyNames = {
   },
 };
 
-const authChallengeStack = "authChallengeStack";
+const authChallengeStack = "authChallengeStack"; //deprecated
+
+const authTokenKeyName = "authToken";
 
 const noBioSKName = "noBSK";
 
@@ -48,4 +50,5 @@ export {
   getUserThemeKey,
   authChallengeStack,
   deviceId,
+  authTokenKeyName,
 };

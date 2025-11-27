@@ -5,6 +5,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import {
   authChallengeStack,
+  authTokenKeyName,
   deviceId,
   secureStoreKeyNames,
 } from "../constants/secureStoreKeyNames";
@@ -12,14 +13,17 @@ import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { getDeviceId } from "./getDeviceId";
 
-async function processAndSaveChallengeStack(challengeStack: string[]) {
-  const existingStack = await SecureStore.getItemAsync(authChallengeStack);
-  let existingChallengeResponses: string[] = [];
-  if (existingStack) {
-    existingChallengeResponses = JSON.parse(existingStack);
-  }
+async function processAndSaveChallenge(challenge: string): Promise<
+  | {
+      status: "success";
+      token: string;
+    }
+  | {
+      status: "error";
+      error: any;
+    }
+> {
   const activePrivateKey = useActiveKeys.getState().activePrivateKey;
-  const decryptionPromises: any[] = [];
 
   if (typeof activePrivateKey !== "string") {
     return {
@@ -28,51 +32,47 @@ async function processAndSaveChallengeStack(challengeStack: string[]) {
     };
   }
 
-  challengeStack.forEach((charCodeData) => {
-    const cryptoOps = useCryptoOpsQueue.getState();
-    const promise = cryptoOps.performOperation("decrypt", {
-      keyType: "private",
-      charCodeData: charCodeData,
-      decoding: "base64",
-      key: activePrivateKey,
-    });
-    decryptionPromises.push(promise);
-  });
-
-  const decryptedChallenges = await Promise.all(decryptionPromises);
-  const decryptedValues = decryptedChallenges.map(
-    (res) => res.payload?.decrypted
-  );
-  const isDecryptionSuccessful = decryptedValues.every(
-    (val) => typeof val === "string"
-  );
-
-  if (isDecryptionSuccessful === false) {
-    console.warn("Decryption of one or more challenges failed.");
+  if (typeof challenge !== "string") {
     return {
       status: "error",
-      error: "Decryption of one or more challenges failed.",
+      error: "Invalid challenge format.",
     };
   }
 
-  const allValues = [...existingChallengeResponses, ...decryptedValues];
-
-  await SecureStore.setItemAsync(authChallengeStack, JSON.stringify(allValues));
-
-  return {
-    status: "success",
-    challenges: allValues,
-  };
+  const cryptoOps = useCryptoOpsQueue.getState();
+  return cryptoOps
+    .performOperation("decrypt", {
+      keyType: "private",
+      charCodeData: challenge,
+      decoding: "base64",
+      key: activePrivateKey,
+    })
+    .then(async (decryptedData) => {
+      const token = decryptedData.payload;
+      if (decryptedData.status !== "success" || typeof token !== "string") {
+        return {
+          status: "error",
+          error: "Decryption failed.",
+        };
+      } else {
+        await SecureStore.setItemAsync(authTokenKeyName, token);
+        return {
+          status: "success",
+          token: token,
+        };
+      }
+    })
+    .catch((error) => {
+      return { status: "error", error: error };
+    });
 }
 
-async function requestAuthChallengeStack(): Promise<
-  { status: "success"; challenges: string[] } | { status: "error"; error: any }
+async function requestAuthChallenge(): Promise<
+  { status: "success"; token: string } | { status: "error"; error: any }
 > {
   const activeUserId = useActiveUser.getState().activeUser?.userId || null;
   if (typeof activeUserId !== "string") {
-    console.log(
-      "No active user ID found. Cannot request auth challenge stack."
-    );
+    console.log("No active user ID found. Cannot request auth challenge.");
     return {
       status: "error",
       error: "No active user ID found.",
@@ -81,7 +81,7 @@ async function requestAuthChallengeStack(): Promise<
   const currentDeviceId = await SecureStore.getItemAsync(deviceId);
 
   return axios
-    .post(`${API_URL}/auth/requestChallengeStack`, {
+    .post(`${API_URL}/auth/requestChallenge`, {
       data: {
         appID: APP_ID,
         accountID: activeUserId,
@@ -92,20 +92,20 @@ async function requestAuthChallengeStack(): Promise<
       const responseData = response.data;
       if (
         responseData.status !== "success" ||
-        !Array.isArray(responseData.challenges)
+        typeof responseData.challenge !== "string"
       ) {
-        console.warn("Failed to retrieve valid challenge stack:", responseData);
+        console.warn("Failed to retrieve valid challenge:", responseData);
         return {
           status: "error",
-          error: "Failed to retrieve valid challenge stack:",
+          error: "Failed to retrieve valid challenge:",
         };
       }
-      return processAndSaveChallengeStack(responseData.challenges);
+      return processAndSaveChallenge(responseData.challenge);
     })
     .catch((error) => {
-      console.log("Error requesting auth challenge stack:", error);
+      console.log("Error requesting auth challenge:", error);
       return { status: "error", error: error };
     });
 }
 
-export { requestAuthChallengeStack };
+export { requestAuthChallenge };
