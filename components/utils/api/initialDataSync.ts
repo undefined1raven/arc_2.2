@@ -33,7 +33,7 @@ async function getLocalMetadata(): Promise<ChunkMetadataResult[]> {
     "SELECT hash, tx, id, version FROM personalDiaryGroups"
   );
   const featureConfigMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version FROM featureConfigChunks"
+    "SELECT hash, tx, id, version, type FROM featureConfigChunks"
   );
 
   const promiseResults = await Promise.allSettled([
@@ -109,6 +109,8 @@ function getMetadataDeltaForSync(
 }
 
 async function initialDataSync() {
+  console.log("DATA SYNC /////// 1", Date.now());
+
   const activeUserId = useActiveUser.getState().activeUser.userId;
   const currentDeviceId = SecureStore.getItem(deviceId);
   console.log("Starting initial data sync... 1");
@@ -124,18 +126,12 @@ async function initialDataSync() {
   Promise.all([localMetadataPromsie, remoteMetadataPromise])
     .then(async (results) => {
       const localMetadataResult: ChunkMetadataResult[] = results[0];
-      const remoteMetadataFetchResult = results[1].data;
+      const remoteMetadataFetchResult = results[1];
 
-      console.log("RMFT", remoteMetadataFetchResult);
-
-      if (
-        remoteMetadataFetchResult.error !== null ||
-        remoteMetadataFetchResult.status !== "success" ||
-        remoteMetadataFetchResult.data === undefined
-      ) {
-        console.error(
-          "Error fetching remote metadata:",
-          remoteMetadataFetchResult?.error
+      if (remoteMetadataFetchResult.error) {
+        console.warn(
+          "No remote metadata fetched:",
+          remoteMetadataFetchResult.error
         );
         return;
       }
@@ -145,8 +141,8 @@ async function initialDataSync() {
         return;
       }
 
-      const remoteMetadataResult =
-        remoteMetadataFetchResult.data as ChunkMetadataResult[];
+      const remoteMetadataResult = remoteMetadataFetchResult?.data
+        ?.data as ChunkMetadataResult[];
 
       const uploads: Partial<TransferTask>[] = [];
       const downloads: Partial<TransferTask>[] = [];

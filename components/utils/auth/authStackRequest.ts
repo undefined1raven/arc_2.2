@@ -40,6 +40,7 @@ async function processAndSaveChallenge(challenge: string): Promise<
   }
 
   const cryptoOps = useCryptoOpsQueue.getState();
+
   return cryptoOps
     .performOperation("decrypt", {
       keyType: "private",
@@ -48,8 +49,9 @@ async function processAndSaveChallenge(challenge: string): Promise<
       key: activePrivateKey,
     })
     .then(async (decryptedData) => {
-      const token = decryptedData.payload;
+      const token = decryptedData?.payload?.decrypted;
       if (decryptedData.status !== "success" || typeof token !== "string") {
+        console.warn("Decryption failed for challenge:", decryptedData);
         return {
           status: "error",
           error: "Decryption failed.",
