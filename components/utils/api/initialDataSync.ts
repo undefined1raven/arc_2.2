@@ -21,19 +21,19 @@ async function getLocalMetadata(): Promise<ChunkMetadataResult[]> {
   const db = await SQLite.openDatabaseAsync("localCache");
 
   const timeTrackingMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM timeTrackingChunks"
+    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM timeTrackingChunks WHERE LENGTH(encryptedContent) > 10"
   );
   const dayPlannerMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM dayPlannerChunks"
+    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM dayPlannerChunks WHERE LENGTH(encryptedContent) > 10"
   );
   const personalDiaryMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version FROM personalDiaryChunks"
+    "SELECT hash, tx, id, version FROM personalDiaryChunks WHERE LENGTH(encryptedContent) > 10"
   );
   const personalDiaryGroupsMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version FROM personalDiaryGroups"
+    "SELECT hash, tx, id, version FROM personalDiaryGroups WHERE LENGTH(encryptedContent) > 10"
   );
   const featureConfigMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, type FROM featureConfigChunks"
+    "SELECT hash, tx, id, version, type FROM featureConfigChunks WHERE LENGTH(encryptedContent) > 10"
   );
 
   const promiseResults = await Promise.allSettled([
@@ -77,31 +77,50 @@ function getMetadataDeltaForSync(
   const toDownload: MetadataType[] = [];
 
   ///1. Get local chunks not present remotely
-  const remoteHashSet = new Set(remoteMetadata.map((item) => item.hash));
-  for (const localItem of localMetadata) {
-    if (!remoteHashSet.has(localItem.hash)) {
-      toUpload.push(localItem);
+  for (let ix = 0; ix < localMetadata.length; ix++) {
+    const localItem = localMetadata[ix];
+    const correspondingRemote = remoteMetadata.find(
+      (r) => r.id === localItem.id
+    );
+
+    if (correspondingRemote !== undefined) {
+      continue;
     }
+    toUpload.push(localItem);
   }
 
   //2. Get remote chunks not present locally
-  const localHashSet = new Set(localMetadata.map((item) => item.hash));
-  for (const remoteItem of remoteMetadata) {
-    if (!localHashSet.has(remoteItem.hash)) {
-      toDownload.push(remoteItem);
+  for (let ix = 0; ix < remoteMetadata.length; ix++) {
+    const remoteItem = remoteMetadata[ix];
+    const correspondingLocal = localMetadata.find(
+      (r) => r.id === remoteItem.id
+    );
+
+    if (correspondingLocal !== undefined) {
+      continue;
     }
+    toDownload.push(remoteItem);
   }
 
   //3. Handle conflicting hashes based on tx
-  const remoteMap = new Map(remoteMetadata.map((item) => [item.hash, item]));
-  for (const localItem of localMetadata) {
-    if (remoteMap.has(localItem.hash)) {
-      const remoteItem = remoteMap.get(localItem.hash)!;
-      if (localItem.tx > remoteItem.tx) {
-        toUpload.push(localItem);
-      } else if (localItem.tx < remoteItem.tx) {
-        toDownload.push(remoteItem);
-      }
+  const conflictedChunks = [];
+  for (let ix = 0; ix < remoteMetadata.length; ix++) {
+    const remoteItem = remoteMetadata[ix];
+    const localItem = localMetadata.find((lm) => lm.id === remoteItem.id);
+    if (!localItem) continue;
+    if (localItem.hash !== remoteItem.hash) {
+      conflictedChunks.push(remoteItem);
+    }
+  }
+
+  for (let ix = 0; ix < conflictedChunks.length; ix++) {
+    const remoteItem = conflictedChunks[ix];
+    const localItem = localMetadata.find((lm) => lm.id === remoteItem.id);
+    if (!localItem) continue;
+    if (localItem.tx >= remoteItem.tx) {
+      toUpload.push(localItem);
+    } else if (remoteItem.tx > localItem.tx) {
+      toDownload.push(remoteItem);
     }
   }
 
@@ -109,11 +128,9 @@ function getMetadataDeltaForSync(
 }
 
 async function initialDataSync() {
-  console.log("DATA SYNC /////// 1", Date.now());
-
   const activeUserId = useActiveUser.getState().activeUser.userId;
   const currentDeviceId = SecureStore.getItem(deviceId);
-  console.log("Starting initial data sync... 1");
+  console.log("Starting data sync...");
   const localMetadataPromsie = getLocalMetadata();
   const remoteMetadataPromise = authenticatedApiRequest(
     "/dataSync/requestMetadata",
@@ -178,6 +195,11 @@ async function initialDataSync() {
 
       ///Queue download ops
       const dataSyncApi = useTransferStore.getState();
+
+      console.info("Sync ops:", {
+        downloads: downloads.map((d) => d.payload?.id),
+        uploads: uploads.map((d) => d.payload?.id),
+      });
 
       downloads.forEach((item) => dataSyncApi.enqueue(item as TransferTask));
 
