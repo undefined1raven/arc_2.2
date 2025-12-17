@@ -33,7 +33,7 @@ interface TransferTask {
 }
 
 interface TransferState {
-  tasks: TransferTask;
+  tasks: TransferTask[];
   activeCount: number;
   maxConcurrent: number;
   enqueue: (

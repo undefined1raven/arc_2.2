@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { AfterInteractions } from "react-native-interactions";
@@ -20,8 +20,14 @@ import {
   deviceId,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import { authenticatedApiRequest } from "@/components/utils/api/apiRequest";
+import { Portal } from "react-native-portalize";
+import { LinearGradient } from "react-native-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
 
 function Home() {
+  const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
+
   return (
     <>
       <ThemedView

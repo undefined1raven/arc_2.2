@@ -112,7 +112,6 @@ function getMetadataDeltaForSync(
       conflictedChunks.push(remoteItem);
     }
   }
-
   for (let ix = 0; ix < conflictedChunks.length; ix++) {
     const remoteItem = conflictedChunks[ix];
     const localItem = localMetadata.find((lm) => lm.id === remoteItem.id);
