@@ -128,8 +128,15 @@ async function NukeLocalData() {
   await deleteDeviceId();
 }
 
+async function deleteLimitedChunks() {
+  const db = await SQLite.openDatabaseAsync("localCache");
+  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 171417354700");
+}
+
 async function checkTables(): Promise<CheckTablesReturnSig> {
   // NukeLocalData();
+
+  // await deleteLimitedChunks();
 
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {

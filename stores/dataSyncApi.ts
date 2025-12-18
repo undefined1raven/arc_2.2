@@ -5,6 +5,8 @@ import { authenticatedApiRequest } from "@/components/utils/api/apiRequest";
 import { useActiveUser } from "./activeUser";
 import { deviceId } from "@/components/utils/constants/secureStoreKeyNames";
 import * as SecureStore from "expo-secure-store";
+import { ARC_ChunksType } from "@/constants/CommonTypes";
+import * as SQLite from "expo-sqlite";
 
 type TransferType = "upload" | "download";
 type TaskStatus = "pending" | "in-progress" | "done" | "failed" | "canceled";
@@ -80,14 +82,16 @@ export const useTransferStore = create<TransferState>((set, get) => ({
     try {
       if (nextTask.type === "upload") await handleUpload(nextTask);
       else await handleDownload(nextTask);
-
+      console.log("Task completed:", nextTask.id);
       get().updateTask(nextTask.id, { status: "done", progress: 1 });
     } catch (err) {
+      console.log("Task failed:", nextTask.id, err);
       get().updateTask(nextTask.id, {
         status: "failed",
         error: String(err),
       });
     } finally {
+      console.log("Finalizing task:", nextTask.id);
       set((state) => ({ activeCount: state.activeCount - 1 }));
       get().runNext(); // trigger next one
     }
@@ -114,10 +118,11 @@ async function handleUpload(task: TransferTask) {
   const { payload } = task;
 
   console.log("Uploading chunk:", payload.id);
-  // Simulate upload with timeout
 
   const activeUserId = useActiveUser.getState().activeUser.userId;
   const currentDeviceId = SecureStore.getItem(deviceId);
+
+  updateTask(task.id, { progress: 0.5 });
 
   authenticatedApiRequest("/dataSync/updateChunk", {
     deviceId: currentDeviceId,
@@ -129,6 +134,101 @@ async function handleUpload(task: TransferTask) {
 async function handleDownload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
   const { payload } = task;
+
+  const activeUserId = useActiveUser.getState().activeUser.userId;
+  const currentDeviceId = SecureStore.getItem(deviceId);
+
+  updateTask(task.id, { progress: 0.5 });
+
+  const downloadResponse = await authenticatedApiRequest(
+    "/dataSync/downloadChunk",
+    {
+      deviceId: currentDeviceId,
+      accountId: activeUserId,
+      ...payload,
+    }
+  );
+
+  const responseData = downloadResponse.data;
+
+  if (
+    typeof responseData.tableName !== "string" ||
+    responseData.chunk === undefined ||
+    responseData.status !== "success"
+  ) {
+    console.error("Failed to download chunk:", responseData);
+    return;
+  } else {
+    const { tableName } = responseData;
+    const validTables = [
+      "timeTrackingChunks",
+      "dayPlannerChunks",
+      "personalDiaryChunks",
+      "featureConfigChunks",
+      "personalDiaryGroups",
+    ];
+    if (validTables.includes(tableName) === false) {
+      console.error("Invalid table name in downloaded chunk:", tableName);
+      return;
+    }
+
+    const saveResults = await saveDownloadedChunkToDB(
+      responseData.chunk,
+      tableName as string
+    );
+
+    console.log("Saved downloaded chunk results:", saveResults);
+
+    return;
+  }
+}
+
+async function saveDownloadedChunkToDB(
+  chunkData: ARC_ChunksType,
+  tableName: string
+) {
+  const db = await SQLite.openDatabaseAsync("localCache");
+  const commonReuqirements = [
+    "id",
+    "userID",
+    "encryptedContent",
+    "tx",
+    "version",
+    "hash",
+  ];
+  const tableKeyReqs = {
+    timeTrackingChunks: [
+      ...commonReuqirements,
+      "timeRangeStart",
+      "timeRangeEnd",
+    ],
+    dayPlannerChunks: [...commonReuqirements, "timeRangeStart", "timeRangeEnd"],
+    personalDiaryChunks: [...commonReuqirements],
+    featureConfigChunks: [...commonReuqirements, "type"],
+    personalDiaryGroups: [...commonReuqirements],
+  };
+
+  const requiredKeys = tableKeyReqs[tableName as keyof typeof tableKeyReqs];
+
+  for (const key of requiredKeys) {
+    if (!(key in chunkData)) {
+      return { status: "error", error: `Missing key ${key} in chunk data` };
+    }
+  }
+
+  const placeholders = requiredKeys.map(() => "?").join(", ");
+  const values = requiredKeys.map((key) => (chunkData as any)[key]);
+
+  const query = `INSERT OR REPLACE INTO ${tableName} (${requiredKeys.join(
+    ", "
+  )}) VALUES (${placeholders});`;
+
+  try {
+    await db.runAsync(query, values);
+    return { status: "success" };
+  } catch (error) {
+    return { status: "error", error: String(error) };
+  }
 }
 
 export type { TransferTask };

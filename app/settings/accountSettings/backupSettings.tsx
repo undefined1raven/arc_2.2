@@ -7,11 +7,6 @@ import * as Updates from "expo-updates";
 import { router } from "expo-router";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import themeColors, {
-  layoutCardLikeBackgroundOpacity,
-  themeColorKeyToDisplayName,
-} from "@/constants/colors";
-import { Dropdown } from "@/components/deco/Dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
