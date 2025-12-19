@@ -196,11 +196,15 @@ async function initialDataSync() {
       const dataSyncApi = useTransferStore.getState();
 
       console.info("Sync ops:", {
-        downloads: downloads.map((d) => d.payload?.id),
-        uploads: uploads.map((d) => d.payload?.id),
+        downloads: downloads.length,
+        uploads: uploads.length,
       });
 
-      downloads.forEach((item) => dataSyncApi.enqueue(item as TransferTask));
+      dataSyncApi.enqueue(
+        downloads.map((r) => {
+          return { ...r, downloadPayload: r.payload };
+        }) as TransferTask[]
+      );
 
       const db = await SQLite.openDatabaseAsync("localCache");
       const localDataRetrievalPromises = uploads.map(async (item) => {

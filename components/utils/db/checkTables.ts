@@ -136,8 +136,6 @@ async function deleteLimitedChunks() {
 async function checkTables(): Promise<CheckTablesReturnSig> {
   // NukeLocalData();
 
-  // await deleteLimitedChunks();
-
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {
       return res;

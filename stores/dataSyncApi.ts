@@ -51,17 +51,35 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   activeCount: 0,
   maxConcurrent: 3, // limit number of simultaneous uploads/downloads
 
-  enqueue: (task) => {
-    const newTask = {
-      ...task,
-      status: "pending",
-      retries: 0,
-      progress: 0,
-      id: Crypto.randomUUID(),
-    };
-    console.log("Enqueuing task:", newTask.id);
-    set((state) => ({ tasks: [...state.tasks, newTask] }));
-    get().runNext();
+  enqueue: (
+    task:
+      | Omit<TransferTask, "status" | "retries" | "progress">
+      | Omit<TransferTask, "status" | "retries" | "progress">[]
+  ) => {
+    const currentTasks = get().tasks;
+    if (Array.isArray(task)) {
+      const newTasks = task.map((t) => ({
+        ...t,
+        status: "pending" as TaskStatus,
+        retries: 0,
+        progress: 0,
+        id: Crypto.randomUUID(),
+      }));
+
+      set((state) => ({ tasks: [...currentTasks, ...newTasks] }));
+      get().runNext();
+    } else {
+      const newTask = {
+        ...task,
+        status: "pending",
+        retries: 0,
+        progress: 0,
+        id: Crypto.randomUUID(),
+      };
+
+      set((state) => ({ tasks: [...currentTasks, newTask] }));
+      get().runNext();
+    }
   },
 
   runNext: async () => {
@@ -71,18 +89,22 @@ export const useTransferStore = create<TransferState>((set, get) => ({
     const nextTask = tasks.find((t) => t.status === "pending");
     if (!nextTask) return; // no pending task left
 
+    const currentTasks = get().tasks;
+
     // Mark as running
     set((state) => ({
       activeCount: state.activeCount + 1,
-      tasks: state.tasks.map((t) =>
+      tasks: currentTasks.map((t) =>
         t.id === nextTask.id ? { ...t, status: "in-progress" } : t
       ),
     }));
 
     try {
-      if (nextTask.type === "upload") await handleUpload(nextTask);
-      else await handleDownload(nextTask);
-      console.log("Task completed:", nextTask.id);
+      if (nextTask.type === "upload") {
+        await handleUpload(nextTask);
+      } else {
+        await handleDownload(nextTask);
+      }
       get().updateTask(nextTask.id, { status: "done", progress: 1 });
     } catch (err) {
       console.log("Task failed:", nextTask.id, err);
@@ -98,8 +120,20 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   },
 
   updateTask: (id, updates) => {
+    const currentTasks = get().tasks;
+    const newTasks = [];
+
+    for (let ix = 0; ix < currentTasks.length; ix++) {
+      const task = currentTasks[ix];
+      if (task.id === id) {
+        newTasks.push({ ...task, ...updates });
+      } else {
+        newTasks.push(task);
+      }
+    }
+
     set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+      tasks: newTasks,
     }));
   },
 
@@ -133,13 +167,16 @@ async function handleUpload(task: TransferTask) {
 
 async function handleDownload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
-  const { payload } = task;
-
+  const payload = task.downloadPayload;
+  if (payload === undefined || payload?.id === undefined) {
+    console.error("Invalid payload for download task:", task.payload);
+    updateTask(task.id, { status: "failed", error: "Invalid payload" });
+    return;
+  }
   const activeUserId = useActiveUser.getState().activeUser.userId;
   const currentDeviceId = SecureStore.getItem(deviceId);
-
   updateTask(task.id, { progress: 0.5 });
-
+  console.log("Downloading chunk w payload:", JSON.stringify(task.payload));
   const downloadResponse = await authenticatedApiRequest(
     "/dataSync/downloadChunk",
     {
@@ -148,16 +185,13 @@ async function handleDownload(task: TransferTask) {
       ...payload,
     }
   );
-
   const responseData = downloadResponse.data;
-
   if (
     typeof responseData.tableName !== "string" ||
     responseData.chunk === undefined ||
     responseData.status !== "success"
   ) {
     console.error("Failed to download chunk:", responseData);
-    return;
   } else {
     const { tableName } = responseData;
     const validTables = [
@@ -169,17 +203,12 @@ async function handleDownload(task: TransferTask) {
     ];
     if (validTables.includes(tableName) === false) {
       console.error("Invalid table name in downloaded chunk:", tableName);
-      return;
     }
-
     const saveResults = await saveDownloadedChunkToDB(
       responseData.chunk,
       tableName as string
     );
-
     console.log("Saved downloaded chunk results:", saveResults);
-
-    return;
   }
 }
 
