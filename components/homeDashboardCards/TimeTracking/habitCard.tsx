@@ -160,8 +160,7 @@ const HabitCard = memo(() => {
   // Memoized constants
   const timeConstants = useMemo(
     () => ({
-      twoWeeksAgo: Date.now() - 120 * 24 * 60 * 60 * 1000,
-      twoWeeksAgoA: Date.now() - 14 * 24 * 60 * 60 * 1000,
+      twoWeeksAgo: Date.now() - 7 * 24 * 60 * 60 * 1000,
     }),
     []
   );
@@ -217,7 +216,7 @@ const HabitCard = memo(() => {
           const filteredData = data.payload
             .filter(
               (t: any) =>
-                t.start > timeConstants.twoWeeksAgoA &&
+                t.start > timeConstants.twoWeeksAgo &&
                 trackedIds.includes(t.taskID)
             )
             .sort((a: any, b: any) => a.start - b.start);
@@ -251,7 +250,7 @@ const HabitCard = memo(() => {
           }
 
           // Convert to final format and fill blank days
-          const startDate = new Date(timeConstants.twoWeeksAgoA);
+          const startDate = new Date(timeConstants.twoWeeksAgo);
           const endDate = new Date();
 
           for (const [activityName, streakMap] of habitMap) {

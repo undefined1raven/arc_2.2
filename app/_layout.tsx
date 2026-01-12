@@ -30,6 +30,7 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { initialDataSync } from "@/components/utils/api/initialDataSync";
 import { useTransferStore } from "@/stores/dataSyncApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CriticalSyncOverlay } from "./dataDownloadScreen/dataDownloadOverlay";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -138,6 +139,8 @@ export default function RootLayout() {
                 backgroundColor: globalStyle.pageBackgroundColors[0],
               }}
             >
+              <CriticalSyncOverlay></CriticalSyncOverlay>
+
               <CreateNewAccountData></CreateNewAccountData>
               <KeyboardVisible></KeyboardVisible>
               <View style={{ width: 0, height: 0 }}>
