@@ -57,8 +57,8 @@ const StreakItem = memo(
     return (
       <View
         style={{
-          width: "100%",
-          height: 35,
+          height: 50,
+
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
@@ -69,14 +69,6 @@ const StreakItem = memo(
         <HabitIcon
           hasDoneActivity={hasDoneActivity}
           globalStyle={globalStyle}
-        />
-        <Text
-          fontSize={globalStyle.mediumMobileFont}
-          label={`${formatDateToMonthDay(streakItem.date)}${
-            streakItem.duration > 0
-              ? ` | ${formatDuration(streakItem.duration)}`
-              : ""
-          }`}
         />
       </View>
     );
@@ -98,20 +90,25 @@ const HabitItem = memo(
     <View
       style={{
         userSelect: "none",
-        height: "100%",
+        height: 75,
         zIndex: -1,
-        width: 180,
-        borderRightWidth: 1,
+        width: "100%",
         marginRight: 5,
-        borderRightColor: globalStyle.color,
       }}
     >
       <Text
         style={{ width: "100%", position: "relative", left: -7 }}
         textAlign="left"
+        color={globalStyle.accentTextColor}
         label={item.activityName}
       />
-      <View>
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+        }}
+      >
         {item.streakData.map((streakItem: any) => (
           <StreakItem
             key={streakItem.date}
@@ -266,6 +263,7 @@ const HabitCard = memo(() => {
 
             habitData.push({ activityName, streakData });
           }
+
           habitCardDataApi.setHasLoadedData(true);
           habitCardDataApi.setDerivedData(habitData);
         })
@@ -334,14 +332,14 @@ const HabitCard = memo(() => {
   return (
     <SafeAreaView
       style={{
-        flexGrow: 1,
+        flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "start",
         borderRadius: globalStyle.borderRadius,
         width: "100%",
-        position: "relative",
+        gap: 5,
         backgroundColor: globalStyle.color + layoutCardLikeBackgroundOpacity,
       }}
     >
@@ -407,75 +405,63 @@ const HabitCard = memo(() => {
             )}
           />
         )}
-      {habitCardDataApi.derivedData !== null && (
-        <>
-          <View
-            style={{
-              top: -50,
-              height: 20,
-              marginLeft: 5,
-              marginRight: 5,
-              marginTop: 5,
-              width: "100%",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              flexShrink: 0,
-            }}
-          >
-            <Text
-              label="Habit Tracker"
-              fontSize={globalStyle.regularMobileFont}
-            />
-            <Selection
-              onMultiSelection={handleSelection}
-              values={filteredTasks || []}
-              labelKeys={["itme", "name"]}
-              multiselectMatchKeys={["itme", "taskID"]}
-              value={habitCardTrackedIds || []}
-              multiselect={true}
-              customSelectionButton={(props: { onClick: () => void }) => (
-                <Button
-                  onClick={props.onClick}
-                  style={{
-                    height: 30,
-                    width: 60,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <EditDeco />
-                </Button>
-              )}
-            />
-          </View>
-          <View
-            style={{
-              top: -30,
-              width: "100%",
-              display: "flex",
-              flexGrow: 1,
-            }}
-          >
-            <FlatList
-              data={habitCardDataApi.derivedData}
-              horizontal={true}
-              extraData={habitCardTrackedIds}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={5}
-              windowSize={10}
-              getItemLayout={(data, index) => ({
-                length: 180,
-                offset: 180 * index,
-                index,
-              })}
-            />
-          </View>
-        </>
-      )}
+      {habitCardDataApi.derivedData !== null && <></>}
+      <View
+        style={{
+          flex: 1,
+          position: "absolute",
+          paddingLeft: 5,
+          paddingRight: 5,
+          marginTop: 5,
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <Text label="Habit Tracker" fontSize={globalStyle.regularMobileFont} />
+        <Selection
+          onMultiSelection={handleSelection}
+          values={filteredTasks || []}
+          labelKeys={["itme", "name"]}
+          multiselectMatchKeys={["itme", "taskID"]}
+          value={habitCardTrackedIds || []}
+          multiselect={true}
+          customSelectionButton={(props: { onClick: () => void }) => (
+            <Button
+              onClick={props.onClick}
+              style={{
+                height: 30,
+                width: 60,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <EditDeco />
+            </Button>
+          )}
+        />
+      </View>
+      <View
+        style={{
+          width: "100%",
+          height: "80%",
+          display: "flex",
+          flexGrow: 1,
+        }}
+      >
+        <FlatList
+          data={habitCardDataApi.derivedData}
+          extraData={habitCardTrackedIds}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+        />
+      </View>
     </SafeAreaView>
   );
 });
