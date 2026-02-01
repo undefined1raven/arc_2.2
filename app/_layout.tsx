@@ -31,6 +31,7 @@ import { initialDataSync } from "@/components/utils/api/initialDataSync";
 import { useTransferStore } from "@/stores/dataSyncApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CriticalSyncOverlay } from "./dataDownloadScreen/dataDownloadOverlay";
+import { onLoginOnce } from "./functions/onLoginOnce";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -38,7 +39,7 @@ export default function RootLayout() {
   const navMenuApi = useNavMenuApi();
   const pathname = usePathname();
   const activeUserAccountType = useActiveUser(
-    (state) => state?.activeUser?.accountType ?? null
+    (state) => state?.activeUser?.accountType ?? null,
   );
 
   const navMenuDisallowedPaths = [
@@ -88,7 +89,7 @@ export default function RootLayout() {
   const activeUserId = useActiveUser((state) => state.activeUser.userId);
   const symKey = useActiveKeys((state) => state.activeSymmetricKey);
   const timeTrackingFeatureConifg = useFeatureConfigs(
-    (state) => state.timeTrackingFeatureConfig
+    (state) => state.timeTrackingFeatureConfig,
   );
 
   const tasks = useTransferStore((state) => state.tasks);
@@ -101,8 +102,8 @@ export default function RootLayout() {
           tasks.map((t) => {
             delete t.payload;
             return t;
-          })
-        )
+          }),
+        ),
       );
     }
   }, [tasks]);
@@ -120,7 +121,7 @@ export default function RootLayout() {
       typeof symKey === "string" &&
       timeTrackingFeatureConifg !== null
     ) {
-      initialDataSync();
+      onLoginOnce();
     }
   }, [activeUserId, symKey, timeTrackingFeatureConifg]);
 

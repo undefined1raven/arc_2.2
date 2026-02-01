@@ -37,7 +37,7 @@ const HabitIcon = memo(
         <StrikeThroughHex width={20} height={20} color={globalStyle.color} />
       )}
     </View>
-  )
+  ),
 );
 
 const StreakItem = memo(
@@ -72,7 +72,7 @@ const StreakItem = memo(
         />
       </View>
     );
-  }
+  },
 );
 
 const HabitItem = memo(
@@ -120,7 +120,7 @@ const HabitItem = memo(
         ))}
       </View>
     </View>
-  )
+  ),
 );
 
 const HabitCard = memo(() => {
@@ -129,190 +129,6 @@ const HabitCard = memo(() => {
   const habitCardDataApi = useHabitCardDataApi();
   const habitCardTrackedIds = useHabitCardDataApi((r) => r.trackedIds);
   const activeUserId = useActiveUser((state) => state.activeUser.userId);
-
-  // Memoized utility functions
-  const getDateFromTimestamp = useCallback((timestamp: number) => {
-    return new Date(timestamp).toISOString().split("T")[0];
-  }, []);
-
-  const formatDateToMonthDay = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-    });
-  }, []);
-
-  const formatDuration = useCallback((seconds: number): string => {
-    if (seconds < 3600) {
-      const minutes = Math.floor(seconds / 60);
-      return `${minutes} mins`;
-    }
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  }, []);
-
-  // Memoized constants
-  const timeConstants = useMemo(
-    () => ({
-      twoWeeksAgo: Date.now() - 7 * 24 * 60 * 60 * 1000,
-    }),
-    []
-  );
-
-  // Memoized task map for O(1) lookups
-  const taskMap = useMemo(() => {
-    const map = new Map();
-    timeTrackingFC.forEach((task) => {
-      map.set(task.itme.taskID, task);
-    });
-    return map;
-  }, [timeTrackingFC]);
-
-  // Load stored data
-  useEffect(() => {
-    const loadStoredData = async () => {
-      try {
-        const data = await AsyncStorage.getItem(
-          `${activeUserId}-habitCardData`
-        );
-        if (data) {
-          const parsedData: string[] = JSON.parse(data);
-          const habitDataApi = useHabitCardDataApi.getState();
-          habitDataApi.setTrackedIds(parsedData);
-        } else {
-          habitCardDataApi.setTrackedIds(null);
-        }
-        habitCardDataApi.setHasTrackedIds(true);
-      } catch (error) {
-        console.error("Error loading habit card data:", error);
-      }
-    };
-
-    loadStoredData();
-  }, [activeUserId]);
-
-  const getHabitData = useCallback(
-    (trackedIds: string[]) => {
-      const dataRetrivalAPI = dataRetrivalApi.getState();
-      if (!trackedIds || trackedIds.length === 0) {
-        return;
-      }
-      dataRetrivalAPI
-        .getDataInTimeRange(
-          "timeTrackingChunks",
-          timeConstants.twoWeeksAgo,
-          null,
-          null
-        )
-        .then((data) => {
-          const habitData: HabitCardDataType = [];
-          // Filter and sort data once
-          const filteredData = data.payload
-            .filter(
-              (t: any) =>
-                t.start > timeConstants.twoWeeksAgo &&
-                trackedIds.includes(t.taskID)
-            )
-            .sort((a: any, b: any) => a.start - b.start);
-
-          // Process data more efficiently
-          const habitMap = new Map();
-
-          for (const item of filteredData) {
-            const task = taskMap.get(item.taskID);
-            if (!task) continue;
-
-            const activityName = task.itme.name;
-            const activityDuration = Math.floor((item.end - item.start) / 1000);
-            const activityDate = getDateFromTimestamp(item.start);
-
-            if (!habitMap.has(activityName)) {
-              habitMap.set(activityName, new Map());
-            }
-
-            const streakMap = habitMap.get(activityName);
-            const currentDuration = streakMap.get(activityDate) || 0;
-            streakMap.set(activityDate, currentDuration + activityDuration);
-          }
-
-          // Add empty habits for tracked IDs without data
-          for (const taskId of trackedIds) {
-            const task = taskMap.get(taskId);
-            if (task && !habitMap.has(task.itme.name)) {
-              habitMap.set(task.itme.name, new Map());
-            }
-          }
-
-          // Convert to final format and fill blank days
-          const startDate = new Date(timeConstants.twoWeeksAgo);
-          const endDate = new Date();
-
-          for (const [activityName, streakMap] of habitMap) {
-            const streakData = [];
-            const currentDate = new Date(startDate);
-
-            while (currentDate <= endDate) {
-              const dateString = currentDate.toISOString().split("T")[0];
-              const duration = streakMap.get(dateString) || 0;
-              streakData.push({ date: dateString, duration });
-              currentDate.setDate(currentDate.getDate() + 1);
-            }
-
-            habitData.push({ activityName, streakData });
-          }
-
-          habitCardDataApi.setHasLoadedData(true);
-          habitCardDataApi.setDerivedData(habitData);
-        })
-        .catch((error) => {
-          console.error("Error retrieving habit data:", error);
-        });
-    },
-    [
-      timeConstants,
-      taskMap,
-      getDateFromTimestamp,
-      habitCardDataApi.setHasLoadedData,
-    ]
-  );
-
-  useEffect(() => {
-    if (
-      habitCardTrackedIds?.length > 0 &&
-      habitCardDataApi.derivedData === null
-    ) {
-      getHabitData(habitCardTrackedIds);
-    }
-  }, [habitCardDataApi.derivedData, habitCardTrackedIds, getHabitData]);
-
-  // Memoized selection handler
-  const handleSelection = useCallback(
-    async (taskIds: string[]) => {
-      const stringified = JSON.stringify(taskIds);
-      const habitDataApi = useHabitCardDataApi.getState();
-      habitDataApi.setTrackedIds(taskIds);
-      getHabitData(taskIds);
-
-      try {
-        await AsyncStorage.setItem(
-          `${activeUserId}-habitCardData`,
-          stringified
-        );
-      } catch (error) {
-        console.error("Error saving habit card data:", error);
-      }
-    },
-    [activeUserId, getHabitData]
-  );
-
-  // Memoized filtered tasks
-  const filteredTasks = useMemo(
-    () => timeTrackingFC.filter((r) => r.type === "task"),
-    [timeTrackingFC]
-  );
 
   // Memoized render item
   const renderItem = useCallback(
@@ -324,7 +140,7 @@ const HabitCard = memo(() => {
         formatDuration={formatDuration}
       />
     ),
-    [globalStyle, formatDateToMonthDay, formatDuration]
+    [globalStyle, formatDateToMonthDay, formatDuration],
   );
 
   const keyExtractor = useCallback((item: any) => item.activityName, []);
@@ -421,28 +237,6 @@ const HabitCard = memo(() => {
         }}
       >
         <Text label="Habit Tracker" fontSize={globalStyle.regularMobileFont} />
-        <Selection
-          onMultiSelection={handleSelection}
-          values={filteredTasks || []}
-          labelKeys={["itme", "name"]}
-          multiselectMatchKeys={["itme", "taskID"]}
-          value={habitCardTrackedIds || []}
-          multiselect={true}
-          customSelectionButton={(props: { onClick: () => void }) => (
-            <Button
-              onClick={props.onClick}
-              style={{
-                height: 30,
-                width: 60,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <EditDeco />
-            </Button>
-          )}
-        />
       </View>
       <View
         style={{

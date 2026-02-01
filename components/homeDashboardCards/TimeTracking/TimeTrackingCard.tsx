@@ -42,6 +42,7 @@ import FuzzySearch from "fuzzy-search";
 import { Portal } from "react-native-portalize";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { TrashIcon } from "@/components/deco/TrashIcon";
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -65,7 +66,7 @@ function TimeTrackingCard() {
 
   const getActivities = useCallback(() => {
     return featureConfigApi.timeTrackingFeatureConfig.filter(
-      (r) => r.type === "task"
+      (r) => r.type === "task",
     );
   }, [featureConfigApi.timeTrackingFeatureConfig]);
 
@@ -83,7 +84,7 @@ function TimeTrackingCard() {
       {
         caseSensitive: false,
         sort: true,
-      }
+      },
     );
     return searcher;
   }, [featureConfigApi.timeTrackingFeatureConfig]);
@@ -124,7 +125,7 @@ function TimeTrackingCard() {
       start: startTime,
       name:
         featureConfigApi.timeTrackingFeatureConfig.find(
-          (r) => r.itme.taskID === taskID
+          (r) => r.itme.taskID === taskID,
         )?.itme.name || "Unknown",
       taskID: taskID,
     });
@@ -132,9 +133,9 @@ function TimeTrackingCard() {
     SecureStore.setItemAsync(
       getUserDataKey(
         activeUserApi.activeUser.userId,
-        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
+        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
       ),
-      JSON.stringify(userDataPayload)
+      JSON.stringify(userDataPayload),
     );
     const menuApi = useNavMenuApi.getState();
     menuApi.setShowMenu(true);
@@ -174,8 +175,8 @@ function TimeTrackingCard() {
     const pendingActivity = SecureStore.getItem(
       getUserDataKey(
         activeUser,
-        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
-      )
+        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
+      ),
     );
     if (pendingActivity === null) {
       setHasPendingActivity(false);
@@ -186,7 +187,7 @@ function TimeTrackingCard() {
           start: parsedActivity.startTime,
           name:
             featureConfigApi.timeTrackingFeatureConfig.find(
-              (r) => r.itme.taskID === parsedActivity.taskID
+              (r) => r.itme.taskID === parsedActivity.taskID,
             )?.itme.name || "Unknown",
           taskID: parsedActivity.taskID,
         });
@@ -197,11 +198,11 @@ function TimeTrackingCard() {
   const getCategoryNameFromTaskObject = useCallback(
     (taskObject) => {
       const categories = featureConfigApi.timeTrackingFeatureConfig.filter(
-        (r) => r.type === "taskCategory"
+        (r) => r.type === "taskCategory",
       );
       const catId = taskObject.itme.categoryID;
       const category = categories.find(
-        (r) => r.itme.categoryID === catId || r.itme.id === catId
+        (r) => r.itme.categoryID === catId || r.itme.id === catId,
       );
       if (category) {
         return category.itme.name;
@@ -209,20 +210,22 @@ function TimeTrackingCard() {
         return "Unknown";
       }
     },
-    [featureConfigApi.timeTrackingFeatureConfig]
+    [featureConfigApi.timeTrackingFeatureConfig],
   );
 
   return isPickingActivity === false ? (
     <View
       style={{
-        backgroundColor:
-          globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity,
+        paddingRight: 5,
+        paddingLeft: 5,
         width: "100%",
         borderRadius: globalStyle.globalStyle.borderRadius,
         height: "20%",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        borderTopColor: globalStyle.globalStyle.colorAccent + "80",
+        borderTopWidth: 1,
       }}
     >
       {hasPendingActivity === null && (
@@ -270,19 +273,20 @@ function TimeTrackingCard() {
               flexDirection: "row",
               paddingLeft: 5,
               paddingRight: 5,
+              top: 0,
             }}
           >
             <Text
-              fontSize={23}
+              fontSize={12}
               style={{ maxWidth: "58%", textAlign: "left" }}
-              label={hasPendingActivity.name}
+              label="Current Activity"
             ></Text>
             <View
               style={{
                 width: "40%",
                 height: "80%",
                 display: "flex",
-                justifyContent: "center",
+                justifyContent: "flex-end",
                 alignItems: "center",
                 flexDirection: "row",
                 gap: 5,
@@ -292,27 +296,19 @@ function TimeTrackingCard() {
                 onClick={() => {
                   router.push("/timeTrackingFeatureConfig/EditActivities");
                 }}
+                backgroundColor={globalStyle.globalStyle.colorAccent + "15"}
                 style={{
                   width: "50%",
                   height: "100%",
                   display: "flex",
+
                   justifyContent: "center",
+                  borderTopWidth: 0,
+                  borderBottomWidth: 0,
                   alignItems: "center",
                 }}
               >
                 <EditDeco height={"150%"}></EditDeco>
-              </Button>
-              <Button
-                onClick={() => {}}
-                style={{
-                  width: "50%",
-                  height: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <AddIcon height={"60%"} width={"50%"}></AddIcon>
               </Button>
             </View>
           </View>
@@ -322,65 +318,81 @@ function TimeTrackingCard() {
               width: "100%",
               display: "flex",
               justifyContent: "center",
-              alignItems: "center",
+              alignItems: "start",
               flexDirection: "column",
+              paddingLeft: 5,
             }}
           >
             <View
               style={{
                 width: "80%",
                 display: "flex",
-                flexDirection: "row",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 justifyContent: "space-between",
               }}
             >
-              <View style={styles.middleTextContainer}>
-                <Text
-                  fontSize={globalStyle.globalStyle.mediumMobileFont}
-                  label="Started at"
-                ></Text>
-                <Text
-                  label={getDisplayTimeAMPM(hasPendingActivity.start)}
-                ></Text>
-              </View>
+              <Text fontSize={23} label={hasPendingActivity.name}></Text>
               <View
                 style={{
                   ...styles.middleTextContainer,
-                  alignItems: "flex-end",
+                  alignItems: "center",
                 }}
               >
                 <Text
-                  fontSize={globalStyle.globalStyle.mediumMobileFont}
-                  label="Duration"
+                  label={getDisplayTimeAMPM(hasPendingActivity.start)}
                 ></Text>
+                <View
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: 150,
+                    borderWidth: 1,
+                    backgroundColor: globalStyle.globalStyle.color,
+                  }}
+                ></View>
                 <Text label={getDisplayTime(hasPendingActivity.start)}></Text>
               </View>
-            </View>
-            <View
-              style={{
-                width: "80%",
-                height: 21,
-              }}
-            >
-              <TimeTrackingVisualization
-                activityStartTime={hasPendingActivity.start}
-                renderWidth={Dimensions.get("window").width * 0.8 - 10}
-              ></TimeTrackingVisualization>
             </View>
           </View>
           <View
             style={{
               height: "32%",
               width: "100%",
-              justifyContent: "center",
+              justifyContent: "space-between",
               alignItems: "center",
+              display: "flex",
+              flexDirection: "row",
+              paddingLeft: 5,
+              paddingRight: 5,
+              gap: 10,
             }}
           >
             <Button
-              label="Save activity"
+              onClick={() => {
+                setHasPendingActivity(false);
+              }}
+              borderColor={globalStyle.globalStyle.colorAccent}
               style={{
-                width: "80%",
-                height: "80%",
+                height: "85%",
+                aspectRatio: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <TrashIcon
+                color={globalStyle.globalStyle.colorAccent}
+                width={15}
+                height={15}
+              ></TrashIcon>
+            </Button>
+            <Button
+              backgroundColor={globalStyle.globalStyle.color + "20"}
+              label="Done"
+              style={{
+                flexGrow: 1,
+                height: "85%",
               }}
               onClick={() => {
                 if (activeUserApi.activeUser.userId === null) {
@@ -396,15 +408,15 @@ function TimeTrackingCard() {
                   .appendEntry(
                     "timeTrackingChunks",
                     newTaskRow,
-                    timeTrackingChunkSize
+                    timeTrackingChunkSize,
                   )
                   .then((res) => {})
                   .catch((err) => {});
                 SecureStore.deleteItemAsync(
                   getUserDataKey(
                     activeUserApi.activeUser.userId,
-                    secureStoreKeyNames.userDataKeys.timeTrackingActiveTask
-                  )
+                    secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
+                  ),
                 );
                 useNavMenuApi.getState().setShowMenu(false);
                 setActivitySearchFilter("");
@@ -579,8 +591,9 @@ function TimeTrackingCard() {
 const styles = {
   middleTextContainer: {
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "row",
     alignItems: "flex-start",
+    gap: 6,
   },
 };
 

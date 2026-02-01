@@ -32,12 +32,12 @@ const TimeTrackingVisualization = ({
       startOfToday.setHours(0, 0, 0, 0);
       const elapsedTime = Date.now() - activityStartTime;
       const elapsedTimeWidth = Math.floor(
-        rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth)
+        rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth),
       );
       const startOfTodayUnix = startOfToday.getTime();
       const elapsedTime2 = activityStartTime - startOfTodayUnix;
       const elapsedTimeWidth2 = Math.floor(
-        rangeScaler(elapsedTime2, 0, 86400000, 0, renderWidth)
+        rangeScaler(elapsedTime2, 0, 86400000, 0, renderWidth),
       );
       setCurrentTimeWidth(elapsedTimeWidth2);
       setActivityDurationWidth(elapsedTimeWidth);
@@ -54,7 +54,7 @@ const TimeTrackingVisualization = ({
     const startOfTodayUnix = startOfToday.getTime();
     const elapsedTime = activityStartTime - startOfTodayUnix;
     const elapsedTimeWidth = Math.floor(
-      rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth)
+      rangeScaler(elapsedTime, 0, 86400000, 0, renderWidth),
     );
     setActivityStartTimeXCoord(elapsedTimeWidth);
   }, [activityStartTime]);
