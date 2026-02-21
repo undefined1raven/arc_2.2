@@ -1,17 +1,17 @@
 import { TessDayLogType, TessStatusType } from "@/constants/CommonTypes";
 import { rangeScaler } from "../RangeScaler";
 
-function computeDayPlannerCompletion(
+function countDoneTasksInDay(
   dayPlannerFeatureConfig: TessStatusType[],
   day: TessDayLogType,
-) {
+): number {
   const tasks = day.tasks;
 
   if (tasks.length === 0) {
     return 0;
   }
 
-  let completionScore: number = 0;
+  let completedTasks: number = 0;
   tasks.forEach((task) => {
     const taskStatusID = task.statusID;
     const taskStatus = dayPlannerFeatureConfig.find(
@@ -23,13 +23,11 @@ function computeDayPlannerCompletion(
     const taskCompletionScore = parseFloat(
       taskStatus.completionEffect.toString(),
     );
-    completionScore += taskCompletionScore;
+    if (taskCompletionScore >= 1) {
+      completedTasks++;
+    }
   });
-  const taskCount = tasks.length;
-  const completionPercantage = parseFloat(
-    (parseFloat((completionScore / taskCount).toFixed(2)) * 100).toFixed(0),
-  );
-  return completionPercantage;
+  return completedTasks;
 }
 
-export { computeDayPlannerCompletion };
+export { countDoneTasksInDay };

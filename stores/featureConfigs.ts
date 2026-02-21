@@ -42,7 +42,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
     const db = await SQLite.openDatabaseAsync("localCache");
     const FCChunks: FeatureConfigChunkType[] = await db.getAllAsync(
       "SELECT * FROM featureConfigChunks WHERE userID = ? ",
-      [activeUserId]
+      [activeUserId],
     );
 
     const decryptionPromises: Promise<any>[] = [];
@@ -68,7 +68,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
             if (decryptionResult.status === "success") {
               try {
                 const encodedArray = JSON.parse(
-                  "[" + decryptionResult.payload.decrypted + "]"
+                  "[" + decryptionResult.payload.decrypted + "]",
                 );
                 const decodedString = charCodeArrayToString(encodedArray);
                 const parsedData = JSON.parse(decodedString);

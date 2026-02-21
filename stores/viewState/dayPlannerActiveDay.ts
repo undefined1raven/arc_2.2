@@ -8,12 +8,18 @@ interface DayPlannerActiveDay {
   setActiveDay: (day: TessDayLogType | null) => void;
   recentDays: TessDayLogType[];
   setRecentDays: (days: TessDayLogType[]) => void;
+  hasLoadedInitialData: boolean;
+  setHasLoadedInitialData: (status: boolean) => void;
 }
 
 const useDayPlannerActiveDay = create<DayPlannerActiveDay>((set, get) => ({
   activeDay: undefined,
   setActiveDay: (day: TessDayLogType | null) => {
     set({ activeDay: day });
+  },
+  hasLoadedInitialData: false,
+  setHasLoadedInitialData: (status: boolean) => {
+    set({ hasLoadedInitialData: status });
   },
   historicDayView: null,
   setHistoricDayView(day) {

@@ -72,7 +72,6 @@ export default function Main() {
         }
       })
       .catch((e) => {
-        ////XLF
         console.log("Something really bad happened", e);
       });
   }, []);

@@ -78,6 +78,9 @@ function Selection({
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "space-between",
+          borderWidth: 0,
+          borderLeftWidth: 1,
+          backgroundColor: globalStyle.color + "20",
           paddingRight: 10,
           ...selectionBoxStyle,
         }}
@@ -129,7 +132,7 @@ function Selection({
                   ) {
                     const itemValue = getValueByKeys(
                       item,
-                      multiselectMatchKeys
+                      multiselectMatchKeys,
                     );
                     isValueSelected = localSelectedValues.includes(itemValue);
                   } else {
@@ -174,7 +177,7 @@ function Selection({
                             ) {
                               const newValue = getValueByKeys(
                                 item,
-                                multiselectMatchKeys
+                                multiselectMatchKeys,
                               );
                               if (newValues.includes(newValue)) {
                                 const index = newValues.indexOf(newValue);

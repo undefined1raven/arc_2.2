@@ -82,8 +82,8 @@ function Button({
         borderColor: borderColor
           ? borderColor
           : disabled
-          ? globalStyles.globalStyle.colorInactive
-          : globalStyles.globalStyle.color,
+            ? globalStyles.globalStyle.colorInactive
+            : globalStyles.globalStyle.color,
         ...style,
       }}
     >
@@ -98,8 +98,8 @@ function Button({
             color: color
               ? color
               : disabled
-              ? globalStyles.globalStyle.textColorInactive
-              : globalStyles.globalStyle.textColor,
+                ? globalStyles.globalStyle.textColorInactive
+                : globalStyles.globalStyle.textColor,
             fontSize: fontSize
               ? fontSize
               : globalStyles.globalStyle.largeMobileFont,

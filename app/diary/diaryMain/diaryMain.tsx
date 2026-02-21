@@ -27,7 +27,7 @@ function DiaryMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const personalDiaryFeatureConfig = useFeatureConfigs(
-    (store) => store.personalDiaryFeatureConfig
+    (store) => store.personalDiaryFeatureConfig,
   );
   const [longSelectIndex, setLongSelectIndex] = useState<number | null>(null);
 
@@ -58,7 +58,7 @@ function DiaryMain() {
       }
 
       const updatedGroups = diaryApi.groups?.map((g) =>
-        g.groupID === group.groupID ? updatedGroup : g
+        g.groupID === group.groupID ? updatedGroup : g,
       );
       setLongSelectIndex(null);
       diaryApi.setGroups(updatedGroups);
@@ -71,14 +71,14 @@ function DiaryMain() {
           group.groupID,
           updatedGroup,
           chunkId,
-          "replace"
+          "replace",
         )
         .then((data) => {})
         .catch((error) => {
           console.error("Error deleting group:", error);
         });
     },
-    [diaryApi, setLongSelectIndex]
+    [diaryApi, setLongSelectIndex],
   );
 
   const createNewGroup = useCallback(() => {
@@ -294,13 +294,12 @@ function DiaryMain() {
         </View>
       );
     },
-    [personalDiaryFeatureConfig, longSelectIndex, globalStyle]
+    [personalDiaryFeatureConfig, longSelectIndex, globalStyle],
   );
 
   ////Data Retrievel
   useEffect(() => {
     const dataRetrivalAPI = dataRetrivalApi.getState();
-
     if (diaryApi.notes === null) {
       dataRetrivalAPI
         .getDataInTimeRange("personalDiaryChunks", null, null, null)
@@ -308,7 +307,7 @@ function DiaryMain() {
           const notes = data.payload as any as SIDNoteType[];
           //@ts-ignore
           diaryApi.setNoteChunkMapping(
-            data.dataChunkMapping ? data.dataChunkMapping : {}
+            data.dataChunkMapping ? data.dataChunkMapping : {},
           );
           diaryApi.setNotes(notes);
         })
@@ -316,22 +315,7 @@ function DiaryMain() {
           console.error("Error retrieving diary data:", error);
         });
     }
-    if (diaryApi.groups === null) {
-      dataRetrivalAPI
-        .getDataInTimeRange("personalDiaryGroups", null, null, null)
-        .then((data) => {
-          const groups = data.payload as any as SIDGroupType[];
-          diaryApi.setGroupsChunkMapping(
-            //@ts-ignore
-            data.dataChunkMapping ? data.dataChunkMapping : {}
-          );
-          diaryApi.setGroups(groups);
-        })
-        .catch((error) => {
-          console.error("Error retrieving diary data:", error);
-        });
-    }
-  }, [diaryApi.notes, diaryApi.groups]);
+  }, [diaryApi.notes]);
 
   return (
     <>

@@ -19,52 +19,59 @@ export type CheckTablesReturnSig = {
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await SQLite.openDatabaseAsync("localCache");
   var promiseArray: Promise<any>[] = [];
+
+  //Behavioral data tables
+  const activityTransitions = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS activityTransitions (previousActivity TEXT NOT NULL, nextActivity TEXT NOT NULL, dayType TEXT NOT NULL, timeBucket TEXT NOT NULL);",
+  );
+  promiseArray.push(activityTransitions);
+
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL, accountType TEXT);"
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL, accountType TEXT);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS userData (userID TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, version TEXT NOT NULL, PRIMARY KEY (userID, key));"
+    "CREATE TABLE IF NOT EXISTS userData (userID TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, version TEXT NOT NULL, PRIMARY KEY (userID, key));",
   );
   promiseArray.push(userDataTablePromise);
 
   //Time tracking chunks
   const arcChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
+    "CREATE TABLE IF NOT EXISTS timeTrackingChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);",
   );
   promiseArray.push(arcChunksTablePromise);
   const arcChunksDerivedDataTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS timeTrackingDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS timeTrackingDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);",
   );
   promiseArray.push(arcChunksDerivedDataTablePromise);
 
   //Day planner chunks
   const tessChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);"
+    "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);",
   );
   promiseArray.push(tessChunksTablePromise);
   const tessChunksDerivedDataTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS dayPlannerDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS dayPlannerDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);",
   );
   promiseArray.push(tessChunksDerivedDataTablePromise);
 
   //Personal Diary chunks
   const SIDChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);",
   );
   const sidChunksDerivedDataTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryDerivedDataChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, generationConfigSignature TEXT NOT NULL);",
   );
   promiseArray.push(sidChunksDerivedDataTablePromise);
   promiseArray.push(SIDChunksTablePromise);
   const SIDGruopsChunksTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);"
+    "CREATE TABLE IF NOT EXISTS personalDiaryGroups (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, hash TEXT);",
   );
   promiseArray.push(SIDGruopsChunksTablePromise);
 
   ////Feature config tables
   const featureConfigChunks = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS featureConfigChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, type TEXT NOT NULL, version TEXT NOT NULL, hash TEXT);"
+    "CREATE TABLE IF NOT EXISTS featureConfigChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, type TEXT NOT NULL, version TEXT NOT NULL, hash TEXT);",
   );
   promiseArray.push(featureConfigChunks);
 
@@ -99,6 +106,11 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
     });
 }
 
+async function removeBT() {
+  const db = await SQLite.openDatabaseAsync("localCache");
+  await db.runAsync("DROP TABLE activityTransitions");
+}
+
 async function NukeLocalData() {
   const db = await SQLite.openDatabaseAsync("localCache");
   const userId = useActiveUser.getState().activeUser.userId;
@@ -112,25 +124,30 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE personalDiaryChunks");
   db.runAsync("DROP TABLE personalDiaryGroups");
   db.runAsync("DROP TABLE featureConfigChunks");
+  db.runAsync("DROP TABLE activityTransitions");
   SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.activePrivateKey
+    secureStoreKeyNames.accountConfig.activePrivateKey,
   );
   SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.activeSymmetricKey
+    secureStoreKeyNames.accountConfig.activeSymmetricKey,
   );
   AsyncStorage.removeItem(`${userId}-habitCardData`);
   SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.privateKey);
   SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.symmetricKey);
   SecureStore.deleteItemAsync(secureStoreKeyNames.accountConfig.pin);
   SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.useBiometricAuth
+    secureStoreKeyNames.accountConfig.useBiometricAuth,
   );
   await deleteDeviceId();
 }
 
+async function deleteLimitedChunks() {
+  const db = await SQLite.openDatabaseAsync("localCache");
+  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 171417354700");
+}
+
 async function checkTables(): Promise<CheckTablesReturnSig> {
   // NukeLocalData();
-
   return checkTablesActual() //do some manual recursion since for some reason creating the tables doens't work the first time (after a fresh install)
     .then((res) => {
       return res;

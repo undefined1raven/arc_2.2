@@ -1,17 +1,12 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import * as NavigationBar from "expo-navigation-bar";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Button from "@/components/common/Button";
 import * as Updates from "expo-updates";
 import { router } from "expo-router";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import themeColors, {
-  layoutCardLikeBackgroundOpacity,
-  themeColorKeyToDisplayName,
-} from "@/constants/colors";
-import { Dropdown } from "@/components/deco/Dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserThemeKey } from "@/components/utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
@@ -20,6 +15,8 @@ import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 import { NukeLocalData } from "@/components/utils/db/checkTables";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { SimpleFooter } from "@/components/common/SimpleFooter";
+import { FlashList } from "@shopify/flash-list";
+import { TransferTask, useTransferStore } from "@/stores/dataSyncApi";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -29,178 +26,68 @@ function AccountSettingsMain() {
     description: string;
     goTo: string;
   };
-  const availableThemes = Object.keys(themeColors).map((key) => {
-    const colorSet =
-      themeColors[key as keyof typeof themeColors][globalStyle.theme];
-    const primaryColor = colorSet.color;
-    const secondaryColor = colorSet.colorAccent;
-    const successColor = colorSet.successColor;
-    const errorColor = colorSet.errorColor;
-    const backgroundColor = colorSet.pageBackgroundColors[0];
-    return {
-      name: key,
-      title: key.charAt(0).toUpperCase() + key.slice(1),
-      primaryColor,
-      secondaryColor,
-      successColor,
-      errorColor,
-      backgroundColor,
-    };
-  });
 
-  const renderItem = useCallback(
-    (item) => {
-      const isSelected = globalStyle.colorScheme === item.name;
+  const [lastSync, setLastSync] = useState<any[]>([]);
 
-      return (
-        <Button
-          onClick={() => {
-            const globalStyleApi = useGlobalStyleStore.getState();
+  useEffect(() => {
+    AsyncStorage.getItem("lastSync").then((res) => {
+      console.log("Fetched last sync tasks:", res);
+      try {
+        setLastSync(JSON.parse(res));
+      } catch (e) {
+        console.error("Error parsing last sync tasks:", e);
+      }
+    });
+  }, []);
 
-            const theme = globalStyle.theme;
+  const sep = useCallback((item) => {
+    return (
+      <View
+        style={{
+          width: "100%",
+          height: 15,
+        }}
+      ></View>
+    );
+  }, []);
 
-            //@ts-ignore
-            const colorSet = themeColors[item.name][theme];
-
-            NavigationBar.setBackgroundColorAsync(
-              colorSet.pageBackgroundColors[1]
-            );
-
-            const userId = useActiveUser.getState().activeUser?.userId;
-
-            if (typeof userId !== "string") {
-              return;
-            }
-
-            console.log(
-              "Saving user theme:",
-              item.name,
-              getUserThemeKey(userId)
-            );
-
-            AsyncStorage.setItem(getUserThemeKey(userId), item.name)
-              .then((r) => {
-                console.log("User theme saved:", r);
-              })
-              .catch((error) => {
-                console.error("Error saving user theme:", error);
-              });
-
-            globalStyleApi.updateGlobalStyle({
-              ...globalStyle,
-              colorScheme: item.name,
-              ...colorSet,
-            });
-          }}
-          style={{
-            width: "100%",
-            height: 93,
-            marginBottom: 10,
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            gap: 10,
-            paddingLeft: 10,
-            paddingRight: 5,
-          }}
-        >
-          <View
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "flex-start",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            <Text
-              style={{ zIndex: -1 }}
-              label={themeColorKeyToDisplayName[item.name]}
-            ></Text>
-            <View
-              style={{
-                height: 35,
-                padding: 5,
-                width: 140,
-                zIndex: -1,
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  width: "100%",
-                  height: 35,
-                  borderRadius: globalStyle.borderRadius,
-                  backgroundColor: item.backgroundColor,
-                }}
-              ></View>
-              <View
-                style={{
-                  height: "100%",
-                  zIndex: 5,
-                  borderRadius: globalStyle.borderRadius,
-                  width: 45,
-                  backgroundColor: item.primaryColor,
-                }}
-              ></View>
-              <View
-                style={{
-                  height: "100%",
-                  zIndex: 5,
-                  borderRadius: globalStyle.borderRadius,
-                  width: 20,
-                  backgroundColor: item.secondaryColor,
-                }}
-              ></View>
-              <View
-                style={{
-                  height: "100%",
-                  borderRadius: globalStyle.borderRadius,
-                  width: 20,
-                  zIndex: 5,
-                  backgroundColor: item.successColor,
-                }}
-              ></View>
-              <View
-                style={{
-                  height: "100%",
-                  borderRadius: globalStyle.borderRadius,
-                  width: 20,
-                  zIndex: 5,
-                  backgroundColor: item.errorColor,
-                }}
-              ></View>
-            </View>
-          </View>
-          {isSelected && (
-            <View
-              style={{ position: "absolute", right: 10, height: 30, width: 30 }}
-            >
-              <HexDeco
-                color={globalStyle.color}
-                height={30}
-                width={30}
-              ></HexDeco>
-            </View>
-          )}
-        </Button>
-      );
-    },
-    [globalStyle]
-  );
+  const renderItem = useCallback((item: TransferTask) => {
+    return (
+      <View
+        style={{
+          width: "100%",
+          height: 93,
+          marginBottom: 10,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          gap: 10,
+          paddingLeft: 10,
+          paddingRight: 5,
+        }}
+      >
+        <Text fontSize={14} label={`[${item.item.id}]`}></Text>
+        <Text fontSize={14} label={`[${item.item.status}]`}></Text>
+        <Text fontSize={14} label={`[${item.item.type}]`}></Text>
+        <Text fontSize={14} label={item.error ?? "No error"}></Text>
+      </View>
+    );
+  }, []);
 
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
+          <View style={{ marginTop: 15, display: "flex", flexGrow: 1 }}>
+            <FlashList
+              inverted={true}
+              data={lastSync}
+              estimatedItemSize={120}
+              renderItem={renderItem}
+              ItemSeparatorComponent={sep}
+            />
+          </View>
           <View
             style={{
               display: "flex",

@@ -28,6 +28,10 @@ import { HashColumnMigration } from "@/components/utils/db/migrations/HashColumn
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { initialDataSync } from "@/components/utils/api/initialDataSync";
+import { useTransferStore } from "@/stores/dataSyncApi";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CriticalSyncOverlay } from "./dataDownloadScreen/dataDownloadOverlay";
+import { onLoginOnce } from "./functions/onLoginOnce";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -35,7 +39,7 @@ export default function RootLayout() {
   const navMenuApi = useNavMenuApi();
   const pathname = usePathname();
   const activeUserAccountType = useActiveUser(
-    (state) => state?.activeUser?.accountType ?? null
+    (state) => state?.activeUser?.accountType ?? null,
   );
 
   const navMenuDisallowedPaths = [
@@ -85,8 +89,24 @@ export default function RootLayout() {
   const activeUserId = useActiveUser((state) => state.activeUser.userId);
   const symKey = useActiveKeys((state) => state.activeSymmetricKey);
   const timeTrackingFeatureConifg = useFeatureConfigs(
-    (state) => state.timeTrackingFeatureConfig
+    (state) => state.timeTrackingFeatureConfig,
   );
+
+  const tasks = useTransferStore((state) => state.tasks);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      AsyncStorage.setItem(
+        "lastSync",
+        JSON.stringify(
+          tasks.map((t) => {
+            delete t.payload;
+            return t;
+          }),
+        ),
+      );
+    }
+  }, [tasks]);
 
   useEffect(() => {
     if (loaded) {
@@ -101,7 +121,7 @@ export default function RootLayout() {
       typeof symKey === "string" &&
       timeTrackingFeatureConifg !== null
     ) {
-      initialDataSync();
+      onLoginOnce();
     }
   }, [activeUserId, symKey, timeTrackingFeatureConifg]);
 
@@ -120,6 +140,8 @@ export default function RootLayout() {
                 backgroundColor: globalStyle.pageBackgroundColors[0],
               }}
             >
+              <CriticalSyncOverlay></CriticalSyncOverlay>
+
               <CreateNewAccountData></CreateNewAccountData>
               <KeyboardVisible></KeyboardVisible>
               <View style={{ width: 0, height: 0 }}>

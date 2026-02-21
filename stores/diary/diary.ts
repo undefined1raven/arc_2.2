@@ -9,22 +9,22 @@ interface IDiary {
   noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null;
   groupChunkMapping: { [key: string]: string[] } | null;
   setGroupsChunkMapping: (
-    groupChunkMapping: { [key: string]: string[] } | null
+    groupChunkMapping: { [key: string]: string[] } | null,
   ) => void;
   setNoteChunkMapping: (
-    noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null
+    noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null,
   ) => void;
 }
 
 const useDiaryData = create<IDiary>()((set, get) => ({
   groupChunkMapping: null,
   setGroupsChunkMapping: (
-    groupChunkMapping: { [key: string]: string[] } | null
+    groupChunkMapping: { [key: string]: string[] } | null,
   ) => set({ groupChunkMapping }),
   notes: null,
   noteChunkMapping: null,
   setNoteChunkMapping: (
-    noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null
+    noteChunkMapping: Record<string, SIDNoteType["noteID"]> | null,
   ) => {
     set({ noteChunkMapping });
   },

@@ -1,4 +1,5 @@
 import { AvailableThemes, Themes } from "./colors";
+import { DaySegment } from "./timeToDaySegment";
 
 export type ColorValueHex = `#${string}`;
 export type FontSize =
@@ -11,6 +12,15 @@ export type FontSize =
   | "largex3";
 export type AlignType = "top" | "left" | "right" | "bottom";
 export type PageBackgroundColorArrayType = ColorValueHex[];
+
+type DayType = "weekday" | "weekend";
+
+type ActivityTransitionLog = {
+  previousActivity: string;
+  nextActivity: string;
+  dayType: DayType;
+  timeBucket: DaySegment;
+};
 
 type UserDataKeys = "currentActivities" | "currentMood";
 type UserDataValues = {
@@ -268,4 +278,6 @@ export type {
   TessTaskType,
   ArcTaskLogType,
   UserDataValues,
+  ActivityTransitionLog,
+  DayType,
 };
