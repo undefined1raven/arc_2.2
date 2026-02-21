@@ -45,7 +45,7 @@ function localAccountAuth() {
   useEffect(() => {
     ///Check if the user has enabled the screen lock method
     const nativeAuthFlag = SecureStore.getItem(
-      secureStoreKeyNames.accountConfig.useBiometricAuth
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
     );
     if (nativeAuthFlag === "true") {
       setNativeAuthAvailable(true);
@@ -95,7 +95,7 @@ function localAccountAuth() {
               activeKeyAPI.setActiveSymmetricKey(symKey);
 
               const armoredPrivateKey = await SecureStore.getItemAsync(
-                getPrivateKey(userId)
+                getPrivateKey(userId),
               );
 
               if (typeof armoredPrivateKey !== "string") {
@@ -112,7 +112,7 @@ function localAccountAuth() {
                   if (privateKeyDecryptionRes.status !== "success") {
                     console.error(
                       "Error decrypting private key",
-                      privateKeyDecryptionRes
+                      privateKeyDecryptionRes,
                     );
                   }
 
@@ -121,7 +121,7 @@ function localAccountAuth() {
                   const decryptedEncodedStringData =
                     "[" + decryptedPayload + "]";
                   const encodedArray = JSON.parse(
-                    decryptedEncodedStringData
+                    decryptedEncodedStringData,
                   ) as number[];
                   const decodedPrivateKey = charCodeArrayToString(encodedArray);
                   activeKeyAPI.setActivePrivateKey(decodedPrivateKey);
@@ -153,12 +153,12 @@ function localAccountAuth() {
         setIsCheckingPin(false);
       }
     },
-    []
+    [],
   );
 
   const nativeAuthChallenge = useCallback(() => {
     const nativeAuthFlag = SecureStore.getItem(
-      secureStoreKeyNames.accountConfig.useBiometricAuth
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
     );
     if (nativeAuthFlag === "true") {
       setIsCheckingPin(true);
@@ -172,7 +172,7 @@ function localAccountAuth() {
               return;
             }
             SecureStore.getItemAsync(
-              getSymmetricKey(activeUserApi.activeUser.userId)
+              getSymmetricKey(activeUserApi.activeUser.userId),
             )
               .then((res) => {
                 unwrapKeyAndSetState(storedPin, res ? res : "{}");
@@ -255,15 +255,14 @@ function localAccountAuth() {
               onClick={() => {
                 if (inputPin.length > 0 && activeUserApi.activeUser.userId) {
                   SecureStore.getItemAsync(
-                    getSymmetricKey(activeUserApi.activeUser.userId)
+                    getSymmetricKey(activeUserApi.activeUser.userId),
                   )
                     .then(async (res) => {
-                      const localKey = await SecureStore.getItemAsync(
-                        noBioSKName
-                      );
+                      const localKey =
+                        await SecureStore.getItemAsync(noBioSKName);
                       unwrapKeyAndSetState(
                         inputPin + localKey,
-                        res ? res : "{}"
+                        res ? res : "{}",
                       );
                     })
                     .catch((e) => {

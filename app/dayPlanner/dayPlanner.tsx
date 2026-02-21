@@ -25,12 +25,12 @@ function dayPlanner() {
 
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
-      {dayPlannerApi.recentDays.length > 0 && displayMode === "visual" && (
+      {/* {dayPlannerApi.recentDays.length > 0 && displayMode === "visual" && (
         <DayPlannerChart />
       )}
       {dayPlannerApi.recentDays.length > 0 && displayMode === "list" && (
         <DayPlannerHistoryListView></DayPlannerHistoryListView>
-      )}
+      )} */}
       <DayPlannerCard
         onSwitchDisplayMode={(newStatus) => {
           setDisplayMode(newStatus);
@@ -47,8 +47,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-end",
-    paddingLeft: 5,
-    paddingRight: 5,
     gap: 5,
     top: 0,
   },

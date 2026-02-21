@@ -17,6 +17,7 @@ import * as SecureStore from "expo-secure-store";
 import { FlashList } from "@shopify/flash-list";
 import {
   getUserDataKey,
+  previousActivityId,
   secureStoreKeyNames,
 } from "../../utils/constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
@@ -43,6 +44,11 @@ import { Portal } from "react-native-portalize";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { TrashIcon } from "@/components/deco/TrashIcon";
+import { timeToDaySegment } from "@/constants/timeToDaySegment";
+import { timestampToDayType } from "@/constants/timestampToDayType";
+import * as SQLite from "expo-sqlite";
+import { ActivityTransitionLog, ARCTasksType } from "@/constants/CommonTypes";
+
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
   const globalStyle = useGlobalStyleStore();
@@ -52,6 +58,10 @@ function TimeTrackingCard() {
   const [hasPendingActivity, setHasPendingActivity] = useState<
     false | null | { name: string; start: number; taskID: string }
   >(null);
+
+  const [recommendedCounts, setRecommendedCounts] = useState<{
+    [key: string]: number;
+  }>({});
   const activeUserApi = useActiveUser();
   const [timeDisplayLabel, setTimeDisplayLabel] = useState("");
   const [activitySearchFilter, setActivitySearchFilter] = useState("");
@@ -94,9 +104,17 @@ function TimeTrackingCard() {
       const results = searcher().search(activitySearchFilter);
       setActivities(results);
     } else {
-      setActivities(getActivities());
+      const activities = getActivities();
+
+      setActivities(
+        activities.sort((a, b) => {
+          const countA = recommendedCounts[a.itme.taskID] || 0;
+          const countB = recommendedCounts[b.itme.taskID] || 0;
+          return countB - countA;
+        }),
+      );
     }
-  }, [activitySearchFilter]);
+  }, [activitySearchFilter, recommendedCounts]);
 
   useEffect(() => {
     if (hasPendingActivity !== null && hasPendingActivity !== false) {
@@ -108,7 +126,7 @@ function TimeTrackingCard() {
     }
   }, [hasPendingActivity]);
 
-  const startActivity = useCallback((task: any) => {
+  const startActivity = useCallback(async (task: any) => {
     if (!activeUserApi.activeUser.userId) {
       console.error("No active user");
       return;
@@ -138,8 +156,34 @@ function TimeTrackingCard() {
       JSON.stringify(userDataPayload),
     );
     const menuApi = useNavMenuApi.getState();
-    menuApi.setShowMenu(true);
-    setIsPickingActivity(false);
+
+    const prevActivityId = await SecureStore.getItemAsync(previousActivityId);
+
+    if (prevActivityId !== null) {
+      const currentTime = Date.now();
+      const newActivityId = taskID;
+      const daySegment = timeToDaySegment(new Date().getHours());
+      const dayType = timestampToDayType(currentTime);
+
+      menuApi.setShowMenu(true);
+      setIsPickingActivity(false);
+
+      const newBehaviorLogRow = {
+        previousActivity: prevActivityId,
+        nextActivity: newActivityId,
+        dayType,
+        timeBucket: daySegment,
+      };
+
+      const db = await SQLite.openDatabaseAsync("localCache");
+      const res = await db.runAsync(
+        "INSERT INTO activityTransitions (previousActivity, nextActivity, dayType, timeBucket) VALUES (?, ?, ?, ?)",
+        newBehaviorLogRow.previousActivity,
+        newBehaviorLogRow.nextActivity,
+        newBehaviorLogRow.dayType,
+        newBehaviorLogRow.timeBucket,
+      );
+    }
   }, []);
 
   const getDisplayTime = useCallback((startTime: number) => {
@@ -166,6 +210,47 @@ function TimeTrackingCard() {
     hours = hours % 12 || 12; // Convert to 12-hour format
     return `${hours}:${minutes} ${ampm}`;
   }, []);
+
+  useEffect(() => {
+    const currentTime = Date.now();
+    const daySegment = timeToDaySegment(new Date().getHours());
+    const dayType = timestampToDayType(currentTime);
+    const prevActivityId = SecureStore.getItem(previousActivityId);
+    if (prevActivityId === null) {
+      return;
+    }
+
+    async function requestRecommendations() {
+      const db = await SQLite.openDatabaseAsync("localCache");
+      const nextActivityMatches = await db.getAllAsync(
+        `SELECT *
+    FROM activityTransitions
+    WHERE previousActivity = ?
+    AND dayType = ?
+    AND timeBucket = ?
+    LIMIT 3;`,
+        [prevActivityId, dayType, daySegment],
+      );
+
+      let countMap: { [key: string]: number } = {};
+
+      nextActivityMatches.forEach((row: ActivityTransitionLog) => {
+        const nextActivity = row.nextActivity;
+        if (countMap[nextActivity]) {
+          const newCountMap = {
+            ...countMap,
+            [nextActivity]: countMap[nextActivity] + 1,
+          };
+          countMap = newCountMap;
+        } else {
+          countMap[nextActivity] = 1;
+        }
+      });
+
+      setRecommendedCounts(countMap);
+    }
+    requestRecommendations();
+  }, [isPickingActivity]);
 
   useEffect(() => {
     const activeUser = activeUserApi.activeUser.userId;
@@ -301,7 +386,6 @@ function TimeTrackingCard() {
                   width: "50%",
                   height: "100%",
                   display: "flex",
-
                   justifyContent: "center",
                   borderTopWidth: 0,
                   borderBottomWidth: 0,
@@ -394,7 +478,7 @@ function TimeTrackingCard() {
                 flexGrow: 1,
                 height: "85%",
               }}
-              onClick={() => {
+              onClick={async () => {
                 if (activeUserApi.activeUser.userId === null) {
                   console.error("No active user");
                   return;
@@ -412,11 +496,15 @@ function TimeTrackingCard() {
                   )
                   .then((res) => {})
                   .catch((err) => {});
-                SecureStore.deleteItemAsync(
+                await SecureStore.deleteItemAsync(
                   getUserDataKey(
                     activeUserApi.activeUser.userId,
                     secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
                   ),
+                );
+                await SecureStore.setItemAsync(
+                  previousActivityId,
+                  hasPendingActivity.taskID,
                 );
                 useNavMenuApi.getState().setShowMenu(false);
                 setActivitySearchFilter("");

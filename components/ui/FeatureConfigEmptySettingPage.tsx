@@ -93,7 +93,7 @@ function FeatureConfigEmptySettingPage(props: Props) {
               style={{
                 width: "80%",
                 height: "100%",
-                backgroundColor: globalStyle.globalStyle.color + "20",
+                backgroundColor: globalStyle.globalStyle.color + "10",
               }}
               label={props.bototmHeaderLabel}
             />
@@ -108,6 +108,9 @@ function FeatureConfigEmptySettingPage(props: Props) {
                 marginLeft: 5,
                 width: "20%",
                 height: "100%",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                backgroundColor: globalStyle.globalStyle.color + "20",
                 borderRadius: globalStyle.globalStyle.borderRadius,
               }}
             ></Button>

@@ -26,7 +26,7 @@ function DayPlannerCard(props: {
   currentSwitchDisplayMode: "list" | "visual";
 }) {
   const dayPlannerFeatureConfig = useFeatureConfigs(
-    (store) => store.dayPlannerFeatureConfig
+    (store) => store.dayPlannerFeatureConfig,
   );
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const dayPlannerActiveDayApi = useDayPlannerActiveDay();
@@ -48,7 +48,7 @@ function DayPlannerCard(props: {
     }
     const dayCompletion = computeDayPlannerCompletion(
       dayPlannerFeatureConfig,
-      dayPlannerActiveDayApi.activeDay
+      dayPlannerActiveDayApi.activeDay,
     );
     setDayCompletionPercentage(dayCompletion);
   }, [dayPlannerActiveDayApi.activeDay, dayPlannerFeatureConfig]);
@@ -67,7 +67,7 @@ function DayPlannerCard(props: {
     const recentDays = dayPlannerApi.recentDays;
 
     const todayDayIndex = recentDays.findIndex(
-      (day) => day.day === formattedDate
+      (day) => day.day === formattedDate,
     );
 
     if (todayDayIndex !== -1) {
@@ -80,7 +80,7 @@ function DayPlannerCard(props: {
           formattedDate,
           existingDay,
           undefined,
-          "replace"
+          "replace",
         )
         .then((res) => {
           dayPlannerApi.setActiveDay(existingDay);
@@ -132,13 +132,14 @@ function DayPlannerCard(props: {
         };
       }
     },
-    []
+    [],
   );
 
   return (
     <View
       style={{
-        backgroundColor: globalStyle.color + layoutCardLikeBackgroundOpacity,
+        borderTopColor: globalStyle.color + "40",
+        borderTopWidth: 1,
         width: "100%",
         borderRadius: globalStyle.borderRadius,
         height: "20%",
@@ -155,34 +156,41 @@ function DayPlannerCard(props: {
         <View
           style={{
             width: "100%",
-            height: "30%",
+            height: "23%",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexDirection: "row",
           }}
         >
-          <Text
-            fontSize={globalStyle.regularMobileFont}
-            label="Day Planner"
-          ></Text>
+          <Text fontSize={12} label="Day Planner"></Text>
           <View
             style={{
               height: "100%",
               display: "flex",
               gap: 5,
+              width: "50%",
               flexDirection: "row",
-              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <Button
               onClick={() => {
                 const currentDisplayMode = props.currentSwitchDisplayMode;
                 props.onSwitchDisplayMode(
-                  currentDisplayMode === "list" ? "visual" : "list"
+                  currentDisplayMode === "list" ? "visual" : "list",
                 );
               }}
-              style={styles.contextButtonStyle}
+              backgroundColor={globalStyle.colorAccent + "15"}
+              style={{
+                height: "100%",
+                display: "flex",
+                flex: 1,
+                justifyContent: "center",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                alignItems: "center",
+              }}
             >
               {props.currentSwitchDisplayMode === "visual" ? (
                 <ListDeco width={35} height={15}></ListDeco>
@@ -194,7 +202,16 @@ function DayPlannerCard(props: {
               onClick={() => {
                 router.push("/dayPlanner/statusEditor/statusEditor");
               }}
-              style={styles.contextButtonStyle}
+              backgroundColor={globalStyle.colorAccent + "15"}
+              style={{
+                flex: 1,
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                alignItems: "center",
+              }}
             >
               <EditDeco width={35} height={25}></EditDeco>
             </Button>
@@ -227,6 +244,15 @@ function DayPlannerCard(props: {
             ></Text>
           </View>
           <Button
+            style={{
+              width: "50%",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              alignItems: "center",
+            }}
             onClick={startDay}
             label="Start Day"
             style={{ height: "40%", width: "80%", marginTop: 15 }}
@@ -259,7 +285,7 @@ function DayPlannerCard(props: {
                 <Text
                   style={{ marginLeft: 5 }}
                   label={getDateDisplayLabelFromDate(
-                    new Date(dayPlannerActiveDayApi.activeDay.day)
+                    new Date(dayPlannerActiveDayApi.activeDay.day),
                   )}
                 ></Text>
               </View>

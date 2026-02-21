@@ -37,7 +37,7 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 function dayPlannerActiveDayView() {
   const dataRetriavalAPI = dataRetrivalApi();
   const dayPlannerActiveDay = useDayPlannerActiveDay(
-    (store) => store.activeDay
+    (store) => store.activeDay,
   );
   const featureConfigApi = useFeatureConfigs();
   const globalStyle = useGlobalStyleStore();
@@ -57,7 +57,7 @@ function dayPlannerActiveDayView() {
     (task: TessTaskType) => {
       const statusId = task.statusID;
       const status = featureConfigApi.dayPlannerFeatureConfig.find(
-        (status: TessStatusType) => status.statusID === statusId
+        (status: TessStatusType) => status.statusID === statusId,
       );
       if (status) {
         return status.name;
@@ -65,7 +65,7 @@ function dayPlannerActiveDayView() {
         return "Unknown Status";
       }
     },
-    [featureConfigApi.dayPlannerFeatureConfig]
+    [featureConfigApi.dayPlannerFeatureConfig],
   );
 
   const debouncedUpdateTaskName = useCallback(
@@ -77,7 +77,7 @@ function dayPlannerActiveDayView() {
           updatedDay.day,
           updatedDay,
           undefined,
-          "replace"
+          "replace",
         )
         .then((r) => {
           console.log("Task name updated", r);
@@ -86,7 +86,7 @@ function dayPlannerActiveDayView() {
           console.log("Error updating task name", e);
         });
     }, 500),
-    []
+    [],
   );
 
   const getStatusColorsForTask = useCallback(
@@ -100,7 +100,7 @@ function dayPlannerActiveDayView() {
 
       const statusId = task.statusID;
       const status = featureConfigApi.dayPlannerFeatureConfig.find(
-        (status: TessStatusType) => status.statusID === statusId
+        (status: TessStatusType) => status.statusID === statusId,
       );
       if (status) {
         const statusColors = status.colors;
@@ -125,7 +125,7 @@ function dayPlannerActiveDayView() {
         return returnDefaultColors();
       }
     },
-    [featureConfigApi.dayPlannerFeatureConfig]
+    [featureConfigApi.dayPlannerFeatureConfig],
   );
 
   const updateTaskStatus = useCallback(
@@ -139,7 +139,7 @@ function dayPlannerActiveDayView() {
         return;
       }
       const taskIndex = dayPlannerActiveDay.tasks.findIndex(
-        (task) => task.TTID === statusPickingForTask?.TTID
+        (task) => task.TTID === statusPickingForTask?.TTID,
       );
       if (taskIndex === -1) {
         return;
@@ -163,7 +163,7 @@ function dayPlannerActiveDayView() {
           updatedDay.day,
           updatedDay,
           undefined,
-          "replace"
+          "replace",
         )
         .then((r) => {
           console.log("Task status updated", r);
@@ -172,7 +172,7 @@ function dayPlannerActiveDayView() {
           console.error("Error updating task status", e);
         });
     },
-    [statusPickingForTask]
+    [statusPickingForTask],
   );
 
   const endDay = useCallback(() => {
@@ -188,7 +188,7 @@ function dayPlannerActiveDayView() {
         endedDay.day,
         endedDay,
         undefined,
-        "replace"
+        "replace",
       )
       .then((r) => {
         useDayPlannerActiveDay.getState().setActiveDay(null);
@@ -210,7 +210,7 @@ function dayPlannerActiveDayView() {
       return;
     }
     let defaultStatusId: string = featureConfigApi.dayPlannerFeatureConfig.find(
-      (status: TessStatusType) => status.name === "To Do"
+      (status: TessStatusType) => status.name === "To Do",
     )?.statusID;
     if (!defaultStatusId) {
       defaultStatusId = featureConfigApi.dayPlannerFeatureConfig[0].statusID;
@@ -241,7 +241,7 @@ function dayPlannerActiveDayView() {
         newDay.day,
         newDay,
         undefined,
-        "replace"
+        "replace",
       )
       .then((r) => {
         console.log("Day updated", r);
@@ -289,7 +289,7 @@ function dayPlannerActiveDayView() {
               statusPickingForTask === null
                 ? dayPlannerActiveDay?.tasks
                 : featureConfigApi.dayPlannerFeatureConfig.filter(
-                    (r: TessStatusType) => r.deleted !== true
+                    (r: TessStatusType) => r.deleted !== true,
                   )
             }
             estimatedItemSize={55}
@@ -335,7 +335,7 @@ function dayPlannerActiveDayView() {
 
                 const statusFeatureConfig: TessStatusType =
                   tessFeatureConfig.find(
-                    (item) => item.statusID === typedItem.statusID
+                    (item) => item.statusID === typedItem.statusID,
                   );
 
                 const colorScheme = globalStyle.globalStyle.colorScheme;
@@ -405,7 +405,7 @@ function dayPlannerActiveDayView() {
                         };
 
                         const updatedTasks = dayPlannerActiveDay?.tasks.map(
-                          (t) => (t.TTID === typedItem.TTID ? updatedTask : t)
+                          (t) => (t.TTID === typedItem.TTID ? updatedTask : t),
                         );
 
                         if (!updatedTasks) {

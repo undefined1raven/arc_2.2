@@ -26,7 +26,7 @@ const getUserThemeKey = (userId: string) => {
 
 const getUserDataKey = (
   userId: string,
-  userDataKey: "timeTrackingActiveTask" | string
+  userDataKey: "timeTrackingActiveTask" | string,
 ) => {
   return `userData_${userId}-${userDataKey}`;
 };
@@ -39,6 +39,8 @@ const getPrivateKey = (userId: string) => {
   return `privateKey_${userId}`;
 };
 
+const previousActivityId = "previousActivityId";
+
 const deviceId = `device_id`;
 
 export {
@@ -50,5 +52,6 @@ export {
   getUserThemeKey,
   authChallengeStack,
   deviceId,
+  previousActivityId,
   authTokenKeyName,
 };

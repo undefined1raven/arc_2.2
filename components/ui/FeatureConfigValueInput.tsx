@@ -30,12 +30,12 @@ function FeatureConfigValueInput(props: Props) {
   const styles = useCallback(() => {
     return StyleSheet.create({
       inputCoreStyle: {
-        height: "97%",
-        top: "1.5%",
-        position: "relative",
+        height: "100%",
         flexGrow: 1,
-        marginLeft: props.label ? 5 : 0,
-        marginBottom: 5,
+        borderColor: "transparent",
+        borderWidth: 0,
+        borderLeftColor: globalStyle.globalStyle.color,
+        borderLeftWidth: 1,
         width: `${100 - (props.labelWidthPercentage || 35)}%`,
       },
     });
@@ -56,8 +56,9 @@ function FeatureConfigValueInput(props: Props) {
         <Text
           label={props.label}
           textAlign="left"
+          color={globalStyle.globalStyle.textColorAccent}
           style={{
-            backgroundColor: globalStyle.globalStyle.color + "20",
+            backgroundColor: globalStyle.globalStyle.color + "10",
             height: "100%",
             width: props.labelWidthPercentage
               ? `${props.labelWidthPercentage}%`
@@ -121,7 +122,7 @@ function FeatureConfigValueInput(props: Props) {
                     break;
                 }
               },
-            }
+            },
       )}
     </View>
   );

@@ -4,6 +4,7 @@ import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/T
 import DayOverviewCard from "@/components/homeDashboardCards/dayOverviewCard";
 import { WeekOverview } from "@/components/homeDashboardCards/weekOverview/weekOverview";
 import { HabitTracker } from "@/components/homeDashboardCards/habitTracker/habitTracker";
+import { TestTile } from "@/components/ui/TestTile";
 
 function Home() {
   return (

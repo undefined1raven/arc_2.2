@@ -22,12 +22,8 @@ function FeatureConfigSelection(props: Props) {
   const styles = useCallback(() => {
     return StyleSheet.create({
       inputCoreStyle: {
-        height: "97%",
-        top: "1.5%",
-        position: "relative",
+        height: "100%",
         flexGrow: 1,
-        marginLeft: props.label ? 5 : 0,
-        marginBottom: 5,
         width: `${100 - (props.labelWidthPercentage || 35)}%`,
       },
     });
@@ -47,9 +43,10 @@ function FeatureConfigSelection(props: Props) {
       {typeof props.label === "string" && props.label.length > 0 && (
         <Text
           label={props.label}
+          color={globalStyle.globalStyle.textColorAccent}
           textAlign="left"
           style={{
-            backgroundColor: globalStyle.globalStyle.color + "20",
+            backgroundColor: globalStyle.globalStyle.color + "10",
             height: "100%",
             width: props.labelWidthPercentage
               ? `${props.labelWidthPercentage}%`

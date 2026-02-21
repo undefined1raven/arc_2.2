@@ -10,6 +10,7 @@ import { useDiaryData } from "@/stores/diary/diary";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useHabitCardDataApi } from "@/stores/viewState/habitCardData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { retroBehaviorLogs } from "./retroBehaviorLogs";
 
 ///Get UI blocking data at login
 function getDayPlannerActiveDay() {
@@ -132,6 +133,7 @@ function onLoginOnce() {
   loadDiaryGroups();
   loadRecentDayPlannerData();
   loadLastWeekTimeTrackingData();
+  retroBehaviorLogs();
 }
 
 export { onLoginOnce };
