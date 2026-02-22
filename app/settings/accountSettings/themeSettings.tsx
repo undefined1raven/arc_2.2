@@ -67,7 +67,7 @@ function AccountSettingsMain() {
             const colorSet = themeColors[item.name][theme];
 
             NavigationBar.setBackgroundColorAsync(
-              colorSet.pageBackgroundColors[1]
+              colorSet.pageBackgroundColors[1],
             );
 
             const userId = useActiveUser.getState().activeUser?.userId;
@@ -79,7 +79,7 @@ function AccountSettingsMain() {
             console.log(
               "Saving user theme:",
               item.name,
-              getUserThemeKey(userId)
+              getUserThemeKey(userId),
             );
 
             AsyncStorage.setItem(getUserThemeKey(userId), item.name)
@@ -198,7 +198,7 @@ function AccountSettingsMain() {
         </Button>
       );
     },
-    [globalStyle]
+    [globalStyle],
   );
 
   return (

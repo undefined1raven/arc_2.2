@@ -63,7 +63,8 @@ type AvailableThemes =
   | "sangeRed"
   | "paper"
   | "monochromeGray"
-  | "blackOrange";
+  | "blackOrange"
+  | "midnightBlue";
 
 type Themes = {
   cloudy: ThemeColorsType;
@@ -76,6 +77,7 @@ type Themes = {
   paper: ThemeColorsType;
   monochromeGray: ThemeColorsType;
   blackOrange: ThemeColorsType;
+  midnightBlue: ThemeColorsType;
 };
 const themeColorKeyToDisplayName = {
   cloudy: "Cloudy",
@@ -92,6 +94,7 @@ const themeColorKeyToDisplayName = {
   monochromeGray: "Monochrome Gray",
   paper: "Paper",
   blackOrange: "Black Orange",
+  midnightBlue: "Midnight Blue",
 };
 
 export { themeColorKeyToDisplayName };
@@ -395,6 +398,86 @@ const themeColors: Themes = {
       colorAltLight: "#BCB1FE",
       warningColor: "#4A4800",
       warningTextColor: "#4A4800",
+      chartColorSet: [
+        "#E71D36",
+        "#D66BA0",
+        "#9DF7E5",
+        "#F4E4BA",
+        "#1A8FE3",
+        "#6874E8",
+        "#E5A9A9",
+        "#6F5E5C",
+        "#FCBF49",
+        "#F7E733",
+        "#41E2BA",
+        "#B80C09",
+        "#6E7DAB",
+        "#607466",
+        "#F46036",
+        "#C64191",
+        "#EF6F6C",
+        "#1B998B",
+      ],
+    },
+  },
+  midnightBlue: {
+    light: {
+      androidRippleColor: "#000000",
+      statusBarColor: "#070039",
+      pageBackgroundColors: ["#070039", "#040410"],
+      color: "#AEC3FF",
+      colorAccent: "#5B74BA",
+      colorAlt: "#618BFF",
+      textColor: "#C2D3FF",
+      textColorAccent: "#7F95CE",
+      textColorInactive: "#5A688C",
+      colorInactive: "#5A688C",
+      successColor: "#00C631",
+      successTextColor: "#41FF3E",
+      errorColor: "#C60003",
+      errorTextColor: "#FF2558",
+      colorAltLight: "#ACC2FF",
+      warningColor: "#FFB700",
+      warningTextColor: "#CD9300",
+      chartColorSet: [
+        "#E71D36",
+        "#D66BA0",
+        "#9DF7E5",
+        "#F4E4BA",
+        "#1A8FE3",
+        "#6874E8",
+        "#E5A9A9",
+        "#6F5E5C",
+        "#FCBF49",
+        "#F7E733",
+        "#41E2BA",
+        "#B80C09",
+        "#6E7DAB",
+        "#607466",
+        "#F46036",
+        "#C64191",
+        "#EF6F6C",
+        "#1B998B",
+      ],
+    },
+    dark: {
+      androidRippleColor: "#000000",
+      statusBarColor: "#070039",
+      pageBackgroundColors: ["#070039", "#040410"],
+      color: "#AEC3FF",
+      colorAccent: "#5B74BA",
+      colorAlt: "#618BFF",
+      textColor: "#C2D3FF",
+      textColorAccent: "#7F95CE",
+      textColorInactive: "#5A688C",
+      colorInactive: "#5A688C",
+      successColor: "#00C631",
+      successTextColor: "#41FF3E",
+      errorColor: "#C60003",
+      errorTextColor: "#FF2558",
+      colorAltLight: "#ACC2FF",
+      warningColor: "#FFB700",
+      warningTextColor: "#CD9300",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
