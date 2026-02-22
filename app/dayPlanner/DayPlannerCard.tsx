@@ -21,10 +21,7 @@ import React, { useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
-function DayPlannerCard(props: {
-  onSwitchDisplayMode: (newMode: "list" | "visual") => void;
-  currentSwitchDisplayMode: "list" | "visual";
-}) {
+function DayPlannerCard() {
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (store) => store.dayPlannerFeatureConfig,
   );
@@ -38,20 +35,6 @@ function DayPlannerCard(props: {
   const customFadeInDown = useCallback((duration: number) => {
     return FadeInDown.duration(duration);
   }, []);
-
-  useEffect(() => {
-    if (
-      dayPlannerActiveDayApi.activeDay === undefined ||
-      dayPlannerActiveDayApi.activeDay === null
-    ) {
-      return;
-    }
-    const dayCompletion = computeDayPlannerCompletion(
-      dayPlannerFeatureConfig,
-      dayPlannerActiveDayApi.activeDay,
-    );
-    setDayCompletionPercentage(dayCompletion);
-  }, [dayPlannerActiveDayApi.activeDay, dayPlannerFeatureConfig]);
 
   const getDateDisplayLabelFromDate = useCallback((date: Date) => {
     const month = monthToLabel[date.getMonth()];
@@ -113,28 +96,6 @@ function DayPlannerCard(props: {
     }
   }, []);
 
-  const getColorsFromCompletionPercentage = useCallback(
-    (completionPercentage: number) => {
-      if (completionPercentage < 25) {
-        return {
-          textColor: globalStyle.errorTextColor,
-          color: globalStyle.errorColor,
-        };
-      } else if (completionPercentage < 75) {
-        return {
-          textColor: globalStyle.warningTextColor,
-          color: globalStyle.warningColor,
-        };
-      } else {
-        return {
-          textColor: globalStyle.successTextColor,
-          color: globalStyle.successColor,
-        };
-      }
-    },
-    [],
-  );
-
   return (
     <View
       style={{
@@ -142,7 +103,8 @@ function DayPlannerCard(props: {
         borderTopWidth: 1,
         width: "100%",
         borderRadius: globalStyle.borderRadius,
-        height: "20%",
+        height: "auto",
+        maxHeight: 120,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -152,203 +114,97 @@ function DayPlannerCard(props: {
       {dayPlannerActiveDayApi.activeDay === undefined && (
         <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
       )}
-      {dayPlannerActiveDayApi.activeDay !== undefined && (
+
+      <View
+        style={{
+          width: "100%",
+          height: "55px",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <View
           style={{
-            width: "100%",
-            height: "23%",
+            flex: 1,
+            height: "100%",
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "row",
+            justifyContent: "flex-start",
             alignItems: "center",
+          }}
+        >
+          <CalendarDeco width={28} height={28}></CalendarDeco>
+          <Text
+            style={{ marginLeft: 5 }}
+            label={getDateDisplayLabelFromDate(new Date())}
+          ></Text>
+        </View>
+        <View
+          style={{
+            height: "90%",
+            flex: 1,
+            width: "100%",
+            display: "flex",
+            gap: 10,
             flexDirection: "row",
           }}
         >
-          <Text fontSize={12} label="Day Planner"></Text>
-          <View
-            style={{
-              height: "100%",
-              display: "flex",
-              gap: 5,
-              width: "50%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Button
-              onClick={() => {
-                const currentDisplayMode = props.currentSwitchDisplayMode;
-                props.onSwitchDisplayMode(
-                  currentDisplayMode === "list" ? "visual" : "list",
-                );
-              }}
-              backgroundColor={globalStyle.colorAccent + "15"}
-              style={{
-                height: "100%",
-                display: "flex",
-                flex: 1,
-                justifyContent: "center",
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                alignItems: "center",
-              }}
-            >
-              {props.currentSwitchDisplayMode === "visual" ? (
-                <ListDeco width={35} height={15}></ListDeco>
-              ) : (
-                <StatsDeco width={35} height={25}></StatsDeco>
-              )}
-            </Button>
-            <Button
-              onClick={() => {
-                router.push("/dayPlanner/statusEditor/statusEditor");
-              }}
-              backgroundColor={globalStyle.colorAccent + "15"}
-              style={{
-                flex: 1,
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                alignItems: "center",
-              }}
-            >
-              <EditDeco width={35} height={25}></EditDeco>
-            </Button>
-          </View>
-        </View>
-      )}
-      {dayPlannerActiveDayApi.activeDay === null && (
-        <View
-          style={{
-            width: "100%",
-            height: "70%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: "80%",
-              height: "20%",
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "flex-start",
-            }}
-          >
-            <CalendarDeco width={28} height={28}></CalendarDeco>
-            <Text
-              style={{ marginLeft: 5 }}
-              label={getDateDisplayLabelFromDate(new Date())}
-            ></Text>
-          </View>
           <Button
+            onClick={() => {}}
+            backgroundColor={globalStyle.colorAccent + "15"}
             style={{
-              width: "50%",
               height: "100%",
               display: "flex",
+              flex: 1,
               justifyContent: "center",
               borderTopWidth: 0,
               borderBottomWidth: 0,
               alignItems: "center",
             }}
-            onClick={startDay}
-            label="Start Day"
-            style={{ height: "40%", width: "80%", marginTop: 15 }}
-          ></Button>
-        </View>
-      )}
-      {dayPlannerActiveDayApi.activeDay !== null &&
-        dayPlannerActiveDayApi.activeDay !== undefined && (
-          <View
-            style={{
-              width: "100%",
-              height: "70%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
           >
-            <View
-              style={{
-                width: "80%",
-                height: "20%",
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <View style={{ display: "flex", flexDirection: "row" }}>
-                <CalendarDeco width={28} height={28}></CalendarDeco>
-                <Text
-                  style={{ marginLeft: 5 }}
-                  label={getDateDisplayLabelFromDate(
-                    new Date(dayPlannerActiveDayApi.activeDay.day),
-                  )}
-                ></Text>
-              </View>
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  flexGrow: 1,
-                  height: "100%",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  gap: 5,
-                }}
-              >
-                <Text
-                  color={
-                    getColorsFromCompletionPercentage(dayCompletionPercentage)
-                      .textColor
-                  }
-                  textAlign="left"
-                  style={{
-                    backgroundColor:
-                      getColorsFromCompletionPercentage(dayCompletionPercentage)
-                        .color + "00",
-                  }}
-                  fontSize={globalStyle.mediumMobileFont}
-                  label={`${dayCompletionPercentage}% completed`}
-                ></Text>
-                <SimpleDonutChart
-                  value={dayCompletionPercentage}
-                  min={0}
-                  max={100}
-                  style={{
-                    width: 25,
-                    height: 25,
-                  }}
-                  color={
-                    getColorsFromCompletionPercentage(dayCompletionPercentage)
-                      .color
-                  }
-                  backgroundColor={
-                    getColorsFromCompletionPercentage(dayCompletionPercentage)
-                      .color + "50"
-                  }
-                  thickness={4}
-                ></SimpleDonutChart>
-              </View>
-            </View>
+            <StatsDeco width={35} height={25}></StatsDeco>
+          </Button>
+          {dayPlannerActiveDayApi.activeDay === null ? (
             <Button
               onClick={() => {
-                const activeDay = dayPlannerActiveDayApi.activeDay;
-                if (activeDay === null || activeDay === undefined) {
-                  return;
-                }
-                if (Object.keys(activeDay).length > 0) {
-                  router.push("/activeDayView/activeDayView");
-                }
+                startDay();
               }}
-              label="View Day"
-              style={{ height: "40%", width: "80%", marginTop: 15 }}
+              fontSize={15}
+              label="Start day"
+              backgroundColor={globalStyle.colorAccent + "15"}
+              style={{
+                flex: 2,
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                alignItems: "center",
+              }}
             ></Button>
-          </View>
-        )}
+          ) : (
+            <Button
+              onClick={() => {}}
+              fontSize={15}
+              label="End day"
+              color={globalStyle.errorColor}
+              borderColor={globalStyle.errorColor}
+              backgroundColor={globalStyle.errorColor + "15"}
+              style={{
+                flex: 2,
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                alignItems: "center",
+              }}
+            ></Button>
+          )}
+        </View>
+      </View>
     </View>
   );
 }
