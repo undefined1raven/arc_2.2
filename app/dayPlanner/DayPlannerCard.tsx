@@ -1,41 +1,25 @@
 import Button from "@/components/common/Button";
-import { SimpleDonutChart } from "@/components/common/SimpleDonutChart";
 import Text from "@/components/common/Text";
-import { BackupFileDeco } from "@/components/deco/BackupFileDeco";
 import CalendarDeco from "@/components/deco/CalendarDeco";
-import { EditDeco } from "@/components/deco/EditDeco";
-import { ListDeco } from "@/components/deco/ListDeco";
 import { StatsDeco } from "@/components/deco/StatsDeco";
 import { dayPlannerChunkSize } from "@/components/utils/constants/chunking";
-import { computeDayPlannerCompletion } from "@/components/utils/dataProcessing/computeDayPlannerCompletion";
-import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { TessDayLogType } from "@/constants/CommonTypes";
 import { monthToLabel } from "@/constants/time";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
-import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { router } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 function DayPlannerCard() {
-  const dayPlannerFeatureConfig = useFeatureConfigs(
-    (store) => store.dayPlannerFeatureConfig,
+  const dayPlannerActiveDay = useDayPlannerActiveDay(
+    (state) => state.activeDay,
   );
+  const recentDays = useDayPlannerActiveDay((store) => store.recentDays);
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const dayPlannerActiveDayApi = useDayPlannerActiveDay();
-  const customFadeInUp = useCallback((duration: number) => {
-    return FadeInUp.duration(duration);
-  }, []);
-  const [dayCompletionPercentage, setDayCompletionPercentage] =
-    React.useState<number>(0);
-  const customFadeInDown = useCallback((duration: number) => {
-    return FadeInDown.duration(duration);
-  }, []);
-
+  const dataRetriavalAPI = dataRetrivalApi();
   const getDateDisplayLabelFromDate = useCallback((date: Date) => {
     const month = monthToLabel[date.getMonth()];
     const day = date.getDate();
@@ -47,7 +31,6 @@ function DayPlannerCard() {
     const dayPlannerApi = useDayPlannerActiveDay.getState();
     const newDate = new Date();
     const formattedDate = newDate.toDateString();
-    const recentDays = dayPlannerApi.recentDays;
 
     const todayDayIndex = recentDays.findIndex(
       (day) => day.day === formattedDate,
@@ -94,7 +77,34 @@ function DayPlannerCard() {
           console.error("Error creating new day", err);
         });
     }
-  }, []);
+  }, [recentDays]);
+
+  const endDay = useCallback(() => {
+    if (dayPlannerActiveDay === undefined || dayPlannerActiveDay === null) {
+      return;
+    }
+    console.log("RRR WHAT", dayPlannerActiveDay?.tasks);
+    const endedDay: TessDayLogType = { ...dayPlannerActiveDay };
+    delete endedDay.isActive;
+    dataRetriavalAPI
+      .modifyEntry(
+        "dayPlannerChunks",
+        ["day"],
+        endedDay.day,
+        endedDay,
+        undefined,
+        "replace",
+      )
+      .then((r) => {
+        useDayPlannerActiveDay.getState().setActiveDay(null);
+        console.log("Day ended", r);
+        router.replace("/dayPlanner/dayPlanner");
+      })
+      .catch((e) => {
+        router.replace("/dayPlanner/dayPlanner");
+        console.error("Error ending day", e);
+      });
+  }, [dayPlannerActiveDay]);
 
   return (
     <View
@@ -111,7 +121,7 @@ function DayPlannerCard() {
         padding: 5,
       }}
     >
-      {dayPlannerActiveDayApi.activeDay === undefined && (
+      {dayPlannerActiveDay === undefined && (
         <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
       )}
 
@@ -166,7 +176,7 @@ function DayPlannerCard() {
           >
             <StatsDeco width={35} height={25}></StatsDeco>
           </Button>
-          {dayPlannerActiveDayApi.activeDay === null ? (
+          {dayPlannerActiveDay === null ? (
             <Button
               onClick={() => {
                 startDay();
@@ -186,7 +196,9 @@ function DayPlannerCard() {
             ></Button>
           ) : (
             <Button
-              onClick={() => {}}
+              onClick={() => {
+                endDay();
+              }}
               fontSize={15}
               label="End day"
               color={globalStyle.errorColor}

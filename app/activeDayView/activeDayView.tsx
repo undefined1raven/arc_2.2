@@ -39,6 +39,10 @@ function dayPlannerActiveDayView() {
   const dayPlannerActiveDay = useDayPlannerActiveDay(
     (store) => store.activeDay,
   );
+  const dayPlannerRecentDays = useDayPlannerActiveDay(
+    (state) => state.recentDays,
+  );
+  const dayPlannerRecentDaysApi = useDayPlannerActiveDay();
   const featureConfigApi = useFeatureConfigs();
   const globalStyle = useGlobalStyleStore();
   const virtualKeyboardApi = useVirtualKeyboard();
@@ -70,6 +74,7 @@ function dayPlannerActiveDayView() {
 
   const debouncedUpdateTaskName = useCallback(
     debounce((updatedDay: TessDayLogType) => {
+      updateRecentDaysWithUpdatedDay(updatedDay);
       dataRetriavalAPI
         .modifyEntry(
           "dayPlannerChunks",
@@ -128,6 +133,30 @@ function dayPlannerActiveDayView() {
     [featureConfigApi.dayPlannerFeatureConfig],
   );
 
+  const updateRecentDaysWithUpdatedDay = useCallback(
+    (updatedDay: TessDayLogType) => {
+      const currentRecentDays = useDayPlannerActiveDay.getState().recentDays;
+      if (Array.isArray(currentRecentDays) === false) {
+        return;
+      }
+      const newDayPlannerRecentDays = [...currentRecentDays];
+      const newDate = new Date();
+      const formattedTodayDate = newDate.toDateString();
+
+      const currentDayIndex = newDayPlannerRecentDays.findIndex(
+        (dayLog) => dayLog.day === formattedTodayDate,
+      );
+
+      if (currentDayIndex === -1) {
+        return;
+      } else {
+        newDayPlannerRecentDays.splice(currentDayIndex, 1, updatedDay);
+        dayPlannerRecentDaysApi.setRecentDays(newDayPlannerRecentDays);
+      }
+    },
+    [],
+  );
+
   const updateTaskStatus = useCallback(
     (statusID: string) => {
       if (
@@ -156,6 +185,7 @@ function dayPlannerActiveDayView() {
       };
       useDayPlannerActiveDay.getState().setActiveDay(updatedDay);
       setStatusPickingForTask(null);
+      updateRecentDaysWithUpdatedDay(updatedDay);
       dataRetriavalAPI
         .modifyEntry(
           "dayPlannerChunks",
@@ -174,32 +204,6 @@ function dayPlannerActiveDayView() {
     },
     [statusPickingForTask],
   );
-
-  const endDay = useCallback(() => {
-    if (dayPlannerActiveDay === undefined || dayPlannerActiveDay === null) {
-      return;
-    }
-    const endedDay: TessDayLogType = { ...dayPlannerActiveDay };
-    delete endedDay.isActive;
-    dataRetriavalAPI
-      .modifyEntry(
-        "dayPlannerChunks",
-        ["day"],
-        endedDay.day,
-        endedDay,
-        undefined,
-        "replace",
-      )
-      .then((r) => {
-        useDayPlannerActiveDay.getState().setActiveDay(null);
-        console.log("Day ended", r);
-        router.replace("/dayPlanner/dayPlanner");
-      })
-      .catch((e) => {
-        router.replace("/dayPlanner/dayPlanner");
-        console.error("Error ending day", e);
-      });
-  }, [dayPlannerActiveDay]);
 
   const addTaskToDay = useCallback(() => {
     if (
@@ -234,6 +238,7 @@ function dayPlannerActiveDayView() {
       tasks: allTasks,
     };
     useDayPlannerActiveDay.getState().setActiveDay(newDay);
+    updateRecentDaysWithUpdatedDay(newDay);
     dataRetriavalAPI
       .modifyEntry(
         "dayPlannerChunks",

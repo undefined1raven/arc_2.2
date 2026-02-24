@@ -43,6 +43,8 @@ const useHabitCardDataApi = create<HabitCardData>((set, get) => ({
     ) {
       const newDerivedData = processHabitDataFromTimeLogs(rawData, ids);
       set({ derivedData: newDerivedData, hasLoadedData: true });
+    } else {
+      set({ trackedIds: [], hasLoadedData: true });
     }
   },
 }));

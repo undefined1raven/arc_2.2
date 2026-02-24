@@ -21,10 +21,10 @@ function HabitTracker() {
     hasTrackedIds,
     trackedIds: trackedHabitIds,
   } = useHabitCardDataApi();
+
   const { globalStyle } = useGlobalStyleStore();
 
   const activitiesLabelWidth = 35;
-
   const dayLabels = useMemo(() => {
     const days = ["S", "M", "T", "W", "T", "F", "S"];
     const today = new Date().getDay();
@@ -90,7 +90,10 @@ function HabitTracker() {
   }
 
   ///Render no tracked habits selected state
-  if (hasTrackedIds === true && trackedHabitIds?.length === 0) {
+  if (
+    hasTrackedIds === true &&
+    (trackedHabitIds === null || trackedHabitIds?.length === 0)
+  ) {
     return (
       <View
         style={{
