@@ -4,6 +4,7 @@ import { deviceId } from "../constants/secureStoreKeyNames";
 import { authenticatedApiRequest } from "./apiRequest";
 import * as SQLite from "expo-sqlite";
 import { TransferTask, useTransferStore } from "@/stores/dataSyncApi";
+import { getLocalCache } from "../localDb";
 
 type MetadataType = {
   hash: string;
@@ -18,22 +19,22 @@ type ChunkMetadataResult = {
 };
 
 async function getLocalMetadata(): Promise<ChunkMetadataResult[]> {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
 
   const timeTrackingMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM timeTrackingChunks WHERE LENGTH(encryptedContent) > 10"
+    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM timeTrackingChunks WHERE LENGTH(encryptedContent) > 10",
   );
   const dayPlannerMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM dayPlannerChunks WHERE LENGTH(encryptedContent) > 10"
+    "SELECT hash, tx, id, version, timeRangeStart, timeRangeEnd FROM dayPlannerChunks WHERE LENGTH(encryptedContent) > 10",
   );
   const personalDiaryMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version FROM personalDiaryChunks WHERE LENGTH(encryptedContent) > 10"
+    "SELECT hash, tx, id, version FROM personalDiaryChunks WHERE LENGTH(encryptedContent) > 10",
   );
   const personalDiaryGroupsMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version FROM personalDiaryGroups WHERE LENGTH(encryptedContent) > 10"
+    "SELECT hash, tx, id, version FROM personalDiaryGroups WHERE LENGTH(encryptedContent) > 10",
   );
   const featureConfigMetadataPromise = db.getAllAsync(
-    "SELECT hash, tx, id, version, type FROM featureConfigChunks WHERE LENGTH(encryptedContent) > 10"
+    "SELECT hash, tx, id, version, type FROM featureConfigChunks WHERE LENGTH(encryptedContent) > 10",
   );
 
   const promiseResults = await Promise.allSettled([
@@ -68,7 +69,7 @@ async function getLocalMetadata(): Promise<ChunkMetadataResult[]> {
 
 function getMetadataDeltaForSync(
   localMetadata: MetadataType[],
-  remoteMetadata: MetadataType[]
+  remoteMetadata: MetadataType[],
 ): {
   toUpload: MetadataType[];
   toDownload: MetadataType[];
@@ -80,7 +81,7 @@ function getMetadataDeltaForSync(
   for (let ix = 0; ix < localMetadata.length; ix++) {
     const localItem = localMetadata[ix];
     const correspondingRemote = remoteMetadata.find(
-      (r) => r.id === localItem.id
+      (r) => r.id === localItem.id,
     );
 
     if (correspondingRemote !== undefined) {
@@ -93,7 +94,7 @@ function getMetadataDeltaForSync(
   for (let ix = 0; ix < remoteMetadata.length; ix++) {
     const remoteItem = remoteMetadata[ix];
     const correspondingLocal = localMetadata.find(
-      (r) => r.id === remoteItem.id
+      (r) => r.id === remoteItem.id,
     );
 
     if (correspondingLocal !== undefined) {
@@ -136,7 +137,7 @@ async function initialDataSync() {
     {
       deviceId: currentDeviceId,
       accountId: activeUserId,
-    }
+    },
   );
 
   Promise.all([localMetadataPromsie, remoteMetadataPromise])
@@ -147,7 +148,7 @@ async function initialDataSync() {
       if (remoteMetadataFetchResult.error) {
         console.warn(
           "No remote metadata fetched:",
-          remoteMetadataFetchResult.error
+          remoteMetadataFetchResult.error,
         );
         return;
       }
@@ -167,7 +168,7 @@ async function initialDataSync() {
       for (let ix = 0; ix < 5; ix++) {
         let { toUpload, toDownload } = getMetadataDeltaForSync(
           localMetadataResult[ix].metadata || [],
-          remoteMetadataResult[ix].metadata || []
+          remoteMetadataResult[ix].metadata || [],
         );
 
         //@ts-ignore
@@ -203,14 +204,14 @@ async function initialDataSync() {
       dataSyncApi.enqueue(
         downloads.map((r) => {
           return { ...r, downloadPayload: r.payload };
-        }) as TransferTask[]
+        }) as TransferTask[],
       );
 
-      const db = await SQLite.openDatabaseAsync("localCache");
+      const db = await getLocalCache();
       const localDataRetrievalPromises = uploads.map(async (item) => {
         return db.getAllAsync(
           `SELECT encryptedContent FROM ${item.payload.tableName} WHERE id = ?`,
-          [item.payload.id]
+          [item.payload.id],
         );
       });
 
@@ -224,7 +225,7 @@ async function initialDataSync() {
         }));
 
         uploadPayloads.forEach((item) =>
-          dataSyncApi.enqueue(item as TransferTask)
+          dataSyncApi.enqueue(item as TransferTask),
         );
       });
     })

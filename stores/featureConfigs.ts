@@ -10,6 +10,7 @@ import {
 import { useCryptoOpsQueue } from "./cryptoOpsQueue";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 import { useActiveKeys } from "./decryptedKeys";
+import { getLocalCache } from "@/components/utils/localDb";
 interface IFeatureConfigs {
   decryptFeatureConfigs: () => Promise<void>;
   timeTrackingFeatureConfig: any | null;
@@ -39,7 +40,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
       console.error("Key is not a string");
       return;
     }
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
     const FCChunks: FeatureConfigChunkType[] = await db.getAllAsync(
       "SELECT * FROM featureConfigChunks WHERE userID = ? ",
       [activeUserId],

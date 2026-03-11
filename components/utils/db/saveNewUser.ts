@@ -2,20 +2,21 @@ import { useNewUserData } from "@/stores/newUserData";
 import * as SQLite from "expo-sqlite";
 import { v4 } from "uuid";
 import * as Crypto from "expo-crypto";
+import { getLocalCache } from "../localDb";
 async function saveNewUser(PIKBackup: string) {
   console.log("------------SAVING NEW USER", Date.now());
 
   const newUserDataApi = useNewUserData.getState();
   const newUserData = newUserDataApi.userData;
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
 
   async function getFeatureConfigChunk(
     encryptedContent: string,
-    type: "timeTracking" | "personalDiary" | "dayPlanner"
+    type: "timeTracking" | "personalDiary" | "dayPlanner",
   ) {
     const encryptedContentHash = await Crypto.digestStringAsync(
       Crypto.CryptoDigestAlgorithm.SHA256,
-      encryptedContent
+      encryptedContent,
     );
 
     return {
@@ -31,15 +32,15 @@ async function saveNewUser(PIKBackup: string) {
 
   const timeTrackingFCChunk = await getFeatureConfigChunk(
     newUserData?.timeTrackingFeatureConfig ?? "",
-    "timeTracking"
+    "timeTracking",
   );
   const personalDiaryFCChunk = await getFeatureConfigChunk(
     newUserData?.diaryFeatureConfig ?? "",
-    "personalDiary"
+    "personalDiary",
   );
   const dayPlannerFCChunk = await getFeatureConfigChunk(
     newUserData?.dayPlannerFeatureConfig ?? "",
-    "dayPlanner"
+    "dayPlanner",
   );
 
   const newFCChunks = [
@@ -53,9 +54,9 @@ async function saveNewUser(PIKBackup: string) {
     const savePromise = db
       .runAsync(
         `INSERT INTO featureConfigChunks (id, userID, encryptedContent, tx, type, version, hash) VALUES (${"?, ".repeat(
-          6
+          6,
         )} ?);`,
-        Object.values(chunk)
+        Object.values(chunk),
       )
       .catch((e) => {
         console.log(`Error savings FC CHUnks: `, e);
@@ -67,7 +68,7 @@ async function saveNewUser(PIKBackup: string) {
 
   return db.runAsync(
     `INSERT INTO users (id, signupTime, publicKey, passwordHash, emailAddress, passkeys, PIKBackup, PSKBackup, RCKBackup, trustedDevices, oauthState, securityLogs, version) VALUES (${"?, ".repeat(
-      12
+      12,
     )} ?);`,
     [
       newUserData?.id ?? null,
@@ -83,7 +84,7 @@ async function saveNewUser(PIKBackup: string) {
       newUserData?.oauthState ?? null,
       newUserData?.securityLogs ?? null,
       newUserData?.version ?? null,
-    ]
+    ],
   );
 }
 

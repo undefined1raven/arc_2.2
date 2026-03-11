@@ -11,6 +11,7 @@ import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useHabitCardDataApi } from "@/stores/viewState/habitCardData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { retroBehaviorLogs } from "./retroBehaviorLogs";
+import { useTimeStatsData } from "@/stores/viewState/timeStatsData";
 
 ///Get UI blocking data at login
 function getDayPlannerActiveDay() {
@@ -87,6 +88,7 @@ function loadDiaryGroups() {
 }
 
 function loadLastWeekTimeTrackingData() {
+  ////Dual use fetch for both the habit tracker and initial data load for the time tracking explorer
   const dataRetrivalAPI = dataRetrivalApi.getState();
   const habitDataApi = useHabitCardDataApi.getState();
   const timeConstants = {
@@ -103,7 +105,11 @@ function loadLastWeekTimeTrackingData() {
     )
     .then(async (data) => {
       const timeTrackingData = data.payload as ArcTaskLogType[];
+      const timeTrackingApi = useTimeStatsData.getState();
+      ///Set initial time tracking explorer data
+      timeTrackingApi.setDataInTimeRange(timeTrackingData || null);
 
+      ///Set raw data for habit
       habitDataApi.setRawData(timeTrackingData);
 
       try {
@@ -127,12 +133,12 @@ function loadLastWeekTimeTrackingData() {
 }
 
 ///Called once after the user logs in and crypto keys are available
-function onLoginOnce() {
+async function onLoginOnce() {
   //   initialDataSync();
-  getDayPlannerActiveDay();
-  loadDiaryGroups();
   loadRecentDayPlannerData();
   loadLastWeekTimeTrackingData();
+  getDayPlannerActiveDay();
+  loadDiaryGroups();
   retroBehaviorLogs();
 }
 

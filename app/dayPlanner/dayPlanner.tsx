@@ -1,10 +1,13 @@
 import { ThemedView } from "@/components/ThemedView";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { DayPlannerCard } from "./DayPlannerCard";
+import { DayPlannerHistoryListView } from "@/components/ui/dayPlanner/DayPlannerHistoryListView";
+import { ActiveDayTaskList } from "../activeDayView/activeDayTaskList";
 
 function dayPlanner() {
   return (
     <ThemedView style={{ ...styles.container, height: "100%" }}>
+      <ActiveDayTaskList></ActiveDayTaskList>
       <DayPlannerCard></DayPlannerCard>
     </ThemedView>
   );

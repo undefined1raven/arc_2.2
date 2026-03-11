@@ -20,6 +20,7 @@ import { getValueByKeys } from "@/components/utils/fn/geetValueByKeys";
 import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFromData";
 import { useActiveKeys } from "./decryptedKeys";
 import { featureConfigChunkSize } from "@/components/utils/constants/chunking";
+import { getLocalCache } from "@/components/utils/localDb";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -33,7 +34,7 @@ interface DataRetrivalApi {
   appendEntry: (
     tableName: TableNames,
     rowData: any,
-    chunkSize: number
+    chunkSize: number,
   ) => Promise<{
     status: "error" | "success";
     payload?: any;
@@ -44,7 +45,7 @@ interface DataRetrivalApi {
     tableName: TableNames,
     from?: number | null | undefined,
     until?: number | null | undefined,
-    chunkLimit?: number | null | undefined
+    chunkLimit?: number | null | undefined,
   ) => Promise<{
     status: "error" | "success";
     payload?: any[];
@@ -57,7 +58,7 @@ interface DataRetrivalApi {
     valueToMatch: string,
     newValue: any,
     chunkID?: string | undefined | null,
-    replaceOrAppend?: "replace" | "append" | "delete"
+    replaceOrAppend?: "replace" | "append" | "delete",
   ) => Promise<{
     status: "error" | "success";
     payload?: any;
@@ -68,7 +69,7 @@ interface DataRetrivalApi {
     keyPath: string[],
     valueToMatch: string,
     newValue: any,
-    replaceOrAppend?: "replace" | "append" | "delete"
+    replaceOrAppend?: "replace" | "append" | "delete",
   ) => Promise<{
     status: "error" | "success";
     payload?: any;
@@ -76,7 +77,7 @@ interface DataRetrivalApi {
   }>;
   appendFeatureConfigEntry: (
     featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
-    rowData: any
+    rowData: any,
   ) => Promise<any>;
 }
 
@@ -101,10 +102,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (allowedTableNames.includes(tableName) === false) {
       return { status: "error", error: "Invalid table name" };
     }
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
     let latestChunk: ARC_ChunksType | null = await db.getFirstAsync(
       `SELECT * FROM ${tableName} WHERE userID = ? ORDER BY tx DESC LIMIT 1`,
-      [activeUserId]
+      [activeUserId],
     );
     if (latestChunk === null) {
       return { status: "error", error: "No chunks found" };
@@ -133,7 +134,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
       const newChunkHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        newChunk.encryptedContent
+        newChunk.encryptedContent,
       );
 
       if (
@@ -150,7 +151,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             newChunkHash,
             activeUserId,
             newChunk.id,
-          ]
+          ],
         );
       } else {
         query = db.runAsync(
@@ -161,14 +162,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             newChunkHash,
             activeUserId,
             newChunk.id,
-          ]
+          ],
         );
       }
 
       return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return {
             status: "success",
             payload: result,
@@ -176,7 +176,6 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           };
         })
         .catch((e) => {
-          db.closeAsync();
           return { status: "error", error: e };
         });
     }
@@ -186,7 +185,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
       const newChunkHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        newChunk.encryptedContent
+        newChunk.encryptedContent,
       );
 
       //@ts-expect-error
@@ -198,16 +197,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       ) {
         query = db.runAsync(
           `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, timeRangeStart, timeRangeEnd, hash) VALUES (${"?, ".repeat(
-            7
+            7,
           )} ?);`,
-          Object.values(newChunk)
+          Object.values(newChunk),
         );
       } else {
         query = db.runAsync(
           `INSERT INTO ${tableName} (id, encryptedContent, userID, tx, version, hash) VALUES (${"?, ".repeat(
-            5
+            5,
           )} ?);`,
-          Object.values(newChunk)
+          Object.values(newChunk),
         );
       }
 
@@ -227,7 +226,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     statusIndicatorApi.setIsSavingLocalData(true);
     try {
       const decryptedStringData = charCodeArrayToString(
-        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]"),
       );
       try {
         const parsedData = JSON.parse(decryptedStringData) as any[];
@@ -247,7 +246,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
               keyType: "symmetric",
               key: key,
               charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
-            }
+            },
           );
           if (encryptionResults.status === "error") {
             return { status: "error", error: encryptionResults.payload };
@@ -291,7 +290,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
               keyType: "symmetric",
               key: key,
               charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
-            }
+            },
           );
           if (encryptionResults.status === "error") {
             return { status: "error", error: encryptionResults.payload };
@@ -348,7 +347,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     tableName,
     from,
     until,
-    chunkLimit
+    chunkLimit,
   ): Promise<{
     status: "error" | "success";
     payload?: any[];
@@ -374,7 +373,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return { status: "error", error: "No key found" };
     }
 
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
 
     let timeRangeStart: null | string = null;
     let timeRangeEnd: null | string = null;
@@ -382,7 +381,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       const firstChunkIncludingFrom: ARC_ChunksType | null =
         await db.getFirstAsync(
           `SELECT * FROM ${tableName} WHERE userID = ? AND timeRangeStart <= ? ORDER BY timeRangeStart DESC LIMIT 1`,
-          [activeUserId, from]
+          [activeUserId, from],
         );
       if (
         firstChunkIncludingFrom !== null &&
@@ -395,7 +394,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       const lastChunkIncludingUntil: ARC_ChunksType | null =
         await db.getFirstAsync(
           `SELECT * FROM ${tableName} WHERE userID = ? AND timeRangeEnd >= ? ORDER BY timeRangeEnd DESC LIMIT 1`,
-          [activeUserId, until]
+          [activeUserId, until],
         );
       if (
         lastChunkIncludingUntil !== null &&
@@ -431,7 +430,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
     const relevantChunks: ARC_ChunksType[] = await db.getAllAsync(
       `SELECT * FROM ${tableName} WHERE userID = ? ${timeRangeString} ${orderByString} ${parsedChunkLimit}`,
-      [activeUserId]
+      [activeUserId],
     );
 
     const decryptionPromises = relevantChunks.map((chunk) => {
@@ -455,7 +454,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           const decryptedEncodedStringData =
             "[" + result.payload.decrypted + "]";
           const encodedArray = JSON.parse(
-            decryptedEncodedStringData
+            decryptedEncodedStringData,
           ) as number[];
           const decodedStringData = charCodeArrayToString(encodedArray);
           const parsedData = JSON.parse(decodedStringData) as any[];
@@ -528,7 +527,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     valueToMatch: string,
     newValue: any,
     chunkID?: string | undefined | null,
-    replaceOrAppend?: "replace" | "append" | "delete"
+    replaceOrAppend?: "replace" | "append" | "delete",
   ) => {
     let replaceOrAppendValue = "replace";
     if (
@@ -566,7 +565,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     }
     const cryptoOpsApi = useCryptoOpsQueue.getState();
     const statusIndicatorApi = useStatusIndicatorStore.getState();
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
+    console.log(db, "-----FROM MOD");
+
     statusIndicatorApi.setIsSavingLocalData(true);
     ////If no chunkID is provided, get the latest chunk
     const hasChunkId = typeof chunkID === "string" && chunkID.length > 0;
@@ -580,7 +581,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         `SELECT * FROM ${tableName} WHERE userID = ? ${
           hasChunkId ? "AND id = ?" : "ORDER BY tx DESC LIMIT 1"
         } `,
-        argList
+        argList,
       );
 
     if (encryptedChunk === null) {
@@ -606,7 +607,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
     try {
       const decodedStringData = charCodeArrayToString(
-        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]"),
       );
       const parsedData = JSON.parse(decodedStringData) as any[];
       const dataMatchIndex = parsedData.findIndex((item) => {
@@ -654,7 +655,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
       const newChunkHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        encryptedContentStr
+        encryptedContentStr,
       );
 
       const updatedChunk = {
@@ -669,17 +670,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           updatedChunk.hash,
           activeUserId,
           updatedChunk.id,
-        ]
+        ],
       );
       return savePromise
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return { status: "success" };
         })
         .catch((e) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return { status: "error", error: e };
         });
     } catch (e) {
@@ -692,7 +691,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     keyPath: string[],
     valueToMatch: string,
     newValue: any,
-    replaceOrAppend?: "replace" | "append" | "delete"
+    replaceOrAppend?: "replace" | "append" | "delete",
   ) => {
     const allowedFeatureConfigTypes = [
       "dayPlanner",
@@ -735,14 +734,14 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     }
     const cryptoOpsApi = useCryptoOpsQueue.getState();
     const statusIndicatorApi = useStatusIndicatorStore.getState();
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
     statusIndicatorApi.setIsSavingLocalData(true);
     ////If no chunkID is provided, get the latest chunk
     const argList: string[] = [activeUserId];
     const encryptedChunks: FeatureConfigChunkType[] | null =
       await db.getAllAsync(
         `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = "${featureConfigType}" ORDER BY tx DESC`,
-        argList
+        argList,
       );
 
     if (encryptedChunks === null || encryptedChunks.length === 0) {
@@ -847,7 +846,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
       const newChunkHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        encryptedContentStr
+        encryptedContentStr,
       );
 
       const updatedChunk = {
@@ -863,7 +862,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           updatedChunk.hash,
           activeUserId,
           updatedChunk.id,
-        ]
+        ],
       );
       return savePromise
         .then((result) => {
@@ -881,7 +880,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
   },
   appendFeatureConfigEntry: async (
     featureConfigType: "dayPlanner" | "timeTracking" | "personalDiary",
-    rowData
+    rowData,
   ): Promise<any> => {
     const allowedFeatureConfigTypes = [
       "dayPlanner",
@@ -900,11 +899,11 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (allowedFeatureConfigTypes.includes(featureConfigType) === false) {
       return { status: "error", error: "Invalid table name" };
     }
-    const db = await SQLite.openDatabaseAsync("localCache");
+    const db = await getLocalCache();
 
     const latestChunk: FeatureConfigChunkType | null = await db.getFirstAsync(
       `SELECT * FROM featureConfigChunks WHERE userID = ? AND type = ? ORDER BY tx DESC LIMIT 1`,
-      [activeUserId, featureConfigType]
+      [activeUserId, featureConfigType],
     );
 
     if (latestChunk === null) {
@@ -931,7 +930,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     async function updateChunk(newChunk: FeatureConfigChunkType) {
       const newChunkHash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
-        newChunk.encryptedContent
+        newChunk.encryptedContent,
       );
 
       return db
@@ -943,15 +942,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             newChunkHash,
             activeUserId,
             newChunk.id,
-          ]
+          ],
         )
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
-          db.closeAsync();
           return { status: "success", payload: result };
         })
         .catch((e) => {
-          db.closeAsync();
           return { status: "error", error: e };
         });
     }
@@ -959,7 +956,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     statusIndicatorApi.setIsSavingLocalData(true);
     try {
       const decryptedStringData = charCodeArrayToString(
-        JSON.parse("[" + decryptionResults.payload.decrypted + "]")
+        JSON.parse("[" + decryptionResults.payload.decrypted + "]"),
       );
       try {
         const parsedData = JSON.parse(decryptedStringData) as any[];
@@ -981,7 +978,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
               keyType: "symmetric",
               key: key,
               charCodeData: stringToCharCodeArray(JSON.stringify(newData)),
-            }
+            },
           );
           if (encryptionResults.status === "error") {
             return { status: "error", error: encryptionResults.payload };
@@ -995,7 +992,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
 
           const hash = await Crypto.digestStringAsync(
             Crypto.CryptoDigestAlgorithm.SHA256,
-            stringifiedEncryptedContent
+            stringifiedEncryptedContent,
           );
 
           if (typeof hash !== "string" || hash.length === 0) {
@@ -1018,17 +1015,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
           return db
             .runAsync(
               `INSERT INTO featureConfigChunks (id, type, encryptedContent, userID, tx, version, hash) VALUES (${"?, ".repeat(
-                6
+                6,
               )} ?);`,
-              Object.values(newChunk)
+              Object.values(newChunk),
             )
             .then((result) => {
               statusIndicatorApi.setIsSavingLocalData(false);
-              db.closeAsync();
               return { status: "success", payload: result };
             })
             .catch((e) => {
-              db.closeAsync();
               return { status: "error", error: e };
             });
         } else {
@@ -1038,7 +1033,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
               keyType: "symmetric",
               key: key,
               charCodeData: stringToCharCodeArray(JSON.stringify(appendedData)),
-            }
+            },
           );
           if (encryptionResults.status === "error") {
             return { status: "error", error: encryptionResults.payload };

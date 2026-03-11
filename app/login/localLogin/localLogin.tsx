@@ -27,6 +27,7 @@ import {
   checkAndSetDeviceId,
   deleteDeviceId,
 } from "@/components/utils/auth/getDeviceId";
+import { getLocalCache } from "@/components/utils/localDb";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -98,7 +99,7 @@ function LocalLogin() {
                   requireAuthentication: true,
                   authenticationPrompt:
                     "Authenticate to use your screen lock to unlock",
-                }
+                },
               )
                 .catch((e) => {
                   console.log(e);
@@ -106,7 +107,7 @@ function LocalLogin() {
                 .then(async () => {
                   await SecureStore.setItemAsync(
                     secureStoreKeyNames.accountConfig.useBiometricAuth,
-                    "true"
+                    "true",
                   );
                   // await deleteDeviceId();
                   // checkAndSetDeviceId();
@@ -121,15 +122,14 @@ function LocalLogin() {
                     setIsLoadingFile(false);
                     return;
                   }
-                  const db = await SQLite.openDatabaseAsync("localCache");
+                  const db = await getLocalCache();
                   const userData: {
                     id: string;
                     PIKBackup: string;
                     PSKBackup: string;
                   } | null = await db.getFirstAsync(
-                    "SELECT id, PIKBackup, PSKBackup FROM users;"
+                    "SELECT id, PIKBackup, PSKBackup FROM users;",
                   );
-                  db.closeAsync();
                   if (
                     typeof userData === "object" &&
                     userData?.PIKBackup &&
@@ -137,11 +137,11 @@ function LocalLogin() {
                   ) {
                     SecureStore.setItemAsync(
                       getSymmetricKey(userData.id),
-                      userData.PIKBackup
+                      userData.PIKBackup,
                     );
                     SecureStore.setItemAsync(
                       getPrivateKey(userData.id),
-                      userData.PSKBackup
+                      userData.PSKBackup,
                     );
                     setIsLoadingFile(false);
                     setShowError(false);

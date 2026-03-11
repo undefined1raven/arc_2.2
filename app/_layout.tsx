@@ -74,6 +74,7 @@ export default function RootLayout() {
     "/settings/accountSettings/accountType",
     "/dayPlanner/historicDayView",
     "/diary/diaryFeatureConfig/diaryFeatureConfig",
+    "/activeDayView/taskEditorView",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -307,6 +308,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="diary/diaryFeatureConfig/diaryFeatureConfig"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="activeDayView/taskEditorView"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

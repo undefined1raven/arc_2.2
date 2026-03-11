@@ -1,3 +1,4 @@
+import { getLocalCache } from "@/components/utils/localDb";
 import { ActivityTransitionLog, ArcTaskLogType } from "@/constants/CommonTypes";
 import { timestampToDayType } from "@/constants/timestampToDayType";
 import { timestampToLocalUtcHour } from "@/constants/timestampToUtcHour";
@@ -7,7 +8,7 @@ import * as SQLite from "expo-sqlite";
 
 ///IF the activities transition table is empty, fetch the last 7 days of activities and populate the table with reconstructed transition data
 async function retroBehaviorLogs() {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
 
   const transitionsTableCheck = await db.getAllAsync(
     "SELECT * FROM activityTransitions LIMIT 5;",

@@ -8,6 +8,7 @@ import {
 } from "../constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
 import { checkAndSetDeviceId, deleteDeviceId } from "../auth/getDeviceId";
+import { getLocalCache } from "../localDb";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
   error: null | string;
@@ -17,7 +18,7 @@ export type CheckTablesReturnSig = {
 };
 
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
   var promiseArray: Promise<any>[] = [];
 
   //Behavioral data tables
@@ -107,12 +108,12 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
 }
 
 async function removeBT() {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
   await db.runAsync("DROP TABLE activityTransitions");
 }
 
 async function NukeLocalData() {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
   const userId = useActiveUser.getState().activeUser.userId;
   db.runAsync("DROP TABLE users");
   db.runAsync("DROP TABLE userData");
@@ -142,7 +143,7 @@ async function NukeLocalData() {
 }
 
 async function deleteLimitedChunks() {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
   await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 171417354700");
 }
 

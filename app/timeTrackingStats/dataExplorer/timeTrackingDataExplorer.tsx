@@ -31,37 +31,14 @@ function TimeTrackingDataExplorer() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const timeTrackingDataExplorer = useTimeTrackingDataExplorer();
   const timeTrackingFC = useFeatureConfigs(
-    (fc) => fc.timeTrackingFeatureConfig
+    (fc) => fc.timeTrackingFeatureConfig,
   );
   // Memoized filtered tasks
   const filteredTasks = useMemo(
     () => timeTrackingFC.filter((r) => r.type === "task"),
-    [timeTrackingFC]
+    [timeTrackingFC],
   );
-  const dataRetrievalApi = dataRetrivalApi();
-
   const screenSize = useWindowDimensions();
-
-  useEffect(() => {
-    if (timeTrackingDataExplorer.dataInTimeRange !== null) {
-      return;
-    }
-    const weekAgoTimestamp = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    const timeTrackingApi = useTimeTrackingDataExplorer.getState();
-    dataRetrievalApi
-      .getDataInTimeRange(
-        "timeTrackingChunks",
-        weekAgoTimestamp,
-        Date.now(),
-        null
-      )
-      .then((data) => {
-        timeTrackingApi.setDataInTimeRange(data.payload || null);
-      })
-      .catch((error) => {
-        console.error("Error fetching time tracking data:", error);
-      });
-  }, []);
 
   const renderFocusTooltip = useCallback(
     (item: { label: string; value: number }) => {
@@ -88,7 +65,7 @@ function TimeTrackingDataExplorer() {
         </View>
       );
     },
-    []
+    [],
   );
 
   const renderItem = useCallback(
@@ -100,7 +77,7 @@ function TimeTrackingDataExplorer() {
       }
       const color =
         timeTrackingDataExplorer.viewState.find(
-          (r) => r.activityName === task.itme.name
+          (r) => r.activityName === task.itme.name,
         )?.color || globalStyle.color;
       const taskName = task.itme.name || "Unnamed Task";
       return (
@@ -134,7 +111,7 @@ function TimeTrackingDataExplorer() {
         </View>
       );
     },
-    [timeTrackingFC, timeTrackingDataExplorer.viewState]
+    [timeTrackingFC, timeTrackingDataExplorer.viewState],
   );
 
   return (

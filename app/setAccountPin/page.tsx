@@ -42,6 +42,7 @@ import {
   Tess_ChunksType,
 } from "@/constants/CommonTypes";
 import * as Crypto from "expo-crypto";
+import { getLocalCache } from "@/components/utils/localDb";
 
 async function createEmptyEncryptedChunkContent(jwkKeyData: string) {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -55,14 +56,14 @@ async function createEmptyEncryptedChunkContent(jwkKeyData: string) {
 
   const hash = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    emptyEncryptedContent
+    emptyEncryptedContent,
   );
 
   return { content: emptyEncryptedContent, hash: hash };
 }
 
 async function createEmptyChunks(jwkKeyData: string, userId: string) {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
 
   const empty1 = await createEmptyEncryptedChunkContent(jwkKeyData);
   const empty2 = await createEmptyEncryptedChunkContent(jwkKeyData);
@@ -110,35 +111,35 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
   };
 
   const timeTrackingInsertHelperVals = getInsertStringFromObject(
-    emptyNewTimeTrackingChunk
+    emptyNewTimeTrackingChunk,
   );
   const timeTrackingChunkPromise = db.runAsync(
     `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
-    [...timeTrackingInsertHelperVals.values]
+    [...timeTrackingInsertHelperVals.values],
   );
 
   const dayPlannerInsertHelperVals = getInsertStringFromObject(
-    emptyNewDayPlannerChunk
+    emptyNewDayPlannerChunk,
   );
   const dayPlannerChunkPromise = db.runAsync(
     `INSERT INTO dayPlannerChunks  ${dayPlannerInsertHelperVals.queryString}`,
-    dayPlannerInsertHelperVals.values
+    dayPlannerInsertHelperVals.values,
   );
 
   const personalDiaryInsertHelperVals = getInsertStringFromObject(
-    emptyNewPersonalDiaryChunk
+    emptyNewPersonalDiaryChunk,
   );
   const personalDiaryChunkPromise = db.runAsync(
     `INSERT INTO personalDiaryChunks ${personalDiaryInsertHelperVals.queryString}`,
-    personalDiaryInsertHelperVals.values
+    personalDiaryInsertHelperVals.values,
   );
 
   const personalDiaryGroupInsertHelperVals = getInsertStringFromObject(
-    emptyNewPersonalDiaryGroupChunk
+    emptyNewPersonalDiaryGroupChunk,
   );
   const personalDiaryGroupChunkPromise = db.runAsync(
     `INSERT INTO personalDiaryGroups ${personalDiaryGroupInsertHelperVals.queryString}`,
-    personalDiaryGroupInsertHelperVals.values
+    personalDiaryGroupInsertHelperVals.values,
   );
 
   return Promise.all([
@@ -168,7 +169,7 @@ export default function Main() {
   useEffect(() => {
     const newPinLength = newPin.length;
     setIsNewPinValid(
-      newPinLength >= 4 && newPinLength <= 6 && !isNaN(Number(newPin))
+      newPinLength >= 4 && newPinLength <= 6 && !isNaN(Number(newPin)),
     );
   }, [newPin]);
 
@@ -232,17 +233,17 @@ export default function Main() {
             console.log("Saving new user with wrapped symmetric key");
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              wrappedSymKey
+              wrappedSymKey,
             );
 
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
               //@ts-expect-error
-              armoredPrivateKey
+              armoredPrivateKey,
             );
             await SecureStore.setItemAsync(
               secureStoreKeyNames.accountConfig.useBiometricAuth,
-              "false"
+              "false",
             );
             ///Redirect to home
             saveNewUser(wrappedSymKey)
@@ -263,7 +264,7 @@ export default function Main() {
           } else {
             await SecureStore.setItemAsync(
               getPrivateKey(userId),
-              armoredPrivateKey
+              armoredPrivateKey,
             );
             await saveSecretKeyOnDevice(newUserDataApi.secretKey);
 
@@ -274,13 +275,13 @@ export default function Main() {
             }
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              wrappedSymKey
+              wrappedSymKey,
             )
               .then(async () => {
                 ///Redirect to home
                 await SecureStore.setItemAsync(
                   secureStoreKeyNames.accountConfig.useBiometricAuth,
-                  "true"
+                  "true",
                 );
                 await SecureStore.setItemAsync(
                   secureStoreKeyNames.accountConfig.pin,
@@ -289,7 +290,7 @@ export default function Main() {
                     requireAuthentication: true,
                     authenticationPrompt:
                       "Authenticate to use your screen lock to unlock",
-                  }
+                  },
                 );
                 saveNewUser(wrappedSymKey)
                   .then(() => {

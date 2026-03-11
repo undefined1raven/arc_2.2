@@ -7,6 +7,7 @@ import { deviceId } from "@/components/utils/constants/secureStoreKeyNames";
 import * as SecureStore from "expo-secure-store";
 import { ARC_ChunksType } from "@/constants/CommonTypes";
 import * as SQLite from "expo-sqlite";
+import { getLocalCache } from "@/components/utils/localDb";
 
 type TransferType = "upload" | "download";
 type TaskStatus = "pending" | "in-progress" | "done" | "failed" | "canceled";
@@ -39,7 +40,7 @@ interface TransferState {
   activeCount: number;
   maxConcurrent: number;
   enqueue: (
-    task: Omit<TransferTask, "status" | "retries" | "progress">
+    task: Omit<TransferTask, "status" | "retries" | "progress">,
   ) => void;
   runNext: () => Promise<void>;
   updateTask: (id: string, updates: Partial<TransferTask>) => void;
@@ -54,7 +55,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   enqueue: (
     task:
       | Omit<TransferTask, "status" | "retries" | "progress">
-      | Omit<TransferTask, "status" | "retries" | "progress">[]
+      | Omit<TransferTask, "status" | "retries" | "progress">[],
   ) => {
     const currentTasks = get().tasks;
     if (Array.isArray(task)) {
@@ -95,7 +96,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
     set((state) => ({
       activeCount: state.activeCount + 1,
       tasks: currentTasks.map((t) =>
-        t.id === nextTask.id ? { ...t, status: "in-progress" } : t
+        t.id === nextTask.id ? { ...t, status: "in-progress" } : t,
       ),
     }));
 
@@ -140,7 +141,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   cancelTask: (id) => {
     set((state) => ({
       tasks: state.tasks.map((t) =>
-        t.id === id ? { ...t, status: "canceled" } : t
+        t.id === id ? { ...t, status: "canceled" } : t,
       ),
     }));
   },
@@ -183,7 +184,7 @@ async function handleDownload(task: TransferTask) {
       deviceId: currentDeviceId,
       accountId: activeUserId,
       ...payload,
-    }
+    },
   );
   const responseData = downloadResponse.data;
   if (
@@ -206,7 +207,7 @@ async function handleDownload(task: TransferTask) {
     }
     const saveResults = await saveDownloadedChunkToDB(
       responseData.chunk,
-      tableName as string
+      tableName as string,
     );
     console.log("Saved downloaded chunk results:", saveResults);
   }
@@ -214,9 +215,9 @@ async function handleDownload(task: TransferTask) {
 
 async function saveDownloadedChunkToDB(
   chunkData: ARC_ChunksType,
-  tableName: string
+  tableName: string,
 ) {
-  const db = await SQLite.openDatabaseAsync("localCache");
+  const db = await getLocalCache();
   const commonReuqirements = [
     "id",
     "userID",
@@ -249,7 +250,7 @@ async function saveDownloadedChunkToDB(
   const values = requiredKeys.map((key) => (chunkData as any)[key]);
 
   const query = `INSERT OR REPLACE INTO ${tableName} (${requiredKeys.join(
-    ", "
+    ", ",
   )}) VALUES (${placeholders});`;
 
   try {

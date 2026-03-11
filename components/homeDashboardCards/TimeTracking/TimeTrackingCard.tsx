@@ -48,6 +48,7 @@ import { timeToDaySegment } from "@/constants/timeToDaySegment";
 import { timestampToDayType } from "@/constants/timestampToDayType";
 import * as SQLite from "expo-sqlite";
 import { ActivityTransitionLog, ARCTasksType } from "@/constants/CommonTypes";
+import { getLocalCache } from "@/components/utils/localDb";
 
 function TimeTrackingCard() {
   const dataRetrivalAPI = dataRetrivalApi();
@@ -175,7 +176,7 @@ function TimeTrackingCard() {
         timeBucket: daySegment,
       };
 
-      const db = await SQLite.openDatabaseAsync("localCache");
+      const db = await getLocalCache();
       const res = await db.runAsync(
         "INSERT INTO activityTransitions (previousActivity, nextActivity, dayType, timeBucket) VALUES (?, ?, ?, ?)",
         newBehaviorLogRow.previousActivity,
@@ -221,7 +222,7 @@ function TimeTrackingCard() {
     }
 
     async function requestRecommendations() {
-      const db = await SQLite.openDatabaseAsync("localCache");
+      const db = await getLocalCache();
       const nextActivityMatches = await db.getAllAsync(
         `SELECT *
     FROM activityTransitions

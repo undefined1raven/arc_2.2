@@ -1,5 +1,6 @@
 import Button from "@/components/common/Button";
 import Text from "@/components/common/Text";
+import { AddIcon } from "@/components/deco/AddIcon";
 import CalendarDeco from "@/components/deco/CalendarDeco";
 import { StatsDeco } from "@/components/deco/StatsDeco";
 import { dayPlannerChunkSize } from "@/components/utils/constants/chunking";
@@ -9,7 +10,7 @@ import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { router } from "expo-router";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 function DayPlannerCard() {
@@ -25,6 +26,20 @@ function DayPlannerCard() {
     const day = date.getDate();
     return `Today | ${month} ${day}`;
   }, []);
+
+  ///Used to show continue day instead of start day if the user ends the day too early and wants to restart it.
+  const [hasPlanningDayToday, setHasPlanningDayToday] = useState(false);
+
+  useEffect(() => {
+    const todayDate = new Date();
+    const formattedTodayDate = todayDate.toDateString();
+
+    const todayPlanIndex = recentDays.findIndex(
+      (day) => day.day === formattedTodayDate,
+    );
+
+    setHasPlanningDayToday(todayPlanIndex !== -1);
+  }, [recentDays]);
 
   const startDay = useCallback(() => {
     const dataRetrivalAPI = dataRetrivalApi.getState();
@@ -162,7 +177,14 @@ function DayPlannerCard() {
           }}
         >
           <Button
-            onClick={() => {}}
+            onClick={() => {
+              const s = useDayPlannerActiveDay.getState();
+              const newA = { ...s.activeDay };
+              const newT = [...s.activeDay?.tasks];
+              newT.slice(0, 1);
+              newA.tasks = newT;
+              s.setActiveDay(newA);
+            }}
             backgroundColor={globalStyle.colorAccent + "15"}
             style={{
               height: "100%",
@@ -182,7 +204,7 @@ function DayPlannerCard() {
                 startDay();
               }}
               fontSize={15}
-              label="Start day"
+              label={hasPlanningDayToday ? "Continue day" : "Start day"}
               backgroundColor={globalStyle.colorAccent + "15"}
               style={{
                 flex: 2,
