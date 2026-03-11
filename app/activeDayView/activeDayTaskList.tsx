@@ -11,7 +11,9 @@ import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
+import { useDayPlannerTaskToEdit } from "@/stores/viewState/dayPlannerTaskToEdit";
 import { FlashList } from "@shopify/flash-list";
+import { router } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { Animated, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
@@ -24,7 +26,7 @@ function ActiveDayTaskList() {
   );
   const dayPlannerRecentDaysApi = useDayPlannerActiveDay();
   const dataRetriavalAPI = dataRetrivalApi();
-
+  const dayPlannerTaskToEdit = useDayPlannerTaskToEdit();
   const updateRecentDaysWithUpdatedDay = useCallback(
     (updatedDay: TessDayLogType) => {
       const currentRecentDays = useDayPlannerActiveDay.getState().recentDays;
@@ -138,6 +140,7 @@ function ActiveDayTaskList() {
             borderRadius: globalStyle.borderRadius,
             width: "100%",
             height: 62,
+            marginTop: index === 0 ? 0 : 15,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -145,6 +148,20 @@ function ActiveDayTaskList() {
             backgroundColor: taskBorderColor + "15",
           }}
         >
+          <Button
+            backgroundColor="transparent"
+            onClick={() => {
+              dayPlannerTaskToEdit.setTaskToEdit(task);
+              router.navigate("/activeDayView/taskEditorView");
+            }}
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              zIndex: 2,
+              borderColor: "#00000000",
+            }}
+          ></Button>
           <View
             style={{
               width: "66%",
@@ -210,7 +227,7 @@ function ActiveDayTaskList() {
         </View>
       );
     },
-    [dayPlannerFeatureConfig],
+    [dayPlannerFeatureConfig, dayPlannerTaskToEdit.setTaskToEdit],
   );
 
   const separatorItem = useCallback(
@@ -250,9 +267,17 @@ function ActiveDayTaskList() {
       >
         <AddIcon width={18} height={18}></AddIcon>
       </Button>
-      <View style={{ width: "100%", height: "100%", zIndex: 1 }}>
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 1,
+        }}
+      >
         <FlashList
-          ItemSeparatorComponent={separatorItem}
+          keyExtractor={(item) => item.TTID}
           renderItem={taskRenderItem}
           data={activeDay?.tasks}
           estimatedItemSize={62}
