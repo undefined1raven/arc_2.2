@@ -121,8 +121,7 @@ function ActiveDayTaskList() {
       const isCompletedHighPrioTask =
         completionEffect >= 1 && isHighPrio === true;
       let taskBorderColor = colorsObj.color;
-
-      if (isHighPrio) {
+      if (isHighPrio === true) {
         if (isCompletedHighPrioTask) {
           taskBorderColor = globalStyle.successColor;
         } else {
@@ -145,7 +144,7 @@ function ActiveDayTaskList() {
             justifyContent: "space-between",
             alignItems: "center",
             flexDirection: "row",
-            backgroundColor: taskBorderColor + "15",
+            backgroundColor: taskBorderColor + "30",
           }}
         >
           <Button
@@ -198,7 +197,10 @@ function ActiveDayTaskList() {
                 gap: 5,
               }}
             >
-              <Text label={task.name}></Text>
+              <Text
+                color={isHighPrio ? globalStyle.textColor : colorsObj.textColor}
+                label={task.name}
+              ></Text>
               {isHighPrio && (
                 <Text
                   color={taskBorderColor}
@@ -228,13 +230,6 @@ function ActiveDayTaskList() {
       );
     },
     [dayPlannerFeatureConfig, dayPlannerTaskToEdit.setTaskToEdit],
-  );
-
-  const separatorItem = useCallback(
-    (task: TessDayLogType["tasks"][number], index: number) => {
-      return <View style={{ width: "100%", height: 15 }}></View>;
-    },
-    [],
   );
 
   if (activeDay === null) {

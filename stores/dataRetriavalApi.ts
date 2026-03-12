@@ -566,9 +566,9 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     const cryptoOpsApi = useCryptoOpsQueue.getState();
     const statusIndicatorApi = useStatusIndicatorStore.getState();
     const db = await getLocalCache();
-    console.log(db, "-----FROM MOD");
 
     statusIndicatorApi.setIsSavingLocalData(true);
+
     ////If no chunkID is provided, get the latest chunk
     const hasChunkId = typeof chunkID === "string" && chunkID.length > 0;
     const argList: string[] = [activeUserId];

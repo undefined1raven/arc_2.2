@@ -53,6 +53,63 @@ function TaskEditorView() {
     [],
   );
 
+  const updateHighPrioLabel = useCallback(
+    (isHighPrio: boolean) => {
+      if (
+        dayPlannerActiveDay === undefined ||
+        dayPlannerActiveDay === null ||
+        typeof dayPlannerTaskToEdit?.TTID !== "string"
+      ) {
+        return;
+      }
+      const taskIndex = dayPlannerActiveDay.tasks.findIndex(
+        (task) => task.TTID === dayPlannerTaskToEdit?.TTID,
+      );
+      if (taskIndex === -1) {
+        return;
+      }
+      let currentTask = dayPlannerActiveDay.tasks[taskIndex];
+
+      if (isHighPrio === false) {
+        currentTask = {
+          ...currentTask,
+          labels: currentTask.labels.filter((l) => l !== "highPriority"),
+        };
+      } else {
+        currentTask = {
+          ...currentTask,
+          labels: [...currentTask.labels, "highPriority"],
+        };
+      }
+
+      dayPlannerSetTaskToEdit(currentTask);
+      const updatedTasks = [...dayPlannerActiveDay.tasks];
+      updatedTasks[taskIndex] = currentTask;
+      const updatedDay = {
+        ...dayPlannerActiveDay,
+        tasks: updatedTasks,
+      };
+      useDayPlannerActiveDay.getState().setActiveDay(updatedDay);
+      updateRecentDaysWithUpdatedDay(updatedDay);
+      dataRetriavalAPI
+        .modifyEntry(
+          "dayPlannerChunks",
+          ["day"],
+          updatedDay.day,
+          updatedDay,
+          undefined,
+          "replace",
+        )
+        .then((r) => {
+          console.log("Task status updated", r);
+        })
+        .catch((e) => {
+          console.error("Error updating task status", e);
+        });
+    },
+    [dayPlannerTaskToEdit],
+  );
+
   const updateTaskStatus = useCallback(
     (statusID: string) => {
       if (
@@ -102,7 +159,32 @@ function TaskEditorView() {
   );
 
   const debouncedUpdateTaskName = useCallback(
-    debounce((updatedDay: TessDayLogType) => {
+    debounce((e) => {
+      if (!dayPlannerActiveDay || !dayPlannerTaskToEdit) return;
+      const newName = e;
+
+      const updatedTask: TessTaskType = {
+        ...dayPlannerTaskToEdit,
+        name: newName,
+      };
+
+      const updatedTasks = dayPlannerActiveDay?.tasks.map((t) =>
+        t.TTID === dayPlannerTaskToEdit.TTID ? updatedTask : t,
+      );
+
+      if (!updatedTasks) {
+        return;
+      }
+      const updatedDay = {
+        ...dayPlannerActiveDay,
+        tasks: updatedTasks,
+      };
+
+      useDayPlannerActiveDay
+        .getState()
+        //@ts-ignore
+        .setActiveDay(updatedDay);
+
       updateRecentDaysWithUpdatedDay(updatedDay);
       dataRetriavalAPI
         .modifyEntry(
@@ -120,7 +202,7 @@ function TaskEditorView() {
           console.log("Error updating task name", e);
         });
     }, 500),
-    [],
+    [dayPlannerTaskToEdit],
   );
 
   return (
@@ -132,15 +214,19 @@ function TaskEditorView() {
       bototmHeaderLabel="Edit task"
     >
       <FeatureConfigBooleanInput
-        value={false}
+        value={dayPlannerTaskToEdit?.labels.indexOf("highPriority") !== -1}
         label="High Priority"
-        onChange={() => {}}
+        onChange={(e) => {
+          updateHighPrioLabel(e);
+        }}
       ></FeatureConfigBooleanInput>
       <FeatureConfigValueInput
         inputType="text"
         label="Name"
         value={dayPlannerTaskToEdit?.name || ""}
-        onChange={(e) => {}}
+        onChange={(e) => {
+          debouncedUpdateTaskName(e);
+        }}
       ></FeatureConfigValueInput>
       <FeatureConfigSelection
         onChange={(status: TessStatusType) => {
