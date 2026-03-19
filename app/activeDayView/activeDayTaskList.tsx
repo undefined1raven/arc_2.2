@@ -120,6 +120,7 @@ function ActiveDayTaskList() {
       const { name: statusName, completionEffect } = currentStatus;
       const isCompletedHighPrioTask =
         completionEffect >= 1 && isHighPrio === true;
+
       let taskBorderColor = colorsObj.color;
       if (isHighPrio === true) {
         if (isCompletedHighPrioTask) {
@@ -198,7 +199,7 @@ function ActiveDayTaskList() {
               }}
             >
               <Text
-                color={isHighPrio ? globalStyle.textColor : colorsObj.textColor}
+                color={isHighPrio ? taskBorderColor : colorsObj.textColor}
                 label={task.name}
               ></Text>
               {isHighPrio && (

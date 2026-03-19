@@ -51,7 +51,6 @@ export default function RootLayout() {
     "/setAccountPin/page",
     "/localAccountAuth/localAccountAuth",
     "/timeTrackingFeatureConfig/EditActivities",
-    "/activeDayView/activeDayView",
     "/dayPlanner/statusEditor/statusEditor",
     "/diary/groupView/groupMain",
     "/diary/diaryNoteView/diaryNoteView",
@@ -196,10 +195,6 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="dayPlanner/dayPlanner"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="activeDayView/activeDayView"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

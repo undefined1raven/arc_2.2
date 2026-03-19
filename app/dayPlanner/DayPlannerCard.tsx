@@ -65,7 +65,6 @@ function DayPlannerCard() {
         )
         .then((res) => {
           dayPlannerApi.setActiveDay(existingDay);
-          router.push("/activeDayView/activeDayView");
         })
         .catch((err) => {
           console.error("Error updating existing day", err);
@@ -83,7 +82,6 @@ function DayPlannerCard() {
           if (res.status === "success") {
             console.log("New day created successfully");
             dayPlannerActiveDayApi.setActiveDay(newDay);
-            router.push("/activeDayView/activeDayView");
           } else {
             console.error("Failed to create new day");
           }
@@ -98,7 +96,6 @@ function DayPlannerCard() {
     if (dayPlannerActiveDay === undefined || dayPlannerActiveDay === null) {
       return;
     }
-    console.log("RRR WHAT", dayPlannerActiveDay?.tasks);
     const endedDay: TessDayLogType = { ...dayPlannerActiveDay };
     delete endedDay.isActive;
     dataRetriavalAPI
