@@ -13,6 +13,7 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useDayPlannerTaskToEdit } from "@/stores/viewState/dayPlannerTaskToEdit";
 import { FlashList } from "@shopify/flash-list";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { Animated, View } from "react-native";
@@ -241,11 +242,9 @@ function ActiveDayTaskList() {
     <Animated.View
       style={{ width: "100%", flex: 1, height: "100%", marginBottom: 10 }}
     >
-      <Button
-        onClick={() => {
-          addTaskToDay();
-        }}
-        backgroundColor={globalStyle.colorAccent + "15"}
+      <BlurView
+        experimentalBlurMethod={"dimezisBlurView"}
+        intensity={10}
         style={{
           position: "absolute",
           bottom: 5,
@@ -253,16 +252,31 @@ function ActiveDayTaskList() {
           right: 5,
           height: 35,
           width: 100,
-          display: "flex",
-          flex: 1,
           justifyContent: "center",
-          borderTopWidth: 0,
-          borderBottomWidth: 0,
           alignItems: "center",
         }}
       >
-        <AddIcon width={18} height={18}></AddIcon>
-      </Button>
+        <Button
+          onClick={() => {
+            addTaskToDay();
+          }}
+          backgroundColor={globalStyle.colorAccent + "15"}
+          style={{
+            position: "absolute",
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            flex: 1,
+            justifyContent: "center",
+            borderTopWidth: 0,
+            borderBottomWidth: 0,
+            alignItems: "center",
+          }}
+        >
+          <AddIcon width={18} height={18}></AddIcon>
+        </Button>
+      </BlurView>
+
       <View
         style={{
           position: "absolute",

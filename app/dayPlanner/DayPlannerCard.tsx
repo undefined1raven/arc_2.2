@@ -24,7 +24,7 @@ function DayPlannerCard() {
   const getDateDisplayLabelFromDate = useCallback((date: Date) => {
     const month = monthToLabel[date.getMonth()];
     const day = date.getDate();
-    return `Today | ${month} ${day}`;
+    return `${month} ${day}`;
   }, []);
 
   ///Used to show continue day instead of start day if the user ends the day too early and wants to restart it.
@@ -160,7 +160,9 @@ function DayPlannerCard() {
           <CalendarDeco width={28} height={28}></CalendarDeco>
           <Text
             style={{ marginLeft: 5 }}
-            label={getDateDisplayLabelFromDate(new Date())}
+            label={getDateDisplayLabelFromDate(
+              new Date(dayPlannerActiveDay?.day || ""),
+            )}
           ></Text>
         </View>
         <View
@@ -175,12 +177,7 @@ function DayPlannerCard() {
         >
           <Button
             onClick={() => {
-              const s = useDayPlannerActiveDay.getState();
-              const newA = { ...s.activeDay };
-              const newT = [...s.activeDay?.tasks];
-              newT.slice(0, 1);
-              newA.tasks = newT;
-              s.setActiveDay(newA);
+              router.push("/dayPlanner/dayPlannerHistory");
             }}
             backgroundColor={globalStyle.colorAccent + "15"}
             style={{

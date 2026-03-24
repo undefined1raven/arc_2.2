@@ -21,7 +21,7 @@ function getDayPlannerActiveDay() {
   dataRetriavalAPI
     .getDataInTimeRange(
       "dayPlannerChunks",
-      Date.now() - 24 * 60 * 60 * 1000,
+      Date.now() - 48 * 60 * 60 * 1000,
       null,
       1,
     )

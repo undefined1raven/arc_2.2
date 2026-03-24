@@ -74,6 +74,7 @@ export default function RootLayout() {
     "/dayPlanner/historicDayView",
     "/diary/diaryFeatureConfig/diaryFeatureConfig",
     "/activeDayView/taskEditorView",
+    "/dayPlanner/dayPlannerHistory",
   ];
 
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -299,6 +300,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="dayPlanner/historicDayView"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dayPlanner/dayPlannerHistory"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

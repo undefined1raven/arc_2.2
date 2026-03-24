@@ -23,6 +23,7 @@ import { v4 } from "uuid";
 import { personalDiaryNotes } from "@/components/utils/constants/chunking";
 import { TrashIcon } from "@/components/deco/TrashIcon";
 import * as SecureStore from "expo-secure-store";
+import { BlurView } from "expo-blur";
 function DiaryMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -363,32 +364,43 @@ function DiaryMain() {
                     right: 0,
                   }}
                 >
-                  <Button
-                    onClick={createNewGroup}
+                  <BlurView
+                    experimentalBlurMethod={"dimezisBlurView"}
+                    intensity={10}
                     style={{
                       height: "100%",
                       width: "100%",
-                      display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      flexDirection: "row",
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
                     }}
-                    label=""
                   >
-                    <View
+                    <Button
+                      onClick={createNewGroup}
                       style={{
-                        position: "absolute",
-                        width: "100%",
-                        borderRadius: globalStyle.borderRadius,
                         height: "100%",
-                        backgroundColor: globalStyle.colorAltLight,
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        flexDirection: "row",
+                        position: "absolute",
+                        bottom: 0,
+                        right: 0,
                       }}
-                    ></View>
-                    <AddIcon height={20} width={20}></AddIcon>
-                  </Button>
+                      label=""
+                    >
+                      <View
+                        style={{
+                          position: "absolute",
+                          width: "100%",
+                          borderRadius: globalStyle.borderRadius,
+                          height: "100%",
+                          backgroundColor: globalStyle.color + "20",
+                        }}
+                      ></View>
+                      <AddIcon height={20} width={20}></AddIcon>
+                    </Button>
+                  </BlurView>
                 </Animated.View>
               </View>
             </Animated.View>

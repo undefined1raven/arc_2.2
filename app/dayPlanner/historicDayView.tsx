@@ -36,7 +36,7 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 function historicDayView() {
   const historicDayView = useDayPlannerActiveDay(
-    (store) => store.historicDayView
+    (store) => store.historicDayView,
   );
   const featureConfigApi = useFeatureConfigs();
   const globalStyle = useGlobalStyleStore();
@@ -54,7 +54,7 @@ function historicDayView() {
     (task: TessTaskType) => {
       const statusId = task.statusID;
       const status = featureConfigApi.dayPlannerFeatureConfig.find(
-        (status: TessStatusType) => status.statusID === statusId
+        (status: TessStatusType) => status.statusID === statusId,
       );
       if (status) {
         return status.name;
@@ -62,7 +62,7 @@ function historicDayView() {
         return "Unknown Status";
       }
     },
-    [featureConfigApi.dayPlannerFeatureConfig]
+    [featureConfigApi.dayPlannerFeatureConfig],
   );
 
   const getStatusColorsForTask = useCallback(
@@ -76,7 +76,7 @@ function historicDayView() {
 
       const statusId = task.statusID;
       const status = featureConfigApi.dayPlannerFeatureConfig.find(
-        (status: TessStatusType) => status.statusID === statusId
+        (status: TessStatusType) => status.statusID === statusId,
       );
       if (status) {
         const statusColors = status.colors;
@@ -101,7 +101,7 @@ function historicDayView() {
         return returnDefaultColors();
       }
     },
-    [featureConfigApi.dayPlannerFeatureConfig]
+    [featureConfigApi.dayPlannerFeatureConfig],
   );
 
   return (

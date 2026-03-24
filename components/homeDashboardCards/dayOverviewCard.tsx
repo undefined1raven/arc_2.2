@@ -9,7 +9,10 @@ import Text from "../common/Text";
 import Button from "../common/Button";
 import { useRouter } from "expo-router";
 import { EditDeco } from "../deco/EditDeco";
-import { countDoneTasksInDay } from "../utils/dataProcessing/countDoneTasksInDay";
+import {
+  countDoneTasksInDay,
+  countHighPriorityTasksLeftInDay,
+} from "../utils/dataProcessing/countDoneTasksInDay";
 import { getColorFromDayCompletion } from "../utils/dataProcessing/getColorFromDayCompletion";
 
 function DayOverviewCard() {
@@ -47,8 +50,13 @@ function DayOverviewCard() {
       dayPlannerFeatureConfig,
       dayPlannerActiveDay,
     );
+    const highPriorityTasksLeft = countHighPriorityTasksLeftInDay(
+      dayPlannerFeatureConfig,
+      dayPlannerActiveDay,
+    );
     setTaskCount(dayPlannerActiveDay.tasks.length);
     setNumberOfCompletedTasks(completedTasks);
+    setHighPriorityTasksLeft(highPriorityTasksLeft);
     setDayCompletion(dayCompletion);
   }, [dayPlannerActiveDay]);
 
@@ -230,7 +238,7 @@ function DayOverviewCard() {
                 label={`${
                   highPriorityTasksLeft === 0 || highPriorityTasksLeft === null
                     ? "No high priority tasks remaining"
-                    : `${highPriorityTasksLeft} high priority tasks left`
+                    : `${highPriorityTasksLeft} high priority task${highPriorityTasksLeft === 1 ? "" : "s"} left`
                 }`}
               ></Text>
             </View>

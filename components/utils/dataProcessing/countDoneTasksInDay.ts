@@ -30,4 +30,37 @@ function countDoneTasksInDay(
   return completedTasks;
 }
 
-export { countDoneTasksInDay };
+function countHighPriorityTasksLeftInDay(
+  dayPlannerFeatureConfig: TessStatusType[],
+  day: TessDayLogType,
+) {
+  const tasks = day.tasks;
+
+  if (tasks.length === 0) {
+    return 0;
+  }
+
+  let highPrioTasksLeft: number = 0;
+  tasks.forEach((task) => {
+    const taskStatusID = task.statusID;
+    const taskStatus = dayPlannerFeatureConfig.find(
+      (status) => status.statusID === taskStatusID,
+    );
+    if (!taskStatus) {
+      return;
+    }
+    const taskCompletionScore = parseFloat(
+      taskStatus.completionEffect.toString(),
+    );
+    const taskLabels = task.labels;
+    if (
+      taskLabels.includes("highPriority") === true &&
+      taskCompletionScore < 1
+    ) {
+      highPrioTasksLeft++;
+    }
+  });
+  return highPrioTasksLeft;
+}
+
+export { countDoneTasksInDay, countHighPriorityTasksLeftInDay };

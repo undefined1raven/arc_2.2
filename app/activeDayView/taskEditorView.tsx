@@ -94,7 +94,7 @@ function TaskEditorView() {
         .catch((e) => {
           console.log("Error updating task name", e);
         });
-    }, 50);
+    }, 1500);
 
     return () => {
       debouncedUpdateTaskNameRef.current?.cancel();

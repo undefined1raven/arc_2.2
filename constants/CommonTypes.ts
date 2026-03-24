@@ -88,7 +88,7 @@ type ARCCategoryType = {
 };
 type FeatureConfigArcType = (ARCCategoryType | ARCTasksType)[];
 
-type TessStatusType = {
+type countDoneTasksInDayTessStatusType = {
   statusID: string;
   name: string;
   deleted: boolean;
