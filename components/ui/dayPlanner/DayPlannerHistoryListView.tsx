@@ -17,14 +17,14 @@ function DayPlannerHistoryListView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const recentDayPlannerData = useDayPlannerActiveDay((s) => s.recentDays);
   const dayPlannerFeatureConfig = useFeatureConfigs(
-    (f) => f.dayPlannerFeatureConfig
+    (f) => f.dayPlannerFeatureConfig,
   );
   const recentDays = useDayPlannerActiveDay((r) => r.recentDays);
 
   const renderItem = useCallback(({ item }: { item: TessDayLogType }) => {
     const completionPercentage = computeDayPlannerCompletion(
       dayPlannerFeatureConfig,
-      item
+      item,
     );
     return (
       <View
@@ -37,6 +37,8 @@ function DayPlannerHistoryListView() {
           flexDirection: "row",
           borderColor: globalStyle.color,
           borderWidth: 1,
+          borderTopWidth: 0,
+          borderBottomWidth: 0,
           paddingRight: 5,
           paddingLeft: 5,
           borderRadius: globalStyle.borderRadius,
@@ -91,7 +93,7 @@ function DayPlannerHistoryListView() {
     ({ item }: { item: TessDayLogType }) => {
       return <View style={{ width: "100%", height: 10 }}></View>;
     },
-    []
+    [],
   );
 
   return (

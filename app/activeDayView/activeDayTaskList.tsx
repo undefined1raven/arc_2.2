@@ -13,7 +13,6 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useDayPlannerTaskToEdit } from "@/stores/viewState/dayPlannerTaskToEdit";
 import { FlashList } from "@shopify/flash-list";
-import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { Animated, View } from "react-native";
@@ -242,9 +241,7 @@ function ActiveDayTaskList() {
     <Animated.View
       style={{ width: "100%", flex: 1, height: "100%", marginBottom: 10 }}
     >
-      <BlurView
-        experimentalBlurMethod={"dimezisBlurView"}
-        intensity={10}
+      <View
         style={{
           position: "absolute",
           bottom: 5,
@@ -275,7 +272,7 @@ function ActiveDayTaskList() {
         >
           <AddIcon width={18} height={18}></AddIcon>
         </Button>
-      </BlurView>
+      </View>
 
       <View
         style={{

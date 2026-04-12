@@ -108,7 +108,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
       }
       get().updateTask(nextTask.id, { status: "done", progress: 1 });
     } catch (err) {
-      console.log("Task failed:", nextTask.id, err);
+      console.log("Error in task execution:", err);
       get().updateTask(nextTask.id, {
         status: "failed",
         error: String(err),
@@ -150,9 +150,8 @@ export const useTransferStore = create<TransferState>((set, get) => ({
 // Example handlers
 async function handleUpload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
-  const { payload } = task;
 
-  console.log("Uploading chunk:", payload.id);
+  console.log("Uploading chunk:", task.payload?.id || "No payload id");
 
   const activeUserId = useActiveUser.getState().activeUser.userId;
   const currentDeviceId = SecureStore.getItem(deviceId);
@@ -162,7 +161,7 @@ async function handleUpload(task: TransferTask) {
   authenticatedApiRequest("/dataSync/updateChunk", {
     deviceId: currentDeviceId,
     accountId: activeUserId,
-    ...payload,
+    ...task.payload,
   });
 }
 

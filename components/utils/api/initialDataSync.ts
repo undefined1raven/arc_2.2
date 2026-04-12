@@ -224,9 +224,9 @@ async function initialDataSync() {
           },
         }));
 
-        uploadPayloads.forEach((item) =>
-          dataSyncApi.enqueue(item as TransferTask),
-        );
+        uploadPayloads.forEach((item) => {
+          dataSyncApi.enqueue(item as TransferTask);
+        });
       });
     })
     .catch((e) => {

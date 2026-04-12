@@ -26,6 +26,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
         <data android:scheme="com.midnightraven.arcvv"/>
+        <data android:scheme="exp+arcvv"/>
       </intent-filter>
     </activity>
   </application>

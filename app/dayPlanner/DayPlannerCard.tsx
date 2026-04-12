@@ -161,7 +161,7 @@ function DayPlannerCard() {
           <Text
             style={{ marginLeft: 5 }}
             label={getDateDisplayLabelFromDate(
-              new Date(dayPlannerActiveDay?.day || ""),
+              new Date(dayPlannerActiveDay?.day || Date.now()),
             )}
           ></Text>
         </View>

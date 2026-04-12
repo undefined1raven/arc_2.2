@@ -134,7 +134,7 @@ function loadLastWeekTimeTrackingData() {
 
 ///Called once after the user logs in and crypto keys are available
 async function onLoginOnce() {
-  //   initialDataSync();
+  initialDataSync();
   loadRecentDayPlannerData();
   loadLastWeekTimeTrackingData();
   getDayPlannerActiveDay();
