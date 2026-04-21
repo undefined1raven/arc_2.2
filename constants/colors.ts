@@ -64,7 +64,8 @@ type AvailableThemes =
   | "paper"
   | "monochromeGray"
   | "blackOrange"
-  | "midnightBlue";
+  | "midnightBlue"
+  | "bobocelPink";
 
 type Themes = {
   cloudy: ThemeColorsType;
@@ -78,6 +79,7 @@ type Themes = {
   monochromeGray: ThemeColorsType;
   blackOrange: ThemeColorsType;
   midnightBlue: ThemeColorsType;
+  bobocelPink: ThemeColorsType;
 };
 const themeColorKeyToDisplayName = {
   cloudy: "Cloudy",
@@ -95,6 +97,7 @@ const themeColorKeyToDisplayName = {
   paper: "Paper",
   blackOrange: "Black Orange",
   midnightBlue: "Midnight Blue",
+  bobocelPink: "Bobocel Pink",
 };
 
 export { themeColorKeyToDisplayName };
@@ -177,6 +180,76 @@ const themeColors: Themes = {
         "#C64191",
         "#EF6F6C",
         "#1B998B",
+      ],
+    },
+  },
+  bobocelPink: {
+    dark: {
+      androidRippleColor: "#ffffff",
+      statusBarColor: "#FF78ED",
+      colorAlt: "#9B61FF",
+      pageBackgroundColors: ["#ff9df2", "#fd6ff1"],
+      color: "#350323",
+      colorAccent: "#731550",
+      textColor: "#200315",
+      textColorAccent: "#581640",
+      textColorInactive: "#441432",
+      colorInactive: "#3e2a37",
+      successColor: "#1a7625",
+      successTextColor: "#1a4c20",
+      errorColor: "#5a0505",
+      errorTextColor: "#690019",
+      colorAltLight: "#ff65a3",
+      warningColor: "#581f81",
+      warningTextColor: "#340f4f",
+      chartColorSet: [
+        "#630a14",
+        "#3c1328",
+        "#255a50",
+        "#352c16",
+        "#0d3958",
+        "#14183b",
+        "#894848",
+        "#6F5E5C",
+        "#795b1d",
+        "#534e1d",
+        "#134035",
+        "#B80C09",
+        "#252935",
+      ],
+    },
+    light: {
+      androidRippleColor: "#ffffff",
+      statusBarColor: "#FF78ED",
+      colorAlt: "#9B61FF",
+      pageBackgroundColors: ["#ff9df2", "#fd6ff1"],
+      color: "#350323",
+      colorAccent: "#731550",
+      textColor: "#200315",
+      textColorAccent: "#581640",
+      textColorInactive: "#441432",
+      colorInactive: "#3e2a37",
+      successColor: "#1a7625",
+      successTextColor: "#1a4c20",
+      errorColor: "#5a0505",
+      errorTextColor: "#690019",
+      colorAltLight: "#ff65a3",
+      warningColor: "#581f81",
+      warningTextColor: "#340f4f",
+      chartColorSet: [
+        "#630a14",
+        "#3c1328",
+        "#255a50",
+        "#352c16",
+        "#0d3958",
+        "#14183b",
+        "#894848",
+        "#6F5E5C",
+        "#795b1d",
+        "#534e1d",
+        "#134035",
+        "#B80C09",
+        "#252935",
       ],
     },
   },

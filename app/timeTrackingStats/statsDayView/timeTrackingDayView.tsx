@@ -29,10 +29,10 @@ function TimeTrackingDayView() {
   const derivedData = timeTrackingDataApi.derivedActiveDayData;
   const screenDimensions = useWindowDimensions();
   const timeTrackingFeatureConfig = useFeatureConfigs(
-    (fc) => fc.timeTrackingFeatureConfig
+    (fc) => fc.timeTrackingFeatureConfig,
   );
   const [viewMode, setViewMode] = useState<"list" | "categoryBreakdown">(
-    "list"
+    "list",
   );
   const displayLabel = useMemo(() => {
     const activeDay = timeTrackingDataApi.activeDayView;
@@ -40,16 +40,17 @@ function TimeTrackingDayView() {
     if (typeof activeDay !== "string") return "Select a day";
     const date = new Date(activeDay);
     const day = date.getDate();
-    const month = date.toLocaleString("default", { month: "short" });
+    const month = date.toLocaleString("default", { month: "long" });
     const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+    const dayOfWeek = date.toLocaleString("default", { weekday: "short" });
+    return `${dayOfWeek} | ${day} ${month} ${year}`;
   }, [timeTrackingDataApi.activeDayView]);
 
   const getActivityDisplayInfoFromLog = useCallback(
     (log: ArcTaskLogType) => {
       const id = log.taskID;
       const activity = timeTrackingFeatureConfig.find(
-        (item) => item.itme.taskID === id || item.itme.id === id
+        (item) => item.itme.taskID === id || item.itme.id === id,
       );
 
       let activityName = "Unknown Activity";
@@ -60,7 +61,7 @@ function TimeTrackingDayView() {
         const categoryId = activity.itme.categoryID;
         const category = timeTrackingFeatureConfig.find(
           (item) =>
-            item.itme.categoryID === categoryId || item.itme.id === categoryId
+            item.itme.categoryID === categoryId || item.itme.id === categoryId,
         );
         if (category) {
           categoryName = category.itme.name || "Unnamed Category";
@@ -104,7 +105,7 @@ function TimeTrackingDayView() {
         duration: formatDuration(duration),
       };
     },
-    [timeTrackingFeatureConfig]
+    [timeTrackingFeatureConfig],
   );
 
   const relevantItems = useMemo(() => {
@@ -180,7 +181,7 @@ function TimeTrackingDayView() {
         </View>
       );
     },
-    [getActivityDisplayInfoFromLog]
+    [getActivityDisplayInfoFromLog],
   );
 
   const pieChartLegendRenderItem = useCallback(
@@ -252,7 +253,7 @@ function TimeTrackingDayView() {
         </View>
       );
     },
-    [getActivityDisplayInfoFromLog]
+    [getActivityDisplayInfoFromLog],
   );
 
   return (
@@ -357,7 +358,7 @@ function TimeTrackingDayView() {
             <Button
               onClick={() => {
                 setViewMode((prev) =>
-                  prev === "list" ? "categoryBreakdown" : "list"
+                  prev === "list" ? "categoryBreakdown" : "list",
                 );
               }}
               style={{

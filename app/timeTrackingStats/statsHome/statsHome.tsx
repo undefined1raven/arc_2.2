@@ -24,7 +24,7 @@ function Home() {
   >(null);
 
   const hasTimeTrackingData = useTimeStatsData(
-    (s) => s.dataInTimeRange !== null
+    (s) => s.dataInTimeRange !== null,
   );
   const viewData = useTimeStatsData((s) => s.viewRange);
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -40,7 +40,7 @@ function Home() {
           "timeTrackingChunks",
           timeRangeStart,
           timeRangeEnd,
-          null
+          null,
         )
         .then((data) => {
           timeStatsApi.setIsFetchingData(false);
@@ -54,7 +54,7 @@ function Home() {
           console.error("Error fetching time tracking data:", error);
         });
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -67,14 +67,26 @@ function Home() {
     }
   }, []);
 
+  const getListDisplayDateLabel = useCallback((dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const dayOfWeek = date.toLocaleDateString("en-US", { weekday: "short" });
+    const displayDate = date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+    });
+    return `${dayOfWeek} ${displayDate}`;
+  }, []);
+
   const getDisplayText = useMemo(() => {
     return (dateString: string) => {
       if (!dateString) return "";
       const date = new Date(dateString);
-      return date.toLocaleDateString("en-GB", {
+      const displayDate = date.toLocaleDateString("en-US", {
         day: "2-digit",
         month: "short",
       });
+      return displayDate;
     };
   }, []);
 
@@ -118,8 +130,9 @@ function Home() {
           }}
         ></View>
         <Text
+          style={{ width: 90 }}
           fontSize={globalStyle.regularMobileFont}
-          label={getDisplayText(typedItem)}
+          label={getListDisplayDateLabel(typedItem)}
         />
         <View
           style={{
@@ -180,7 +193,7 @@ function Home() {
           <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
             <Text
               label={`${getDisplayText(
-                viewData[viewData.length - 1]
+                viewData[viewData.length - 1],
               )} - ${getDisplayText(viewData[0])}`}
             ></Text>
             {isFetchingData && (
@@ -211,7 +224,7 @@ function Home() {
               }}
               onClick={() => {
                 router.push(
-                  "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                  "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
                 );
               }}
             >
