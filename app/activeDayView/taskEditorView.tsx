@@ -12,7 +12,7 @@ import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { useDayPlannerTaskToEdit } from "@/stores/viewState/dayPlannerTaskToEdit";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 
 function TaskEditorView() {
@@ -30,6 +30,8 @@ function TaskEditorView() {
     | (((name: string) => void) & { cancel: () => void; flush: () => void })
     | null
   >(null);
+
+  const [name, setName] = useState<string>(dayPlannerTaskToEdit?.name || "");
 
   const updateRecentDaysWithUpdatedDay = useCallback(
     (updatedDay: TessDayLogType) => {
@@ -94,7 +96,7 @@ function TaskEditorView() {
         .catch((e) => {
           console.log("Error updating task name", e);
         });
-    }, 1500);
+    }, 250);
 
     return () => {
       debouncedUpdateTaskNameRef.current?.cancel();
@@ -220,6 +222,10 @@ function TaskEditorView() {
     debouncedUpdateTaskNameRef.current?.(name);
   };
 
+  useEffect(() => {
+    updateTaskName(name);
+  }, [name]);
+
   return (
     <FeatureConfigEmptySettingPage
       bottomHeaderButtonLabel=""
@@ -238,9 +244,9 @@ function TaskEditorView() {
       <FeatureConfigValueInput
         inputType="text"
         label="Name"
-        value={dayPlannerTaskToEdit?.name || ""}
+        value={name}
         onChange={(e) => {
-          updateTaskName(e);
+          setName(e);
         }}
       ></FeatureConfigValueInput>
       <FeatureConfigSelection
