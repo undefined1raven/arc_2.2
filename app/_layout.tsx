@@ -211,6 +211,10 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="budget/budgetMain/budgetMain"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="diary/groupView/groupMain"
                   options={{ headerShown: false }}
                 />

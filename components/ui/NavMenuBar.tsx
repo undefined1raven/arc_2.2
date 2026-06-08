@@ -43,7 +43,7 @@ function NavMenuBar() {
             router.push(menuItem.pathname);
           }}
           style={{
-            width: "20%",
+            width: "16.666%",
             height: "100%",
             borderColor: "#00000000",
             display: "flex",

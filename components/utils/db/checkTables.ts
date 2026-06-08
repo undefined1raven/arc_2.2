@@ -46,6 +46,12 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   );
   promiseArray.push(arcChunksDerivedDataTablePromise);
 
+  //Budget chunks
+  const budgetChunksTablePromise = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS budgetChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);",
+  );
+  promiseArray.push(budgetChunksTablePromise);
+
   //Day planner chunks
   const tessChunksTablePromise = db.runAsync(
     "CREATE TABLE IF NOT EXISTS dayPlannerChunks (id TEXT NOT NULL PRIMARY KEY, userID TEXT NOT NULL, encryptedContent TEXT NOT NULL, tx NUMBER NOT NULL, version TEXT NOT NULL, timeRangeStart NUMBER, timeRangeEnd NUMBER, hash TEXT);",

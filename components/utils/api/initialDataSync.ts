@@ -70,12 +70,18 @@ async function getLocalMetadata(): Promise<ChunkMetadataResult[]> {
 function getMetadataDeltaForSync(
   localMetadata: MetadataType[],
   remoteMetadata: MetadataType[],
+  index: number,
 ): {
   toUpload: MetadataType[];
   toDownload: MetadataType[];
 } {
   const toUpload: MetadataType[] = [];
   const toDownload: MetadataType[] = [];
+
+  if (index === 0) {
+    console.log("-------LOCAL", localMetadata);
+    console.log("-------REMOTE", remoteMetadata);
+  }
 
   ///1. Get local chunks not present remotely
   for (let ix = 0; ix < localMetadata.length; ix++) {
@@ -164,11 +170,17 @@ async function initialDataSync() {
       const uploads: Partial<TransferTask>[] = [];
       const downloads: Partial<TransferTask>[] = [];
 
+      console.log(
+        "Local and remote metadata fetched, calculating deltas...",
+        remoteMetadataResult,
+      );
+
       ///Loop over the metadata from each table
       for (let ix = 0; ix < 5; ix++) {
         let { toUpload, toDownload } = getMetadataDeltaForSync(
           localMetadataResult[ix].metadata || [],
           remoteMetadataResult[ix].metadata || [],
+          ix,
         );
 
         //@ts-ignore
@@ -224,9 +236,10 @@ async function initialDataSync() {
           },
         }));
 
-        uploadPayloads.forEach((item) => {
-          dataSyncApi.enqueue(item as TransferTask);
-        });
+        ////LOCAL
+        // uploadPayloads.forEach((item) => {
+        //   dataSyncApi.enqueue(item as TransferTask);
+        // });
       });
     })
     .catch((e) => {

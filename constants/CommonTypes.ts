@@ -86,6 +86,20 @@ type ARCCategoryType = {
   };
   type: "taskCategory";
 };
+
+type BudgetAccountName = {
+  type: "account";
+  data: {
+    color: ColorValueHex;
+    textColor: ColorValueHex;
+    name: string;
+    monthlyAmount: number;
+    resetDay: number;
+    accountId: string;
+    version: "0.1.0";
+  };
+};
+
 type FeatureConfigArcType = (ARCCategoryType | ARCTasksType)[];
 
 type countDoneTasksInDayTessStatusType = {
@@ -182,11 +196,22 @@ type FeatureConfigChunkType = {
   encryptedContent: string;
   tx: number;
   version: "0.1.1";
-  type: "timeTracking" | "dayPlanner" | "personalDiary";
+  type: "timeTracking" | "dayPlanner" | "personalDiary" | "budget";
   hash: string;
 };
 
 type ARC_ChunksType = {
+  id: string;
+  userID: string;
+  encryptedContent: string;
+  tx: number;
+  version: "0.1.1" | "0.1.2";
+  timeRangeStart: number | null;
+  timeRangeEnd: number | null;
+  hash: string;
+};
+
+type Budget_ChunksType = {
   id: string;
   userID: string;
   encryptedContent: string;
@@ -280,4 +305,6 @@ export type {
   UserDataValues,
   ActivityTransitionLog,
   DayType,
+  Budget_ChunksType,
+  BudgetAccountName,
 };

@@ -16,7 +16,9 @@ interface IFeatureConfigs {
   timeTrackingFeatureConfig: any | null;
   dayPlannerFeatureConfig: any | null;
   personalDiaryFeatureConfig: any | null;
+  budgetFeatureConfig: any | null;
   setDayPlannerFeatureConfig: (config: any) => void;
+  setBudgetFeatureConfig: (config: any) => void;
   setTimeTrackingFeatureConfig: (config: any) => void;
   setPersonalDiaryFeatureConfig: (config: any) => void;
 }
@@ -31,6 +33,10 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
   setPersonalDiaryFeatureConfig: (config: any) => {
     set({ personalDiaryFeatureConfig: config });
   },
+  setBudgetFeatureConfig: (config: any) => {
+    set({ personalDiaryFeatureConfig: config });
+  },
+  budgetFeatureConfig: null,
   decryptFeatureConfigs: async () => {
     const activeUserId = useActiveUser.getState().activeUser.userId;
     const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -63,6 +69,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
         let timeTrackingFeatureConfig: any[] = [];
         let dayPlannerFeatureConfig: any[] = [];
         let personalDiaryFeatureConfig: any[] = [];
+        let budgetFeatureConfig: any[] = [];
         results.forEach((result, index) => {
           if (result.status === "fulfilled") {
             const decryptionResult = result.value;
@@ -95,6 +102,9 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
                       ...parsedData,
                     ];
                     break;
+                  case "budget":
+                    budgetFeatureConfig = [...budgetFeatureConfig, parsedData];
+                    break;
                   default:
                     console.error("Unknown feature config type", type);
                 }
@@ -110,6 +120,7 @@ const useFeatureConfigs = create<IFeatureConfigs>((set, get) => ({
           timeTrackingFeatureConfig: timeTrackingFeatureConfig,
           dayPlannerFeatureConfig: dayPlannerFeatureConfig,
           personalDiaryFeatureConfig: personalDiaryFeatureConfig,
+          budgetFeatureConfig: budgetFeatureConfig,
         });
         return;
       })

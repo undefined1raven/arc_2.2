@@ -1,3 +1,4 @@
+import { BudgetDeco } from "@/components/deco/BudgetLogo";
 import { DayPlannerIcon } from "@/components/deco/DayPlannerIcon";
 import { HomeIcon } from "@/components/deco/HomeIcon";
 import { PersonalDiaryIcon } from "@/components/deco/PersonalDiaryIcon";
@@ -45,6 +46,12 @@ const useNavMenuApi = create<INavMenuApi>((set, get) => ({
       icon: PersonalDiaryIcon,
       name: "personalDiary",
       pathname: "/diary/diaryMain/diaryMain",
+    },
+    {
+      goTo: "budget",
+      icon: BudgetDeco,
+      name: "budget",
+      pathname: "/budget/budgetMain/budgetMain",
     },
   ],
   showMenu: true,
