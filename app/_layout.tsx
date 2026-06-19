@@ -199,6 +199,10 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="budget/settings/budgetSettings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="dayPlanner/statusEditor/statusEditor"
                   options={{ headerShown: false }}
                 />

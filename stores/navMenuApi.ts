@@ -47,12 +47,6 @@ const useNavMenuApi = create<INavMenuApi>((set, get) => ({
       name: "personalDiary",
       pathname: "/diary/diaryMain/diaryMain",
     },
-    {
-      goTo: "budget",
-      icon: BudgetDeco,
-      name: "budget",
-      pathname: "/budget/budgetMain/budgetMain",
-    },
   ],
   showMenu: true,
   setMenuItems: (items) => set({ menuItems: items }),

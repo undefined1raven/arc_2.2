@@ -87,19 +87,6 @@ type ARCCategoryType = {
   type: "taskCategory";
 };
 
-type BudgetAccountName = {
-  type: "account";
-  data: {
-    color: ColorValueHex;
-    textColor: ColorValueHex;
-    name: string;
-    monthlyAmount: number;
-    resetDay: number;
-    accountId: string;
-    version: "0.1.0";
-  };
-};
-
 type FeatureConfigArcType = (ARCCategoryType | ARCTasksType)[];
 
 type countDoneTasksInDayTessStatusType = {

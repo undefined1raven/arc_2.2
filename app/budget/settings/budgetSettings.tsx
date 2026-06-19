@@ -8,14 +8,18 @@ import { SettingdIcon } from "@/components/deco/SettingsIcon";
 import { TimeStatsIcon } from "@/components/deco/TimeStatsIcon";
 import { DayPlannerIcon } from "@/components/deco/DayPlannerIcon";
 import { PersonalDiaryIcon } from "@/components/deco/PersonalDiaryIcon";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import Button from "@/components/common/Button";
 import { router } from "expo-router";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
-import { BudgetDeco } from "@/components/deco/BudgetLogo";
-function SettingsMain() {
+import { Dropdown } from "@/components/deco/Dropdown";
+import { useFeatureConfigs } from "@/stores/featureConfigs";
+function BudgetSettings() {
+  const budgetFeatureConfig = useFeatureConfigs(
+    (state) => state.budgetFeatureConfig,
+  );
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
     name: string;
@@ -26,34 +30,22 @@ function SettingsMain() {
   };
   const settingOptions = [
     {
-      name: "timeTracking",
-      icon: TimeStatsIcon,
-      title: "Activities and categories",
-      description: "Add, remove and categorize your activities",
-      goTo: "timeTracking/timeTrackingSettingsMain",
+      name: "accounts",
+      title: "Accounts",
+      description: "Add, remove and edit your accounts",
+      goTo: "/budget/editAccount/editAccountSelection",
     },
     {
-      name: "dayPlanner",
-      icon: DayPlannerIcon,
-      title: "Customize day planner",
-      description: "Change colors",
-      goTo: "/dayPlanner/statusEditor/statusEditor",
-    },
-    {
-      name: "personalDiary",
-      icon: PersonalDiaryIcon,
-      title: "Personal diary",
-      description: "Access control",
-      goTo: "/diary/diaryFeatureConfig/diaryFeatureConfig",
-    },
-    {
-      name: "accountSettings",
-      icon: SettingdIcon,
-      title: "Account settings",
-      description: "Theme, security, and general settings",
-      goTo: "/settings/accountSettings/accountSettingsMain",
+      name: "budgets",
+      title: "Budgets",
+      description: "Add, remove and edit your budgets",
+      goTo: "/budget/editBudget/editBudgetSelection",
     },
   ];
+
+  useEffect(() => {
+    console.log("budgetFeatureConfig", budgetFeatureConfig);
+  }, []);
 
   const renderItem = useCallback((item: SettingOption) => {
     return (
@@ -75,7 +67,6 @@ function SettingsMain() {
           paddingRight: 5,
         }}
       >
-        <item.icon width={30} height={30} />
         <View
           style={{
             display: "flex",
@@ -100,17 +91,48 @@ function SettingsMain() {
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
           <FlashList
-            estimatedItemSize={100}
+            estimatedItemSize={93}
             inverted={true}
             renderItem={({ item }) => renderItem(item)}
             data={settingOptions}
           ></FlashList>
+          <Text
+            textAlign="left"
+            label="Settings / Budget Settings"
+            style={{
+              flexShrink: 0,
+              width: "100%",
+              height: 65,
+              paddingLeft: 90,
+              backgroundColor:
+                globalStyle.color + layoutCardLikeBackgroundOpacity,
+            }}
+          ></Text>
+          <Button
+            onClick={() => {
+              router.replace("/settings/settingsMain");
+            }}
+            style={{
+              borderRadius: 0,
+              borderWidth: 0,
+              borderRightWidth: 1,
+              position: "absolute",
+              bottom: 0,
+              width: 80,
+              height: 65,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Dropdown style={{ transform: [{ rotate: "90deg" }] }}></Dropdown>
+          </Button>
         </View>
       </ThemedView>
     </>
   );
 }
-export default SettingsMain;
+export default BudgetSettings;
 
 const styles = StyleSheet.create({
   container: {

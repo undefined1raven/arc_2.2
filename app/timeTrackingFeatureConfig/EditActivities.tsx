@@ -28,19 +28,18 @@ function EditActivities() {
   const navMenuApi = useNavMenuApi();
   const virtualKeyboardApi = useVirtualKeyboard();
   const timeTrackingFeatureConfigApi = useFeatureConfigs(
-    (store) => store.timeTrackingFeatureConfig
+    (store) => store.timeTrackingFeatureConfig,
   );
   const featureConfigApi = useFeatureConfigs();
 
   const getActivities = useCallback(() => {
     return featureConfigApi.timeTrackingFeatureConfig.filter(
-      (r) => r.type === "task"
+      (r) => r.type === "task",
     );
   }, [featureConfigApi.timeTrackingFeatureConfig]);
 
-  const [filteredActivities, setFilteredActivities] = useState<ARCTasksType[]>(
-    getActivities()
-  );
+  const [filteredActivities, setFilteredActivities] =
+    useState<ARCTasksType[]>(getActivities());
   const customFadeInUp = useCallback((duration: number) => {
     return FadeInUp.duration(duration);
   }, []);
@@ -53,11 +52,11 @@ function EditActivities() {
   const getCategoryNameFromTaskObject = useCallback(
     (taskObject) => {
       const categories = featureConfigApi.timeTrackingFeatureConfig.filter(
-        (r) => r.type === "taskCategory"
+        (r) => r.type === "taskCategory",
       );
       const catId = taskObject.itme.categoryID;
       const category = categories.find(
-        (r) => r.itme.categoryID === catId || r.itme.id === catId
+        (r) => r.itme.categoryID === catId || r.itme.id === catId,
       );
       if (category) {
         return category.itme.name;
@@ -65,7 +64,7 @@ function EditActivities() {
         return "Unknown";
       }
     },
-    [featureConfigApi.timeTrackingFeatureConfig]
+    [featureConfigApi.timeTrackingFeatureConfig],
   );
 
   useEffect(() => {
@@ -92,7 +91,7 @@ function EditActivities() {
       {
         caseSensitive: false,
         sort: true,
-      }
+      },
     );
     return searcher;
   }, [featureConfigApi.timeTrackingFeatureConfig]);
@@ -172,7 +171,7 @@ function EditActivities() {
                       const timeTrackingSelectedAcitvityApi =
                         useTimeTrackingSelectedActivity.getState();
                       timeTrackingSelectedAcitvityApi.setActivityToEdit(
-                        item as ARCTasksType
+                        item as ARCTasksType,
                       );
                       router.push(`/timeTracking/editActivity/editActivity`);
                     }}

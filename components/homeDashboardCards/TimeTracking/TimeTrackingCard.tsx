@@ -281,6 +281,56 @@ function TimeTrackingCard() {
     }
   }, []);
 
+  const onActivityCancel = useCallback(async () => {
+    const activeUser = activeUserApi.activeUser.userId;
+    if (!activeUser) {
+      console.error("No active user");
+      return;
+    }
+    setHasPendingActivity(false);
+    await SecureStore.deleteItemAsync(
+      getUserDataKey(
+        activeUser,
+        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
+      ),
+    );
+  }, [activeUserApi.activeUser.userId]);
+
+  const saveActivity = useCallback(async () => {
+    if (activeUserApi.activeUser.userId === null) {
+      console.error("No active user");
+      return;
+    }
+
+    if (hasPendingActivity === null || hasPendingActivity === false) {
+      return;
+    }
+
+    const newTaskRow = {
+      start: hasPendingActivity.start,
+      taskID: hasPendingActivity.taskID,
+      end: Date.now(),
+    };
+    dataRetrivalAPI
+      .appendEntry("timeTrackingChunks", newTaskRow, timeTrackingChunkSize)
+      .then((res) => {})
+      .catch((err) => {});
+    await SecureStore.deleteItemAsync(
+      getUserDataKey(
+        activeUserApi.activeUser.userId,
+        secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
+      ),
+    );
+    await SecureStore.setItemAsync(
+      previousActivityId,
+      hasPendingActivity.taskID,
+    );
+    useNavMenuApi.getState().setShowMenu(false);
+    setActivitySearchFilter("");
+    setHasPendingActivity(false);
+    setIsPickingActivity(true);
+  }, [activeUserApi.activeUser.userId, hasPendingActivity]);
+
   const getCategoryNameFromTaskObject = useCallback(
     (taskObject) => {
       const categories = featureConfigApi.timeTrackingFeatureConfig.filter(
@@ -454,9 +504,7 @@ function TimeTrackingCard() {
             }}
           >
             <Button
-              onClick={() => {
-                setHasPendingActivity(false);
-              }}
+              onClick={onActivityCancel}
               borderColor={globalStyle.globalStyle.colorAccent}
               style={{
                 height: "85%",
@@ -479,39 +527,7 @@ function TimeTrackingCard() {
                 flexGrow: 1,
                 height: "85%",
               }}
-              onClick={async () => {
-                if (activeUserApi.activeUser.userId === null) {
-                  console.error("No active user");
-                  return;
-                }
-                const newTaskRow = {
-                  start: hasPendingActivity.start,
-                  taskID: hasPendingActivity.taskID,
-                  end: Date.now(),
-                };
-                dataRetrivalAPI
-                  .appendEntry(
-                    "timeTrackingChunks",
-                    newTaskRow,
-                    timeTrackingChunkSize,
-                  )
-                  .then((res) => {})
-                  .catch((err) => {});
-                await SecureStore.deleteItemAsync(
-                  getUserDataKey(
-                    activeUserApi.activeUser.userId,
-                    secureStoreKeyNames.userDataKeys.timeTrackingActiveTask,
-                  ),
-                );
-                await SecureStore.setItemAsync(
-                  previousActivityId,
-                  hasPendingActivity.taskID,
-                );
-                useNavMenuApi.getState().setShowMenu(false);
-                setActivitySearchFilter("");
-                setHasPendingActivity(false);
-                setIsPickingActivity(true);
-              }}
+              onClick={saveActivity}
             ></Button>
           </View>
         </View>
