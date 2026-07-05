@@ -147,7 +147,6 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   },
 }));
 
-// Example handlers
 async function handleUpload(task: TransferTask) {
   const { updateTask } = useTransferStore.getState();
 
