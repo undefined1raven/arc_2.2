@@ -22,7 +22,7 @@ function Home() {
   useEffect(() => {
     const newPinLength = newPin.length;
     setIsNewPinValid(
-      newPinLength >= 4 && newPinLength <= 6 && !isNaN(Number(newPin))
+      newPinLength >= 4 && newPinLength <= 6 && !isNaN(Number(newPin)),
     );
   }, [newPin]);
 

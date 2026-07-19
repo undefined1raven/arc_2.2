@@ -70,6 +70,7 @@ function localAccountAuth() {
           setIsCheckingPin(false);
           return;
         }
+
         cryptoOpsApi
           .performOperation("unwrapKey", {
             wrappedKey: decodedWrappedKey.wrappedKey,
@@ -261,7 +262,7 @@ function localAccountAuth() {
                       const localKey =
                         await SecureStore.getItemAsync(noBioSKName);
                       unwrapKeyAndSetState(
-                        inputPin + localKey,
+                        inputPin.trim() + localKey,
                         res ? res : "{}",
                       );
                     })
