@@ -45,7 +45,7 @@ function stringToCharCodeArray(str) {
       function cryptoWorker(args) {
     console.log("------Crypto Worker v1.2 active from CW------");
     function returnErrorResponse(message) {
-      console.log(\`Error: \$\{message\} for args\` [redacted]);
+      console.log(\`Error: \$\{message\} for args: [redacted]\`);
       return {
         status: "error",
         payload: { message: message, providedArgs: args },
@@ -343,7 +343,7 @@ function stringToCharCodeArray(str) {
             };
           })
           .catch((e) => {
-            console.log("Something fucked up", e)
+            console.log("Something went wrong", e)
             return returnErrorResponse(e);
           });
       } else if (args.keyType === "symmetric") {
@@ -468,7 +468,6 @@ derive an AES-KW key using PBKDF2.
     }
 
     async function unwrapKey(args) {
-      console.log("Unwrap args", args);
       const wrappedKey = str2ab(args.wrappedKey);
       const password = args.password;
       const salt = str2ab(args.salt);
@@ -529,7 +528,6 @@ derive an AES-KW key using PBKDF2.
     }
   }
   cryptoWorker(${args}).then((response) => {
-      console.log("Response from cryptoWorker", response); 
       console.log("Posting message back to main thread", '${args.requestId}');
       sendMessage(JSON.stringify({...response, requestId: '${
         JSON.parse(args).requestId

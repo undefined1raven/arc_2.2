@@ -36,6 +36,7 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import {
   getPrivateKey,
   getSymmetricKey,
+  noBioSKName,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
 import * as SecureStore from "expo-secure-store";
@@ -71,7 +72,7 @@ export default function Main() {
         console.error("Error updating PIKBackup in DB:", e);
       });
     },
-    [activeUserApi.userId]
+    [activeUserApi.userId],
   );
 
   const regenerateKey = useCallback(() => {
@@ -92,7 +93,7 @@ export default function Main() {
     const newKeyWrapPassword = newPIN + newPassphrase;
 
     const hasBioAuth = SecureStore.getItem(
-      secureStoreKeyNames.accountConfig.useBiometricAuth
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
     );
 
     if (hasBioAuth) {
@@ -115,7 +116,7 @@ export default function Main() {
             console.log("Saving new wrapped symmetric key");
             await SecureStore.setItemAsync(
               getSymmetricKey(userId),
-              wrappedSymKey
+              wrappedSymKey,
             );
           }
 
@@ -127,22 +128,31 @@ export default function Main() {
 
           await SecureStore.setItemAsync(
             getSymmetricKey(activeUserId),
-            wrappedSymKey
+            wrappedSymKey,
           )
             .then(async () => {
               const updatePIKPromise = updateUserPIK(wrappedSymKey);
               ///Restart app
-              const updateSecureStorePromise = SecureStore.setItemAsync(
-                secureStoreKeyNames.accountConfig.pin,
-                newKeyWrapPassword,
-                {
-                  requireAuthentication: true,
-                  authenticationPrompt:
-                    "Authenticate to use your screen lock to unlock",
-                }
+              const updateNoBioPassphraseStorage = SecureStore.setItemAsync(
+                noBioSKName,
+                newPassphrase,
               );
+              const updateBioAuthSecureStoreKeuPromise =
+                SecureStore.setItemAsync(
+                  secureStoreKeyNames.accountConfig.pin,
+                  newKeyWrapPassword,
+                  {
+                    requireAuthentication: true,
+                    authenticationPrompt:
+                      "Authenticate to use your screen lock to unlock",
+                  },
+                );
 
-              Promise.all([updatePIKPromise, updateSecureStorePromise])
+              Promise.all([
+                updatePIKPromise,
+                updateBioAuthSecureStoreKeuPromise,
+                updateNoBioPassphraseStorage,
+              ])
                 .then(() => {
                   Updates.reloadAsync();
                 })
