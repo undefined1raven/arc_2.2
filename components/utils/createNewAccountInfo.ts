@@ -14,7 +14,19 @@ function newRecoveryCode() {
 import * as Crypto from "expo-crypto";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 
-async function getNewRecoveryCodes(symmetricKeyData: string) {
+async function getNewRecoveryCodes(
+  symmetricKeyData: string,
+  userPIN: string,
+): Promise<
+  { RCKBackup: string; status: "success" } | { error: string; status: "failed" }
+> {
+  if (
+    typeof userPIN !== "string" ||
+    (userPIN.length >= 4 && userPIN.length <= 6) === false
+  ) {
+    return { error: "User PIN is not valid", status: "failed" };
+  }
+
   const cryptoOpsApi = useCryptoOpsQueue.getState();
   const newUserDataApi = useNewUserData.getState();
   const recoveryCodes: string[] = [];
@@ -27,29 +39,38 @@ async function getNewRecoveryCodes(symmetricKeyData: string) {
       cryptoOpsApi.performOperation("wrapKey", {
         jwkKeyData: symmetricKeyData,
         keyType: "symmetric",
-        password: newCode,
-      })
+        password: userPIN.trim() + newCode,
+      }),
     );
   }
 
-  return Promise.allSettled(keyWrappingPromises)
-    .then(async (results) => {
-      newUserDataApi.setRecoveryCodes(recoveryCodes);
-      const allKeyVariants: string[] = [];
-      results.forEach(async (result, index) => {
-        if (result.status === "fulfilled") {
-          const wrappedSimKey = result.value.payload;
-          const stringifiedWrappedSimKey = JSON.stringify(wrappedSimKey);
-          allKeyVariants.push(stringifiedWrappedSimKey);
-        } else {
-          console.error("Failed to wrap key", result.reason);
-        }
-      });
-      return { RCKBackup: JSON.stringify(allKeyVariants) };
-    })
-    .catch((error) => {
-      console.error("Error wrapping keys", error);
-    });
+  try {
+    const results = await Promise.allSettled(keyWrappingPromises);
+    newUserDataApi.setRecoveryCodes(recoveryCodes);
+
+    const allKeyVariants: string[] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        const wrappedSimKey = result.value.payload;
+        const stringifiedWrappedSimKey = JSON.stringify(wrappedSimKey);
+        allKeyVariants.push(stringifiedWrappedSimKey);
+      } else {
+        console.error("Failed to wrap key", result.reason);
+        return {
+          error: "Failed to wrap key: " + result.reason,
+          status: "failed",
+        };
+      }
+    }
+
+    return { RCKBackup: JSON.stringify(allKeyVariants) };
+  } catch (error) {
+    console.error("Error wrapping keys", error);
+    return {
+      error: "Error wrapping keys: " + error,
+      status: "failed",
+    };
+  }
 }
 
 async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
@@ -64,9 +85,9 @@ async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
       keyType: "symmetric",
       key: jwkKeyData,
       charCodeData: stringToCharCodeArray(
-        JSON.stringify(timeTrackingFeatureConfig)
+        JSON.stringify(timeTrackingFeatureConfig),
       ),
-    }
+    },
   );
 
   const diaryConfigEncrpytionPromise = cryptoOpsApi.performOperation(
@@ -75,7 +96,7 @@ async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
       keyType: "symmetric",
       key: jwkKeyData,
       charCodeData: stringToCharCodeArray(JSON.stringify(diaryFeatureConfig)),
-    }
+    },
   );
 
   const dayPlannerConfigEncrpytionPromise = cryptoOpsApi.performOperation(
@@ -84,9 +105,9 @@ async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
       keyType: "symmetric",
       key: jwkKeyData,
       charCodeData: stringToCharCodeArray(
-        JSON.stringify(dayPlannerFeatureConfig)
+        JSON.stringify(dayPlannerFeatureConfig),
       ),
-    }
+    },
   );
 
   const encrpytionPromises = [
@@ -100,7 +121,7 @@ async function encryptFeatureConfigs(jwkKeyData: string, userId: string) {
       const userDataPartial: { [key: string]: string } = {};
       function handleEncryptionResult(
         promiseIndex: number,
-        userDataKey: string
+        userDataKey: string,
       ) {
         const result = results[promiseIndex];
         if (typeof result === "undefined") {
@@ -150,7 +171,7 @@ async function generateSecretKey(): Promise<{
     hexString,
     {
       encoding: Crypto.CryptoEncoding.BASE64,
-    }
+    },
   )
     .then((hashedKey) => {
       return { status: "success", payload: hashedKey };
@@ -172,7 +193,7 @@ async function createNewAccountBasics() {
 
   try {
     const newSymmetricKeyResponse = await cryptoOpsApi.performOperation(
-      "generateSymmetricKey"
+      "generateSymmetricKey",
     );
 
     if (newSymmetricKeyResponse.status !== "success") {
@@ -180,9 +201,8 @@ async function createNewAccountBasics() {
       return;
     }
 
-    const newKeyPairResponse = await cryptoOpsApi.performOperation(
-      "generateKeyPair"
-    );
+    const newKeyPairResponse =
+      await cryptoOpsApi.performOperation("generateKeyPair");
 
     if (newKeyPairResponse.status !== "success") {
       console.error("Failed to generate key pair");
@@ -190,9 +210,8 @@ async function createNewAccountBasics() {
     }
     const newKeyPair = newKeyPairResponse.payload;
     const newSymmetricKey = newSymmetricKeyResponse.payload;
-    const RCKPartial = await getNewRecoveryCodes(newSymmetricKey.jwk);
     const featureConfigPartials = await encryptFeatureConfigs(
-      newSymmetricKey.jwk
+      newSymmetricKey.jwk,
     );
 
     const activeKeysAPI = useActiveKeys.getState();
@@ -205,7 +224,7 @@ async function createNewAccountBasics() {
         keyType: "symmetric",
         key: newSymmetricKey.jwk,
         charCodeData: stringToCharCodeArray(newKeyPair.privateKey),
-      }
+      },
     );
 
     if (encryptedPrivateKeyRes.status !== "success") {
@@ -217,7 +236,6 @@ async function createNewAccountBasics() {
       signupTime: signupTime,
       publicKey: newKeyPair.publicKey,
       version: "0.0.1",
-      ...RCKPartial,
       ...featureConfigPartials,
       PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),
     };

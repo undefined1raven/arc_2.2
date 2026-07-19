@@ -1,11 +1,11 @@
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import Button from "@/components/common/Button";
 import Text from "@/components/common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TextInput from "@/components/common/TextInput";
 import { router } from "expo-router";
 import { useActiveKeys } from "@/stores/decryptedKeys";
@@ -18,6 +18,8 @@ function Home() {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [isNewPinValid, setIsNewPinValid] = useState(false);
+  const [isWaitingRecoveryCodes, setIsWaitingRecoveryCodes] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const newPinLength = newPin.length;
@@ -27,22 +29,34 @@ function Home() {
   }, [newPin]);
 
   useEffect(() => {
-    const activeKeyAPI = useActiveKeys.getState();
-    if (typeof activeKeyAPI.activeSymmetricKey !== "string") {
-      return;
-    }
-    getNewRecoveryCodes(activeKeyAPI.activeSymmetricKey)
-      .then((codes) => {})
-      .catch((e) => {});
-  }, []);
-
-  useEffect(() => {
     if (newPin === confirmPin && newPin.length >= 4 && newPin.length <= 6) {
       setCanContinue(true);
     } else {
       setCanContinue(false);
     }
   }, [newPin, confirmPin]);
+
+  const onContinue = useCallback(async () => {
+    if (isWaitingRecoveryCodes || canContinue === false) {
+      return;
+    }
+    const keyRegenTempStoreAPI = keyRegenTempStore.getState();
+    keyRegenTempStoreAPI.setPin(newPin);
+    const activeKeyAPI = useActiveKeys.getState();
+    if (typeof activeKeyAPI.activeSymmetricKey !== "string") {
+      return;
+    }
+    setIsWaitingRecoveryCodes(true);
+    await getNewRecoveryCodes(activeKeyAPI.activeSymmetricKey, newPin)
+      .then((response) => {
+        if (response.status !== "failed") {
+          router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
+        } else {
+          setIsWaitingRecoveryCodes(false);
+        }
+      })
+      .catch(() => {});
+  }, [isWaitingRecoveryCodes]);
 
   ///Flow state
   const [canContinue, setCanContinue] = useState(false);
@@ -218,12 +232,10 @@ function Home() {
               style={{ height: "7%", width: "100%", marginBottom: 20 }}
             >
               <Button
-                onClick={() => {
-                  const keyRegenTempStoreAPI = keyRegenTempStore.getState();
-                  keyRegenTempStoreAPI.setPin(newPin);
-                  router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
-                }}
-                disabled={canContinue ? false : true}
+                onClick={onContinue}
+                disabled={
+                  canContinue ? false : isWaitingRecoveryCodes ? true : false
+                }
                 textAlign="left"
                 label="Continue"
                 textStyle={{ paddingLeft: 7 }}
@@ -236,12 +248,21 @@ function Home() {
                   paddingRight: 5,
                 }}
               >
-                <ArrowDeco
-                  color={
-                    canContinue ? globalStyle.color : globalStyle.colorInactive
-                  }
-                  width={55}
-                ></ArrowDeco>
+                {isWaitingRecoveryCodes ? (
+                  <ActivityIndicator
+                    size={"small"}
+                    color={globalStyle.color}
+                  ></ActivityIndicator>
+                ) : (
+                  <ArrowDeco
+                    color={
+                      canContinue
+                        ? globalStyle.color
+                        : globalStyle.colorInactive
+                    }
+                    width={55}
+                  ></ArrowDeco>
+                )}
               </Button>
             </Animated.View>
           </Animated.View>
