@@ -27,6 +27,7 @@ type ButtonProps = {
   secureTextEntry?: boolean;
   multiline?: boolean;
   readOnly?: boolean;
+  value?: string;
 };
 
 function TextInput({
@@ -45,11 +46,13 @@ function TextInput({
   onChange,
   defaultValue,
   readOnly = false,
+  value,
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
 
   return (
     <RNTextInput
+      value={value}
       readOnly={readOnly}
       multiline={multiline}
       onChange={onChange}

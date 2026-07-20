@@ -1,6 +1,6 @@
 import SimpleLoadingScreen from "@/components/common/SimpleLoadingScreen";
 import { ThemedView } from "@/components/ThemedView";
-import { act, useCallback, useEffect, useState } from "react";
+import { act, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -41,7 +41,30 @@ function localAccountAuth() {
   const [nativeAuthAvailable, setNativeAuthAvailable] = useState(false);
   const [authViewMode, setAuthViewMode] = useState<"PIN" | "NATIVE">("PIN");
 
-  const db = useSQLiteContext();
+  ///Error state
+  const [showErrorMessage, setShowErrorMessage] = useState<null | string>(null);
+
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showError = useCallback((errorMessage: string, timeout?: number) => {
+    setShowErrorMessage(errorMessage);
+
+    function setTimer() {
+      errorTimeoutRef.current = setTimeout(
+        () => {
+          setShowErrorMessage(null);
+        },
+        timeout ? timeout : 2000,
+      );
+    }
+
+    if (errorTimeoutRef.current !== null) {
+      clearTimeout(errorTimeoutRef.current);
+      setTimer();
+    }
+
+    setTimer();
+  }, []);
+
   useEffect(() => {
     ///Check if the user has enabled the screen lock method
     const nativeAuthFlag = SecureStore.getItem(
@@ -68,6 +91,7 @@ function localAccountAuth() {
         if (decodedWrappedKey === null) {
           console.error("Error decoding wrapped key");
           setIsCheckingPin(false);
+          showError("Someting went wrong [KF-0]");
           return;
         }
 
@@ -88,6 +112,8 @@ function localAccountAuth() {
               if (unwrappedKey.payload.key.status === "error") {
                 console.error("Error unwrapping key", unwrappedKey.payload.key);
                 setIsCheckingPin(false);
+                setInputPin("");
+                showError("Incorrect PIN");
                 return;
               }
 
@@ -101,6 +127,7 @@ function localAccountAuth() {
 
               if (typeof armoredPrivateKey !== "string") {
                 console.error("No private key found in secure store");
+                showError("Someting went wrong [KF-1]");
               } else {
                 try {
                   const privateKeyDecryptionRes =
@@ -115,6 +142,7 @@ function localAccountAuth() {
                       "Error decrypting private key",
                       privateKeyDecryptionRes,
                     );
+                    showError("Someting went wrong [KF-2]");
                   }
 
                   const decryptedPayload =
@@ -128,6 +156,7 @@ function localAccountAuth() {
                   activeKeyAPI.setActivePrivateKey(decodedPrivateKey);
                 } catch (e) {
                   console.error("Error decoding private key", e);
+                  showError("Someting went wrong [KF-3]");
                 }
               }
 
@@ -139,9 +168,11 @@ function localAccountAuth() {
                 })
                 .catch((e) => {
                   console.error("Error decrypting feature configs", e);
+                  showError("Someting went wrong [KF-4]");
                 });
             } else {
               console.error("Something went wrong");
+              showError("Someting went wrong [KF-5]");
               setIsCheckingPin(false);
             }
           })
@@ -151,6 +182,7 @@ function localAccountAuth() {
           });
       } catch (e) {
         console.error("Error unwrapping key", e);
+        showError("Someting went wrong [KF-6]");
         setIsCheckingPin(false);
       }
     },
@@ -213,11 +245,20 @@ function localAccountAuth() {
               flexDirection: "row",
             }}
           >
-            <Text
-              label={isCheckingPin ? "Authenticating" : "Enter your PIN"}
-              textAlign="left"
-              style={{ paddingLeft: 0 }}
-            ></Text>
+            {showErrorMessage !== null ? (
+              <Text
+                label={showErrorMessage}
+                textAlign="left"
+                color={globalStyle.errorTextColor}
+                style={{ paddingLeft: 0 }}
+              ></Text>
+            ) : (
+              <Text
+                label={isCheckingPin ? "Authenticating" : "Enter your PIN"}
+                textAlign="left"
+                style={{ paddingLeft: 0 }}
+              ></Text>
+            )}
             {isCheckingPin && (
               <ActivityIndicator
                 size="small"
@@ -228,8 +269,14 @@ function localAccountAuth() {
           </Animated.View>
           <TextInput
             onChange={(e) => {
-              setInputPin(e.nativeEvent.text);
+              const text = e.nativeEvent.text;
+              if (text.length < 10) {
+                setInputPin(text);
+              } else {
+                setInputPin(text.substring(0, 10));
+              }
             }}
+            value={inputPin}
             secureTextEntry={true}
             textAlign="left"
             placeholder="Enter your PIN"

@@ -6,7 +6,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { v4 } from "uuid";
 
 import { ThemedView } from "@/components/ThemedView";
 import Button from "@/components/common/Button";
@@ -19,143 +18,9 @@ import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import TextInput from "@/components/common/TextInput";
 import { CheckBox } from "@/components/common/CheckBox";
 import { act, useCallback, useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
-import {
-  getPrivateKey,
-  getSymmetricKey,
-  noBioSKName,
-  secureStoreKeyNames,
-} from "@/components/utils/constants/secureStoreKeyNames";
-import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
-import { saveNewUser } from "@/components/utils/db/saveNewUser";
-import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
-import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
-import { reloadAsync } from "expo-updates";
+import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
 import { useActiveKeys } from "@/stores/decryptedKeys";
-import { getInsertStringFromObject } from "@/components/utils/db/dbUtils";
-import { chunkPrefixes } from "@/constants/chunkPrefixes";
-import * as SQLite from "expo-sqlite";
-import {
-  ARC_ChunksType,
-  SID_ChunksType,
-  SIDGroups_ChunksType,
-  Tess_ChunksType,
-} from "@/constants/CommonTypes";
-import * as Crypto from "expo-crypto";
-import { getLocalCache } from "@/components/utils/localDb";
-
-async function createEmptyEncryptedChunkContent(jwkKeyData: string) {
-  const cryptoOpsApi = useCryptoOpsQueue.getState();
-  const emptyEncryptedArray = await cryptoOpsApi.performOperation("encrypt", {
-    keyType: "symmetric",
-    key: jwkKeyData,
-    charCodeData: stringToCharCodeArray(JSON.stringify([])),
-  });
-
-  const emptyEncryptedContent = JSON.stringify(emptyEncryptedArray.payload);
-
-  const hash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    emptyEncryptedContent,
-  );
-
-  return { content: emptyEncryptedContent, hash: hash };
-}
-
-async function createEmptyChunks(jwkKeyData: string, userId: string) {
-  const db = await getLocalCache();
-
-  const empty1 = await createEmptyEncryptedChunkContent(jwkKeyData);
-  const empty2 = await createEmptyEncryptedChunkContent(jwkKeyData);
-  const empty3 = await createEmptyEncryptedChunkContent(jwkKeyData);
-  const empty4 = await createEmptyEncryptedChunkContent(jwkKeyData);
-
-  const emptyNewTimeTrackingChunk: ARC_ChunksType = {
-    id: `${chunkPrefixes["timeTrackingChunks"]}${v4()}`,
-    userID: userId,
-    encryptedContent: empty1.content,
-    tx: Date.now(),
-    timeRangeStart: Date.now(),
-    timeRangeEnd: Date.now(),
-    version: "0.1.2",
-    hash: empty1.hash,
-  };
-
-  const emptyNewDayPlannerChunk: Tess_ChunksType = {
-    id: `${chunkPrefixes["dayPlannerChunks"]}${v4()}`,
-    userID: userId,
-    encryptedContent: empty2.content,
-    tx: Date.now(),
-    timeRangeStart: Date.now(),
-    timeRangeEnd: Date.now(),
-    version: "0.1.2",
-    hash: empty2.hash,
-  };
-
-  const emptyNewPersonalDiaryChunk: SID_ChunksType = {
-    id: `${chunkPrefixes["personalDiaryChunks"]}${v4()}`,
-    userID: userId,
-    encryptedContent: empty3.content,
-    tx: Date.now(),
-    version: "0.1.2",
-    hash: empty3.hash,
-  };
-
-  const emptyNewPersonalDiaryGroupChunk: SIDGroups_ChunksType = {
-    id: `${chunkPrefixes["personalDiaryGroupChunks"]}${v4()}`,
-    userID: userId,
-    encryptedContent: empty4.content,
-    tx: Date.now(),
-    version: "0.1.2",
-    hash: empty4.hash,
-  };
-
-  const timeTrackingInsertHelperVals = getInsertStringFromObject(
-    emptyNewTimeTrackingChunk,
-  );
-  const timeTrackingChunkPromise = db.runAsync(
-    `INSERT INTO timeTrackingChunks ${timeTrackingInsertHelperVals.queryString}`,
-    [...timeTrackingInsertHelperVals.values],
-  );
-
-  const dayPlannerInsertHelperVals = getInsertStringFromObject(
-    emptyNewDayPlannerChunk,
-  );
-  const dayPlannerChunkPromise = db.runAsync(
-    `INSERT INTO dayPlannerChunks  ${dayPlannerInsertHelperVals.queryString}`,
-    dayPlannerInsertHelperVals.values,
-  );
-
-  const personalDiaryInsertHelperVals = getInsertStringFromObject(
-    emptyNewPersonalDiaryChunk,
-  );
-  const personalDiaryChunkPromise = db.runAsync(
-    `INSERT INTO personalDiaryChunks ${personalDiaryInsertHelperVals.queryString}`,
-    personalDiaryInsertHelperVals.values,
-  );
-
-  const personalDiaryGroupInsertHelperVals = getInsertStringFromObject(
-    emptyNewPersonalDiaryGroupChunk,
-  );
-  const personalDiaryGroupChunkPromise = db.runAsync(
-    `INSERT INTO personalDiaryGroups ${personalDiaryGroupInsertHelperVals.queryString}`,
-    personalDiaryGroupInsertHelperVals.values,
-  );
-
-  return Promise.all([
-    timeTrackingChunkPromise,
-    dayPlannerChunkPromise,
-    personalDiaryChunkPromise,
-    personalDiaryGroupChunkPromise,
-  ]);
-}
-
-async function saveSecretKeyOnDevice(secretKey: string) {
-  if (typeof secretKey !== "string") {
-    return;
-  }
-  await SecureStore.setItemAsync(noBioSKName, secretKey);
-}
+import { router } from "expo-router";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -165,6 +30,8 @@ export default function Main() {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [isNewPinValid, setIsNewPinValid] = useState(false);
+  const [isWaitingRecoveryCodes, setIsWaitingRecoveryCodes] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const newPinLength = newPin.length;
@@ -181,136 +48,30 @@ export default function Main() {
   }, [confirmPin]);
 
   ///Biometric auth state
-  const [authAvailable, setAuthAvailable] = useState(true); ///Assume true unless we get an error during enrollment
   const [useBiometricAuth, setUseBiometricAuth] = useState(false);
 
   const handlePinSubmit = useCallback(async () => {
-    if (!canContinue) {
-      return;
-    }
-    const cryptoOpsApi = useCryptoOpsQueue.getState();
-    const newUserDataApi = useNewUserData.getState();
-    const userId = newUserDataApi.userData?.id;
-    if (typeof userId !== "string") {
+    const symmetricKeyJwk = useActiveKeys.getState().activeSymmetricKey;
+
+    if (!canContinue || symmetricKeyJwk === null) {
       return;
     }
 
-    const activeKeysAPI = useActiveKeys.getState();
-    const symmetricKeyJwk = activeKeysAPI.activeSymmetricKey;
-    const privateKeyJwk = activeKeysAPI.activePrivateKey;
-    if (
-      typeof symmetricKeyJwk !== "string" ||
-      typeof privateKeyJwk !== "string"
-    ) {
-      return;
-    }
-
-    await createEmptyChunks(symmetricKeyJwk, userId);
-
-    cryptoOpsApi
-      .performOperation("wrapKey", {
-        password: newPin + newUserDataApi.secretKey,
-        jwkKeyData: symmetricKeyJwk,
-        keyType: "symmetric",
-      })
-      .then(async (res) => {
-        const armoredPrivateKey = newUserDataApi?.userData?.PSKBackup || null;
-        if (typeof armoredPrivateKey !== "string") {
-          console.error("EPKM error");
-          return;
-        }
-        if (res.status === "success") {
-          async function basicSecureStoreSave(userId: string) {
-            if (typeof privateKeyJwk !== "string") {
-              return;
-            }
-
-            const wrappedSymKey = encodeWrappedSymkey(res.payload);
-            if (wrappedSymKey === null) {
-              console.error("Error encoding wrapped symmetric key");
-              return;
-            }
-            console.log("Saving new user with wrapped symmetric key");
-            await SecureStore.setItemAsync(
-              getSymmetricKey(userId),
-              wrappedSymKey,
-            );
-
-            await SecureStore.setItemAsync(
-              getPrivateKey(userId),
-              //@ts-expect-error
-              armoredPrivateKey,
-            );
-            await SecureStore.setItemAsync(
-              secureStoreKeyNames.accountConfig.useBiometricAuth,
-              "false",
-            );
-            ///Redirect to home
-            saveNewUser(wrappedSymKey)
-              .then(() => {
-                console.log("Saved new user");
-                reloadAsync();
-              })
-              .catch((e) => {
-                console.error("Error saving new user", e);
-              });
-          }
-          if (typeof newUserDataApi.secretKey !== "string") {
-            return;
-          }
-          if (useBiometricAuth === false) {
-            await saveSecretKeyOnDevice(newUserDataApi.secretKey);
-            basicSecureStoreSave(userId);
-          } else {
-            await SecureStore.setItemAsync(
-              getPrivateKey(userId),
-              armoredPrivateKey,
-            );
-            await saveSecretKeyOnDevice(newUserDataApi.secretKey);
-
-            const wrappedSymKey = encodeWrappedSymkey(res.payload);
-            if (wrappedSymKey === null) {
-              console.error("Error encoding wrapped symmetric key");
-              return;
-            }
-            await SecureStore.setItemAsync(
-              getSymmetricKey(userId),
-              wrappedSymKey,
-            )
-              .then(async () => {
-                ///Redirect to home
-                await SecureStore.setItemAsync(
-                  secureStoreKeyNames.accountConfig.useBiometricAuth,
-                  "true",
-                );
-                await SecureStore.setItemAsync(
-                  secureStoreKeyNames.accountConfig.pin,
-                  newPin + newUserDataApi.secretKey,
-                  {
-                    requireAuthentication: true,
-                    authenticationPrompt:
-                      "Authenticate to use your screen lock to unlock",
-                  },
-                );
-                saveNewUser(wrappedSymKey)
-                  .then(() => {
-                    console.log("Saved new user");
-                    reloadAsync();
-                  })
-                  .catch((e) => {
-                    console.log("Error saving new user", e);
-                  });
-              })
-              .catch(async (err) => {
-                setAuthAvailable(false);
-                basicSecureStoreSave(userId);
-              });
-          }
+    setIsWaitingRecoveryCodes(true);
+    await getNewRecoveryCodes(symmetricKeyJwk, newPin)
+      .then((response) => {
+        if (response.status !== "failed") {
+          const currentNewUserData = newUserDataApi.userData;
+          newUserDataApi.setUserData({
+            ...currentNewUserData,
+            RCKBackup: response.RCKBackup,
+          });
+          router.push("/downloadRecoveryCodes/page");
+        } else {
+          setIsWaitingRecoveryCodes(false);
         }
       })
-      .catch((err) => {
-        console.error("Error wrapping symmetric key:", err);
-      });
+      .catch(() => {});
   }, [newPin, canContinue, useBiometricAuth]);
 
   return (
@@ -359,7 +120,7 @@ export default function Main() {
                 >
                   <Text
                     textAlign="left"
-                    label="One-time Setup [3/3]"
+                    label="One-time Setup [1/3]"
                     style={{
                       height: "100%",
                       width: "100%",
@@ -433,6 +194,7 @@ export default function Main() {
                   <TextInput
                     onChange={(e) => {
                       setNewPin(e.nativeEvent.text);
+                      newUserDataApi.setNewPIN(e.nativeEvent.text);
                     }}
                     textAlign="left"
                     secureTextEntry={true}
@@ -530,14 +292,21 @@ export default function Main() {
                         paddingRight: 5,
                       }}
                     >
-                      <ArrowDeco
-                        color={
-                          canContinue
-                            ? globalStyle.color
-                            : globalStyle.colorInactive
-                        }
-                        width={55}
-                      ></ArrowDeco>
+                      {isWaitingRecoveryCodes ? (
+                        <ActivityIndicator
+                          color={globalStyle.color}
+                          size="small"
+                        ></ActivityIndicator>
+                      ) : (
+                        <ArrowDeco
+                          color={
+                            canContinue
+                              ? globalStyle.color
+                              : globalStyle.colorInactive
+                          }
+                          width={55}
+                        ></ArrowDeco>
+                      )}
                     </Button>
                   </Animated.View>
                   <Animated.View
@@ -564,6 +333,7 @@ export default function Main() {
                         uncheckedColor={globalStyle.color + "10"}
                         onChange={(e) => {
                           setUseBiometricAuth(e);
+                          newUserDataApi.setUseBiometricAuth(e);
                         }}
                         style={{ width: "100%", height: "100%" }}
                       ></CheckBox>

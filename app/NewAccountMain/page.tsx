@@ -24,7 +24,7 @@ export default function Main() {
         ></Button>
         <Button
           onClick={() => {
-            router.push("/downloadRecoveryCodes/page");
+            router.push("/setAccountPin/page");
           }}
           fontSize={globalStyle.largeMobileFont}
           style={styles.button}

@@ -63,20 +63,20 @@ function AccountKeys() {
               keyType: "symmetric",
               key: symKey,
               charCodeData: stringToCharCodeArray(privateKey),
-            }
+            },
           );
           if (armoredPrivateKeyRes.status === "success") {
             const armoredPrivateKey = JSON.stringify(
-              armoredPrivateKeyRes.payload
+              armoredPrivateKeyRes.payload,
             );
             db.runAsync(
               "UPDATE users SET publicKey = ?, PSKBackup = ? WHERE id = ?;",
-              [publicKey, armoredPrivateKey, currentUserId]
+              [publicKey, armoredPrivateKey, currentUserId],
             )
               .then(async () => {
                 await SecureStore.setItemAsync(
                   getPrivateKey(currentUserId),
-                  armoredPrivateKey
+                  armoredPrivateKey,
                 );
                 setKeyRegenStatus("success");
               })
@@ -102,7 +102,7 @@ function AccountKeys() {
   return (
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
-        <View
+        {/* <View
           style={{
             width: "100%",
             height: 120,
@@ -145,7 +145,7 @@ function AccountKeys() {
             ></Text>
           )}
           <KeyDeco height={35} width={25}></KeyDeco>
-        </View>
+        </View> */}
         <Text
           textAlign="left"
           style={{

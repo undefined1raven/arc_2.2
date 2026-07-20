@@ -3,11 +3,6 @@ import { useNewUserData } from "@/stores/newUserData";
 import { v4 } from "uuid";
 import { defaultFeatureConfig } from "./config/defaultFeatureConfig";
 import { stringToCharCodeArray } from "./fn/charOps";
-import * as SecureStore from "expo-secure-store";
-import * as SQLite from "expo-sqlite";
-import { ARC_ChunksType } from "@/constants/CommonTypes";
-import { chunkPrefixes } from "@/constants/chunkPrefixes";
-import { getInsertStringFromObject } from "./db/dbUtils";
 function newRecoveryCode() {
   return `ARC-RC-${v4()}`;
 }
@@ -63,7 +58,7 @@ async function getNewRecoveryCodes(
       }
     }
 
-    return { RCKBackup: JSON.stringify(allKeyVariants) };
+    return { RCKBackup: JSON.stringify(allKeyVariants), status: "success" };
   } catch (error) {
     console.error("Error wrapping keys", error);
     return {
@@ -174,7 +169,7 @@ async function generateSecretKey(): Promise<{
     },
   )
     .then((hashedKey) => {
-      return { status: "success", payload: hashedKey };
+      return { status: "success", payload: "ARC-SK-" + hashedKey };
     })
     .catch((error) => {
       console.error("Error generating secret key", error);
@@ -249,7 +244,7 @@ async function createNewAccountBasics() {
   if (secretKeyResponse.status === "success") {
     return {
       userData: userDataGlobal,
-      secretKey: "ARC-SK-" + secretKeyResponse.payload,
+      secretKey: secretKeyResponse.payload,
     };
   } else {
     return { userData: null, secretKey: null };

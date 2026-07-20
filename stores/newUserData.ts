@@ -2,6 +2,10 @@
 import { create } from "zustand";
 
 interface NewUserData {
+  newPIN: null | string;
+  setNewPIN: (newPIN: string) => void;
+  useBiometricAuth: boolean;
+  setUseBiometricAuth: (useBiometricAuth: boolean) => void;
   recoveryCodes: string[];
   setRecoveryCodes: (recoveryCodes: string[]) => void;
   secretKey: string | null;
@@ -31,6 +35,14 @@ interface NewUserData {
 }
 
 const useNewUserData = create<NewUserData>((set, get) => ({
+  newPIN: null,
+  setNewPIN: (newPIN) => {
+    set({ newPIN });
+  },
+  useBiometricAuth: false,
+  setUseBiometricAuth: (useBiometricAuth) => {
+    set({ useBiometricAuth });
+  },
   secretKey: null,
   setSecretKey(secretKey) {
     set({ secretKey });

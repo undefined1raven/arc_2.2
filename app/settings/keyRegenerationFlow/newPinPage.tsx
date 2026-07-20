@@ -11,6 +11,8 @@ import { router } from "expo-router";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
 import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
+import { useActiveUser } from "@/stores/activeUser";
+import { getLocalCache } from "@/components/utils/localDb";
 
 function Home() {
   const globalStyle = useGlobalStyleStore((r) => r.globalStyle);
@@ -20,6 +22,7 @@ function Home() {
   const [isNewPinValid, setIsNewPinValid] = useState(false);
   const [isWaitingRecoveryCodes, setIsWaitingRecoveryCodes] =
     useState<boolean>(false);
+  const [canContinue, setCanContinue] = useState(false);
 
   useEffect(() => {
     const newPinLength = newPin.length;
@@ -37,6 +40,7 @@ function Home() {
   }, [newPin, confirmPin]);
 
   const onContinue = useCallback(async () => {
+    const db = await getLocalCache();
     if (isWaitingRecoveryCodes || canContinue === false) {
       return;
     }
@@ -48,18 +52,27 @@ function Home() {
     }
     setIsWaitingRecoveryCodes(true);
     await getNewRecoveryCodes(activeKeyAPI.activeSymmetricKey, newPin)
-      .then((response) => {
+      .then(async (response) => {
         if (response.status !== "failed") {
-          router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
+          const newRCK = response.RCKBackup;
+          const userId = useActiveUser.getState().activeUser.userId;
+          db.runAsync(`UPDATE users SET RCKBackup = ? WHERE id = ?`, [
+            userId,
+            newRCK,
+          ])
+            .then((r) => {
+              router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
+            })
+            .catch((e) => {
+              console.log("Failed to update user RCK Backup:", e);
+            });
         } else {
           setIsWaitingRecoveryCodes(false);
         }
       })
       .catch(() => {});
-  }, [isWaitingRecoveryCodes]);
+  }, [isWaitingRecoveryCodes, canContinue]);
 
-  ///Flow state
-  const [canContinue, setCanContinue] = useState(false);
   return (
     <>
       <ThemedView

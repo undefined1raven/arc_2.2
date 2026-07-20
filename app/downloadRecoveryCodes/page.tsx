@@ -91,7 +91,7 @@ export default function Main() {
               >
                 <Text
                   textAlign="left"
-                  label="One-time Setup [1/3]"
+                  label="One-time Setup [2/3]"
                   style={{
                     height: "100%",
                     width: "100%",

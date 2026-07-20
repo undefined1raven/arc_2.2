@@ -47,8 +47,8 @@ function CheckBox({
             ? checkedBorderColor
             : globalStyles.globalStyle.color
           : uncheckedBorderColor
-          ? uncheckedBorderColor
-          : globalStyles.globalStyle.color,
+            ? uncheckedBorderColor
+            : globalStyles.globalStyle.color,
         backgroundColor: checkedState
           ? globalStyles.globalStyle.color
           : globalStyles.globalStyle.color + "20",

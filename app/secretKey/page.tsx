@@ -1,19 +1,9 @@
 import "react-native-get-random-values";
-import { Link, router, Stack } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
-
+import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import Button from "@/components/common/Button";
-import { ARCLogo } from "@/components/deco/ARCLogo";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useNewUserData } from "@/stores/newUserData";
-import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import * as Clipboard from "expo-clipboard";
 import Text from "@/components/common/Text";
 import SimpleHeader from "@/components/common/SimpleHeader";
@@ -21,13 +11,12 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  useSharedValue,
-  withSpring,
 } from "react-native-reanimated";
 import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
 import { CopyDeco } from "@/components/deco/CopyDeco";
+import { finishAccountCreation } from "@/components/utils/newAccountInit/finishAccountCreation";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
@@ -46,7 +35,7 @@ export default function Main() {
         >
           <Text
             textAlign="left"
-            label="One-time Setup [2/3]"
+            label="One-time Setup [3/3]"
             style={{
               height: "100%",
               width: "100%",
@@ -113,7 +102,7 @@ export default function Main() {
                 saveFile(fileName, newUserDataApi.secretKey ?? "").then(
                   (res) => {
                     console.log("File saved", res);
-                  }
+                  },
                 );
               }}
               textAlign="left"
@@ -153,7 +142,7 @@ export default function Main() {
           </View>
           <Button
             onClick={() => {
-              router.push("/setAccountPin/page");
+              finishAccountCreation();
             }}
             textAlign="left"
             label="Continue"
