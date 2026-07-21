@@ -13,11 +13,13 @@ import { router } from "expo-router";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
-
-import DatePicker from "react-native-date-picker";
 import CalendarDeco from "@/components/deco/CalendarDeco";
 import { BarChart } from "react-native-gifted-charts";
 import { BarChartDeco } from "@/components/deco/BarChartDeco";
+import {
+  processDataInTimeRange,
+  useTimeTrackingDataExplorer,
+} from "@/stores/viewState/timeTrackingDataExplorer";
 function Home() {
   const [customTimeRangeStart, setCustomTimeRangeStart] = useState<
     string | null
@@ -33,6 +35,7 @@ function Home() {
   const getDataInTimeRange = useCallback(
     (timeRangeStart: number, timeRangeEnd: number) => {
       const timeStatsApi = useTimeStatsData.getState();
+      const timeExplorerApi = useTimeTrackingDataExplorer.getState();
       const dataRetrivalAPI = dataRetrivalApi.getState();
       timeStatsApi.setIsFetchingData(true);
       dataRetrivalAPI
@@ -48,7 +51,14 @@ function Home() {
             console.error("Failed to fetch time tracking data");
             return;
           }
+          timeExplorerApi.setDataInTimeRange(data.payload);
           timeStatsApi.setDataInTimeRange(data.payload);
+          const currentSelectedActivities = timeExplorerApi.selectedActivities;
+          const newViewState = processDataInTimeRange(
+            data.payload,
+            currentSelectedActivities,
+          );
+          timeExplorerApi.setViewState(newViewState);
         })
         .catch((error) => {
           console.error("Error fetching time tracking data:", error);

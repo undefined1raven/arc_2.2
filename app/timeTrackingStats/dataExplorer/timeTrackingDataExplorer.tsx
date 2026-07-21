@@ -51,15 +51,16 @@ function TimeTrackingDataExplorer() {
             alignItems: "center",
             justifyContent: "center",
             borderRadius: globalStyle.borderRadius,
-            backgroundColor: globalStyle.color,
+            borderWidth: 1,
+            backgroundColor: globalStyle.colorAltLight,
           }}
         >
           <Text
             style={{ padding: 2, width: "100%", height: "100%" }}
             textAlign="center"
-            color={globalStyle.textColorInactive}
+            color={globalStyle.textColor}
             fontSize={globalStyle.smallMobileFont}
-            ellipsizeMode={undefined}
+            ellipsizeMode={null}
             label={`${item.value}h`}
           ></Text>
         </View>
@@ -185,7 +186,7 @@ function TimeTrackingDataExplorer() {
                   {...getChartColorProps(timeTrackingDataExplorer.viewState)}
                   {...getChartPointColors(timeTrackingDataExplorer.viewState)}
                   {...getDataSetMaxValue(timeTrackingDataExplorer.viewState)}
-                  curvature={0.03}
+                  curvature={0.01}
                   curved={true}
                   width={screenSize.width - 40}
                   height={screenSize.height / 2 + 50}
@@ -200,9 +201,9 @@ function TimeTrackingDataExplorer() {
                   focusedDataPointColor={globalStyle.colorAltLight}
                   focusedDataPointLabelComponent={renderFocusTooltip}
                   showTextOnFocus
-                  textFontSize={10}
+                  textFontSize={15}
                   stripColor={globalStyle.colorAccent}
-                  stripWidth={1}
+                  stripWidth={2}
                   yAxisLabelSuffix="h"
                   yAxisTextStyle={{
                     fontSize: globalStyle.mediumMobileFont,
@@ -211,7 +212,7 @@ function TimeTrackingDataExplorer() {
                   xAxisLabelTextStyle={{
                     fontSize: globalStyle.smallMobileFont,
                     position: "relative",
-                    left: 10,
+                    left: 15,
                     color: globalStyle.textColor,
                   }}
                 />
@@ -250,15 +251,12 @@ function TimeTrackingDataExplorer() {
                   ItemSeparatorComponent={() => {
                     return <View style={{ height: 10 }} />;
                   }}
+                  estimatedItemSize={30}
                   renderItem={renderItem}
                 ></FlashList>
               </View>
               <Selection
                 onMultiSelection={(e) => {
-                  const t =
-                    useTimeTrackingDataExplorer.getState().dataInTimeRange;
-                  const viewData = processDataInTimeRange(t, e);
-                  timeTrackingDataExplorer.setViewState(viewData);
                   timeTrackingDataExplorer.setSelectedActivities(e);
                 }}
                 values={filteredTasks}

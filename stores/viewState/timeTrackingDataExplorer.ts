@@ -6,7 +6,7 @@ import { useGlobalStyleStore } from "../globalStyles";
 
 function processDataInTimeRange(
   data: ArcTaskLogType[],
-  filteredActivities: string[]
+  filteredActivities: string[],
 ) {
   if (Array.isArray(data) === false || data.length === 0) {
     console.warn("No data provided or data is not an array.");
@@ -29,7 +29,7 @@ function processDataInTimeRange(
   const endDate = new Date(timeRangeEnd);
   const dayCount =
     Math.ceil(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
     ) + 1;
 
   // Create dataset for each activity
@@ -48,7 +48,7 @@ function processDataInTimeRange(
           (log) =>
             log.taskID === activityId &&
             log.start >= dayStart &&
-            log.end <= dayEnd
+            log.end <= dayEnd,
         )
         .reduce((sum, log) => sum + (log.end - log.start), 0);
 
@@ -63,7 +63,7 @@ function processDataInTimeRange(
     }
     const activityName =
       latestFeatureConfig.find(
-        (activity) => activity.itme.taskID === activityId
+        (activity) => activity.itme.taskID === activityId,
       )?.itme.name || "Unnamed Activity";
     return { data: activityData, activityName };
   });
@@ -141,10 +141,17 @@ const useTimeTrackingDataExplorer = create<ITimeTrackingDataExplorer>(
     selectedActivities: [],
     setSelectedActivities: (activities: ARCTasksType[]) => {
       set({ selectedActivities: activities });
+      const dataInTimeRange = get().dataInTimeRange;
+      if (dataInTimeRange !== null) {
+        set({ selectedActivities: activities });
+        const viewData = processDataInTimeRange(dataInTimeRange, activities);
+        set({ viewState: viewData });
+      }
     },
     dataInTimeRange: null,
-    setDataInTimeRange: (data: ArcTaskLogType[] | null) =>
-      set({ dataInTimeRange: data }),
+    setDataInTimeRange: (data: ArcTaskLogType[] | null) => {
+      set({ dataInTimeRange: data });
+    },
     isFetchingData: false,
     setIsFetchingData: (isFetching: boolean) => {
       set({ isFetchingData: isFetching });
@@ -153,7 +160,7 @@ const useTimeTrackingDataExplorer = create<ITimeTrackingDataExplorer>(
     setViewState: (viewState: []) => {
       set({ viewState: viewState });
     },
-  })
+  }),
 );
 
 export {

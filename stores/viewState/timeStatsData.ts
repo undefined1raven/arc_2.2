@@ -50,7 +50,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
         function getTaskCategory(log: ArcTaskLogType) {
           if (timeTrackingFeatureConfig) {
             const task = timeTrackingFeatureConfig.find(
-              (t: ARCTasksType) => t.itme.taskID === log.taskID
+              (t: ARCTasksType) => t.itme.taskID === log.taskID,
             );
             if (!task) return "Uncategorized";
             const taskCategoryId = task.itme.categoryID;
@@ -60,7 +60,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
             const category = timeTrackingFeatureConfig.find(
               (c: ARCCategoryType) =>
                 c.itme.categoryID === taskCategoryId ||
-                c.itme.id === taskCategoryId
+                c.itme.id === taskCategoryId,
             );
             if (category) return category.itme.name;
           }
@@ -87,7 +87,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
           }[] = [];
 
           for (const [category, duration] of Object.entries(
-            dayCategoryBreakdownByDuration
+            dayCategoryBreakdownByDuration,
           )) {
             dayCategoryBreakdownByPercentage.push({
               value: Math.round((duration / numberOfMsInDay) * 100),
@@ -98,7 +98,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
 
           const totalPercentage = dayCategoryBreakdownByPercentage.reduce(
             (sum, item) => sum + item.value,
-            0
+            0,
           );
           const uncategorizedPercentage = 100 - totalPercentage;
 
@@ -118,11 +118,11 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
             appendColorToArrayItems(
               colorSet,
               dayCategoryBreakdownByPercentage,
-              "color"
+              "color",
             );
 
           dayCategoryBreakdownByPercentageWithColors.sort(
-            (a, b) => b.value - a.value
+            (a, b) => b.value - a.value,
           );
 
           set({

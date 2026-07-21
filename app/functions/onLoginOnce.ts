@@ -12,6 +12,7 @@ import { useHabitCardDataApi } from "@/stores/viewState/habitCardData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { retroBehaviorLogs } from "./retroBehaviorLogs";
 import { useTimeStatsData } from "@/stores/viewState/timeStatsData";
+import { useTimeTrackingDataExplorer } from "@/stores/viewState/timeTrackingDataExplorer";
 
 ///Get UI blocking data at login
 function getDayPlannerActiveDay() {
@@ -106,8 +107,10 @@ function loadLastWeekTimeTrackingData() {
     .then(async (data) => {
       const timeTrackingData = data.payload as ArcTaskLogType[];
       const timeTrackingApi = useTimeStatsData.getState();
+      const tt = useTimeTrackingDataExplorer.getState();
       ///Set initial time tracking explorer data
       timeTrackingApi.setDataInTimeRange(timeTrackingData || null);
+      tt.setDataInTimeRange(timeTrackingData || null);
 
       ///Set raw data for habit
       habitDataApi.setRawData(timeTrackingData);

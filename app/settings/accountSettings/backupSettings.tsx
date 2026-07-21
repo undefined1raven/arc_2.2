@@ -79,7 +79,7 @@ function AccountSettingsMain() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <View style={{ width: "100%", height: "100%" }}>
-          <View style={{ marginTop: 15, display: "flex", flexGrow: 1 }}>
+          {/* <View style={{ marginTop: 15, display: "flex", flexGrow: 1 }}>
             <FlashList
               inverted={true}
               data={lastSync}
@@ -87,7 +87,7 @@ function AccountSettingsMain() {
               renderItem={renderItem}
               ItemSeparatorComponent={sep}
             />
-          </View>
+          </View> */}
           <View
             style={{
               display: "flex",
