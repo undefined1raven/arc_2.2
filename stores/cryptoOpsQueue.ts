@@ -8,8 +8,16 @@ type CryptoOpType =
   | "exportKey"
   | "importKey"
   | "wrapKey"
-  | "unwrapKey";
+  | "unwrapKey"
+  | "generateDPoPKeyPair"
+  | "generateDPoPSignature";
 
+interface GenerateDPoPSignatureArgs {
+  dpopKey: CryptoKey;
+  httpMethod: string;
+  httpUrl: string;
+  accessToken: string;
+}
 interface ICryptoOp {
   requestId: string;
   type: CryptoOpType;
@@ -22,6 +30,7 @@ interface ICryptoOp {
     | ImportKeyArgs
     | WrapKeyArgs
     | UnwrapKeyArgs
+    | GenerateDPoPSignatureArgs
     | undefined;
 }
 

@@ -8,11 +8,12 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useCallback, useEffect, useState } from "react";
 import TextInput from "@/components/common/TextInput";
 import { router } from "expo-router";
-import { useActiveKeys } from "@/stores/decryptedKeys";
-import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
+import {
+  generateSecretKey,
+  getNewRecoveryCodes,
+} from "@/components/utils/createNewAccountInfo";
 import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
-import { useActiveUser } from "@/stores/activeUser";
-import { getLocalCache } from "@/components/utils/localDb";
+import { useActiveKeys } from "@/stores/decryptedKeys";
 
 function Home() {
   const globalStyle = useGlobalStyleStore((r) => r.globalStyle);
@@ -39,33 +40,49 @@ function Home() {
     }
   }, [newPin, confirmPin]);
 
+  const genNewPassphrase = useCallback(async () => {
+    return generateSecretKey().then((newPassphrase) => {
+      if (
+        newPassphrase.status === "error" ||
+        typeof newPassphrase.payload !== "string"
+      ) {
+        console.error(
+          "Failed to generate new passphrase:",
+          newPassphrase.error,
+        );
+        return { status: "error", error: newPassphrase.error };
+      } else {
+        keyRegenTempStore.getState().setNewPassphrase(newPassphrase.payload);
+        return { status: "success", payload: newPassphrase.payload };
+      }
+    });
+  }, []);
+
   const onContinue = useCallback(async () => {
-    const db = await getLocalCache();
     if (isWaitingRecoveryCodes || canContinue === false) {
       return;
     }
+    const symkey = useActiveKeys.getState().activeSymmetricKey;
     const keyRegenTempStoreAPI = keyRegenTempStore.getState();
+    const newPassphraseResult = await genNewPassphrase();
     keyRegenTempStoreAPI.setPin(newPin);
-    const activeKeyAPI = useActiveKeys.getState();
-    if (typeof activeKeyAPI.activeSymmetricKey !== "string") {
+    if (newPassphraseResult.status === "error" || symkey === null) {
       return;
     }
     setIsWaitingRecoveryCodes(true);
-    await getNewRecoveryCodes(activeKeyAPI.activeSymmetricKey, newPin)
+    await getNewRecoveryCodes(
+      symkey,
+      //@ts-ignore
+      newPassphraseResult.payload,
+    )
       .then(async (response) => {
         if (response.status !== "failed") {
           const newRCK = response.RCKBackup;
-          const userId = useActiveUser.getState().activeUser.userId;
-          db.runAsync(`UPDATE users SET RCKBackup = ? WHERE id = ?`, [
-            userId,
-            newRCK,
-          ])
-            .then((r) => {
-              router.push("/settings/keyRegenerationFlow/newRecoveryCodes");
-            })
-            .catch((e) => {
-              console.log("Failed to update user RCK Backup:", e);
-            });
+          keyRegenTempStoreAPI.setNewRCK(newRCK);
+          keyRegenTempStoreAPI.setPlainRecoveryCodes(
+            response.plainRecoveryCodes,
+          );
+          router.replace("/settings/keyRegenerationFlow/newRecoveryCodes");
         } else {
           setIsWaitingRecoveryCodes(false);
         }

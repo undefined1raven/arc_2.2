@@ -80,8 +80,10 @@ function stringToCharCodeArray(str) {
       "importKey",
       "wrapKey",
       "unwrapKey",
+      "generateDPoPKeyPair",
+      "generateDPoPSignature",
     ];
-    const noArgsOps = ["generateKeyPair", "generateSymmetricKey"];
+    const noArgsOps = ["generateKeyPair", "generateSymmetricKey", "generateDPoPKeyPair"];
     if (!validOpTypes.includes(args.type)) {
       return {
         status: "error",
@@ -95,6 +97,77 @@ function stringToCharCodeArray(str) {
       };
     }
     ////[End] Basic error handling
+
+
+    /////[Start] DPoP Signature Generation
+    async function generateDPoPSignature(args) {
+      const importPayload = await importCryptoKey({
+        jwkKeyData: args.jwkKeyData,
+        keyType: "private",
+      });
+      if (!importPayload?.payload?.key) {
+        return returnErrorResponse("Error importing private key");
+      }
+      const key = importPayload.payload.key;
+      const encoder = new TextEncoder();
+      let data = encoder.encode(args.data);
+      return window.crypto.subtle
+        .sign({ name: "ECDSA", hash: { name: "SHA-256" } }, key, data)
+        .then((signature) => {
+          return {
+            status: "success",
+            payload: { signature: stringToCharCodeArray(ab2str(signature)) },
+          };
+        })
+        .catch((e) => {
+          return returnErrorResponse(e);
+        });
+    }
+    /////[End] DPoP Signature Generation
+
+    //////[Start] Key Pair for DPoP
+    async function generateKeyPairForDPoP() {
+      return window.crypto.subtle
+        .generateKey(
+          {
+            name: "ECDSA",
+            namedCurve: "P-256",
+          },
+          true,
+          ["sign", "verify"]
+        )
+        .then((keys) => {
+          const publicKey = keys.publicKey;
+          const privateKey = keys.privateKey;
+          const exportedPublicKey = exportCryptoKey(publicKey);
+          const exportedPrivateKey = exportCryptoKey(privateKey);
+          return Promise.all([exportedPublicKey, exportedPrivateKey]).then(
+            (values) => {
+              const publicExportedKeyResponse = values[0];
+              const privateExportedKeyResponse = values[1];
+              if (
+                publicExportedKeyResponse.status === "error" ||
+                privateExportedKeyResponse.status === "error"
+              ) {
+                return returnErrorResponse(
+                  "Error exporting keys: [redacted]"
+                );
+              }
+              return {
+                status: "success",
+                payload: {
+                  publicKey: values[0].payload.jwk,
+                  privateKey: values[1].payload.jwk,
+                },
+              };
+            }
+          );
+        })
+        .catch((e) => {
+          return returnErrorResponse(e);
+        });
+    }
+    //////[End] Key Pair for DPoP
 
     /////[Start] Symmetric Key Generation
     function generateSymmetricKey() {
@@ -279,7 +352,7 @@ function stringToCharCodeArray(str) {
           keyType: "symmetric",
         });
         if (!importPayload?.payload?.key) {
-          return returnErrorResponse("Error importing public key");
+          return returnErrorResponse("Error importing symmetric key");
         }
         const key = importPayload.payload.key;
         let encoded = new TextEncoder().encode(args.charCodeData);
@@ -523,6 +596,10 @@ derive an AES-KW key using PBKDF2.
         return encrypt(args.args);
       case "decrypt":
         return decrypt(args.args);
+      case "generateDPoPKeyPair":
+        return generateKeyPairForDPoP();
+      case "generateDPoPSignature":
+        return generateDPoPSignature(args.args);
       default:
         return returnErrorResponse("Invalid operation type provided");
     }

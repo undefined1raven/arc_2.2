@@ -11,15 +11,16 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 
 async function getNewRecoveryCodes(
   symmetricKeyData: string,
-  userPIN: string,
+  passphrase: string,
 ): Promise<
-  { RCKBackup: string; status: "success" } | { error: string; status: "failed" }
+  | { RCKBackup: string; status: "success"; plainRecoveryCodes: string[] }
+  | { error: string; status: "failed" }
 > {
   if (
-    typeof userPIN !== "string" ||
-    (userPIN.length >= 4 && userPIN.length <= 6) === false
+    typeof passphrase !== "string" ||
+    (passphrase.length >= 4 && passphrase.startsWith("ARC-SK")) === false
   ) {
-    return { error: "User PIN is not valid", status: "failed" };
+    return { error: "Passphrase is not valid", status: "failed" };
   }
 
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -34,7 +35,7 @@ async function getNewRecoveryCodes(
       cryptoOpsApi.performOperation("wrapKey", {
         jwkKeyData: symmetricKeyData,
         keyType: "symmetric",
-        password: userPIN.trim() + newCode,
+        password: passphrase.trim() + newCode,
       }),
     );
   }
@@ -58,7 +59,11 @@ async function getNewRecoveryCodes(
       }
     }
 
-    return { RCKBackup: JSON.stringify(allKeyVariants), status: "success" };
+    return {
+      RCKBackup: JSON.stringify(allKeyVariants),
+      status: "success",
+      plainRecoveryCodes: recoveryCodes,
+    };
   } catch (error) {
     console.error("Error wrapping keys", error);
     return {
@@ -196,8 +201,9 @@ async function createNewAccountBasics() {
       return;
     }
 
-    const newKeyPairResponse =
-      await cryptoOpsApi.performOperation("generateKeyPair");
+    const newKeyPairResponse = await cryptoOpsApi.performOperation(
+      "generateDPoPKeyPair",
+    );
 
     if (newKeyPairResponse.status !== "success") {
       console.error("Failed to generate key pair");
@@ -230,7 +236,7 @@ async function createNewAccountBasics() {
       id: userId,
       signupTime: signupTime,
       publicKey: newKeyPair.publicKey,
-      version: "0.0.1",
+      version: "0.0.2",
       ...featureConfigPartials,
       PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),
     };

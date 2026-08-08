@@ -1,27 +1,15 @@
 import "react-native-get-random-values";
 import { Link, router, Stack } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import { ThemedView } from "@/components/ThemedView";
 import Button from "@/components/common/Button";
-import { ARCLogo } from "@/components/deco/ARCLogo";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useNewUserData } from "@/stores/newUserData";
-import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import Text from "@/components/common/Text";
-import SimpleHeader from "@/components/common/SimpleHeader";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  useSharedValue,
-  withSpring,
 } from "react-native-reanimated";
 import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
@@ -29,19 +17,21 @@ import { saveFile } from "@/components/utils/fn/saveFile";
 import { CopyDeco } from "@/components/deco/CopyDeco";
 import { useEffect, useMemo, useState } from "react";
 import * as Clipboard from "expo-clipboard";
-import { getNewRecoveryCodes } from "@/components/utils/createNewAccountInfo";
-import { useActiveKeys } from "@/stores/decryptedKeys";
+import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
+import { useActiveUser } from "@/stores/activeUser";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
-  const newUserDataApi = useNewUserData();
+  const keyGenTempStoreAPI = keyRegenTempStore.getState();
+  const recoveryCodesArray = keyGenTempStoreAPI.plainRecoveryCodes;
+  const activeUserID = useActiveUser((state) => state.activeUser.userId);
 
   const textToSave = useMemo(() => {
     return (
-      newUserDataApi.recoveryCodes.join(" , ") +
-      `, 0.1.1, [do not share these with anyone and keep them in a safe place][account_id:${newUserDataApi.userData?.id}]`
+      recoveryCodesArray?.join("\n") +
+      `\n, 0.1.2, [do not share these with anyone and keep them in a safe place][account_id:${activeUserID}]`
     );
-  }, [newUserDataApi.recoveryCodes, newUserDataApi.userData]);
+  }, [recoveryCodesArray, activeUserID]);
 
   const recoveryCodeRenderItem = ({ item }: { item: string }) => {
     return (
@@ -102,10 +92,14 @@ export default function Main() {
             entering={FadeInUp}
             style={{ height: "60%", width: "100%" }}
           >
-            <FlatList
-              renderItem={recoveryCodeRenderItem}
-              data={newUserDataApi.recoveryCodes}
-            ></FlatList>
+            {recoveryCodesArray !== null && recoveryCodesArray.length > 0 ? (
+              <FlatList
+                renderItem={recoveryCodeRenderItem}
+                data={recoveryCodesArray}
+              ></FlatList>
+            ) : (
+              <ActivityIndicator size="small" color={globalStyle.color} />
+            )}
           </Animated.View>
           <Animated.View
             entering={FadeInDown}
@@ -122,7 +116,7 @@ export default function Main() {
               <Button
                 onClick={() => {
                   const fileName = `ARCRecoveryCodes-${Date.now()}-${
-                    newUserDataApi.userData?.id
+                    activeUserID
                   }.txt`;
                   saveFile(fileName, textToSave).then((res) => {
                     console.log("File saved", res);
@@ -165,7 +159,9 @@ export default function Main() {
             </View>
             <Button
               onClick={() => {
-                router.push("/settings/keyRegenerationFlow/newPassphrasePage");
+                router.replace(
+                  "/settings/keyRegenerationFlow/newPassphrasePage",
+                );
               }}
               textAlign="left"
               label="Continue"
