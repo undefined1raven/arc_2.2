@@ -3,6 +3,8 @@
 # dependencies
 node_modules/
 
+package-lock.json
+
 # Expo
 .expo/
 dist/
@@ -19,8 +21,8 @@ android/app/build/
 ios/build/
 
 # Misc
-constants/app_id.ts
-constants/API_URL.ts
+# constants/app_id.ts
+# constants/API_URL.ts
 
 # Large files
 *.zip
