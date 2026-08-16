@@ -1,35 +1,20 @@
 import "react-native-get-random-values";
-import { Link, router, Stack } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
-
+import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import Button from "@/components/common/Button";
-import { ARCLogo } from "@/components/deco/ARCLogo";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useNewUserData } from "@/stores/newUserData";
-import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import * as Clipboard from "expo-clipboard";
 import Text from "@/components/common/Text";
-import SimpleHeader from "@/components/common/SimpleHeader";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  useSharedValue,
-  withSpring,
 } from "react-native-reanimated";
 import { DownloadDeco } from "@/components/deco/DownloadDeco";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { saveFile } from "@/components/utils/fn/saveFile";
 import { CopyDeco } from "@/components/deco/CopyDeco";
-import { useCallback, useEffect, useState } from "react";
-import { generateSecretKey } from "@/components/utils/createNewAccountInfo";
+import { useCallback } from "react";
 import { useActiveUser } from "@/stores/activeUser";
 import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
 import { useActiveKeys } from "@/stores/decryptedKeys";
@@ -41,159 +26,61 @@ import {
 } from "@/components/utils/constants/secureStoreKeyNames";
 import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
-import { encodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
-import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { useSQLiteContext } from "expo-sqlite";
-import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
+import { API_URL } from "@/constants/API_URL";
+import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import {
+  basicSecureStoreSave,
+  newKeyPair,
+  updateSymKeyWrap,
+} from "./keyRegenFunction";
 
 export default function Main() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const activeUserApi = useActiveUser((r) => r.activeUser);
   const db = useSQLiteContext();
   const symkey = useActiveKeys((state) => state.activeSymmetricKey);
-  const keyRegenTempStoreAPI = keyRegenTempStore.getState();
   const newPassphrase = keyRegenTempStore((state) => state.newPassphrase);
-  const updateUserPIKAndRCKBackup = useCallback(
-    async (PIKBackup: string, RCKBackup: string | null) => {
-      if (
-        typeof PIKBackup !== "string" ||
-        PIKBackup.length === 0 ||
-        RCKBackup === null
-      ) {
+
+  const localDBCommit = useCallback(
+    async (
+      encryptedPrivateKey: string,
+      PIKBackup: string,
+      RCKBackup: string,
+      newPassphrase: string,
+      newKeyWrapPassword: string,
+    ) => {
+      const activeUserId = activeUserApi.userId;
+
+      if (activeUserId === null) {
         return;
       }
-      db.runAsync(
-        `UPDATE users SET PIKBackup = ?, RCKBackup = ? WHERE id = ?`,
-        [PIKBackup, RCKBackup, activeUserApi.userId],
-      ).catch((e) => {
-        console.error("Error updating PIKBackup in DB:", e);
-      });
-    },
-    [activeUserApi.userId],
-  );
 
-  const updateKeyPair = useCallback(async () => {
-    const plainKey = symkey;
-    const cryptoOpsApi = useCryptoOpsQueue.getState();
-
-    const newKeyPair = await cryptoOpsApi.performOperation(
-      "generateDPoPKeyPair",
-    );
-
-    if (newKeyPair.status !== "success") {
-      console.error("Failed to generate key pair");
-      return { status: "error", error: "FGKP" };
-    }
-
-    const newKeyPairData = newKeyPair.payload;
-    const privateKey = newKeyPairData.privateKey;
-    const publicKey = newKeyPairData.publicKey;
-    ///TO DO: UPDATE DEVICE INFO IN THE DB
-
-    const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
-      "encrypt",
-      {
-        keyType: "symmetric",
-        key: plainKey,
-        charCodeData: stringToCharCodeArray(privateKey),
-      },
-    );
-    if (encryptedPrivateKeyRes.status !== "success") {
-      console.error("Failed to encrypt private key", encryptedPrivateKeyRes);
-      return { status: "error", error: "FEPK" };
-    }
-    const encryptedPrivateKey = JSON.stringify(encryptedPrivateKeyRes.payload);
-    return db
-      .runAsync(`UPDATE users SET PSKBackup = ? WHERE id = ?`, [
-        encryptedPrivateKey,
-        activeUserApi.userId,
-      ])
-      .catch((e) => {
-        console.error("Error updating key pair in DB:", e);
-        return { status: "error", error: e };
-      })
-      .then(async () => {
-        const userId = activeUserApi.userId;
-        if (typeof userId !== "string") {
-          console.error("User ID is not a string");
-          return { status: "error", error: "UIDNS" };
-        }
-        await SecureStore.setItemAsync(
-          getPrivateKey(userId),
-          encryptedPrivateKey,
-        );
-        console.log("Key pair updated successfully");
-        return { status: "success" };
-      });
-  }, [symkey]);
-
-  const regenerateKey = useCallback(() => {
-    const keyRegenTempStoreAPI = keyRegenTempStore.getState();
-    const newPIN = keyRegenTempStoreAPI.pin;
-    const activeUserId = activeUserApi.userId;
-    const plainKey = symkey;
-    const cryptoOpsApi = useCryptoOpsQueue.getState();
-    if (
-      activeUserId === null ||
-      newPIN === null ||
-      newPassphrase === null ||
-      plainKey === null
-    ) {
-      return;
-    }
-    const newKeyWrapPassword = newPIN + newPassphrase;
-
-    const hasBioAuth = SecureStore.getItem(
-      secureStoreKeyNames.accountConfig.useBiometricAuth,
-    );
-
-    if (hasBioAuth) {
-      cryptoOpsApi
-        .performOperation("wrapKey", {
-          password: newKeyWrapPassword,
-          jwkKeyData: plainKey,
-          keyType: "symmetric",
+      return db
+        .runAsync(
+          `UPDATE users SET PSKBackup = ?, PIKBackup = ?, RCKBackup = ? WHERE id = ?`,
+          [encryptedPrivateKey, PIKBackup, RCKBackup, activeUserApi.userId],
+        )
+        .catch((e) => {
+          console.error("Error updating key pair in DB:", e);
+          return { status: "error", error: e };
         })
-        .then(async (res) => {
-          if (res.status !== "success") {
-            return;
-          }
-          async function basicSecureStoreSave(userId: string) {
-            const wrappedSymKey = encodeWrappedSymkey(res.payload);
-            if (wrappedSymKey === null) {
-              console.error("Error encoding wrapped symmetric key");
-              return;
-            }
-            console.log("Saving new wrapped symmetric key");
-            await SecureStore.setItemAsync(
-              getSymmetricKey(userId),
-              wrappedSymKey,
-            );
-          }
-          const wrappedSymKey = encodeWrappedSymkey(res.payload);
-          if (wrappedSymKey === null) {
-            console.error("Error encoding wrapped symmetric key");
-            return;
+        .then(async () => {
+          const userId = activeUserApi.userId;
+          if (typeof userId !== "string") {
+            console.error("User ID is not a string");
+            return { status: "error", error: "UIDNS" };
           }
           await SecureStore.setItemAsync(
+            getPrivateKey(userId),
+            encryptedPrivateKey,
+          );
+          console.log("Key pair updated successfully");
+          await SecureStore.setItemAsync(
             getSymmetricKey(activeUserId),
-            wrappedSymKey,
+            PIKBackup,
           )
             .then(async () => {
-              const RCKBackup = keyRegenTempStoreAPI.newRCK;
-              const updatePIKPromise = updateUserPIKAndRCKBackup(
-                wrappedSymKey,
-                RCKBackup,
-              );
-              const keyUpdateResponse = await updateKeyPair();
-
-              if (keyUpdateResponse.status !== "success") {
-                console.error(
-                  "Error updating key pair:",
-                  keyUpdateResponse.error,
-                );
-                return;
-              }
               ///Restart app
               const updateNoBioPassphraseStorage = SecureStore.setItemAsync(
                 noBioSKName,
@@ -211,7 +98,6 @@ export default function Main() {
                 );
 
               Promise.all([
-                updatePIKPromise,
                 updateBioAuthSecureStoreKeyPromise,
                 updateNoBioPassphraseStorage,
               ])
@@ -219,17 +105,148 @@ export default function Main() {
                   Updates.reloadAsync();
                 })
                 .catch((err) => {
-                  basicSecureStoreSave(activeUserId);
+                  basicSecureStoreSave(activeUserId, PIKBackup);
                 });
             })
             .catch(async (err) => {
-              basicSecureStoreSave(activeUserId);
+              basicSecureStoreSave(activeUserId, PIKBackup);
             });
-        })
-        .catch((err) => {
-          console.error("Error wrapping symmetric key:", err);
         });
+    },
+    [symkey, activeUserApi.userId],
+  );
+
+  const remoteDBCommit = useCallback(
+    async (
+      PIKBackup: string,
+      RCKBackup: string,
+      PSKBackup: string,
+      publicKey: string,
+    ) => {
+      const deviceId = getDeviceId();
+      if (deviceId === null) {
+        return { status: "error", error: "Device ID missing" };
+      }
+      const deviceInfoUpdatePromise = fetch(
+        `${API_URL}/devices/${deviceId}/update`,
+        {
+          body: JSON.stringify({ device_public_key: publicKey }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      );
+
+      const accountUpdatePayload = JSON.stringify({
+        PIKBackup,
+        RCKBackup,
+        PSKBackup,
+      });
+      const accountUpdatePromise = fetch(
+        `${API_URL}/${activeUserApi.userId}/updateAccount`,
+        {
+          body: accountUpdatePayload,
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      );
+
+      return Promise.allSettled([deviceInfoUpdatePromise, accountUpdatePromise])
+        .then((res) => {
+          if (res.some((r) => r.status !== "fulfilled")) {
+            return { status: "error", error: "API Call failed" };
+          } else {
+            const deviceInfoRes = res[0].value;
+            const accountInfoRes = res[1].value;
+
+            if (deviceInfoRes.ok === false || accountInfoRes.ok === false) {
+              return {
+                status: "error",
+                error: `deviceInfoRes: ${deviceInfoRes.ok} | accountInfoRes: ${accountInfoRes.ok}`,
+              };
+            } else {
+              return { status: "success" };
+            }
+          }
+        })
+        .catch((e) => {
+          return { status: "error", error: e };
+        });
+    },
+    [activeUserApi.userId],
+  );
+
+  const regenerateKey = useCallback(async () => {
+    const keyRegenTempStoreAPI = keyRegenTempStore.getState();
+    const newPIN = keyRegenTempStoreAPI.pin;
+    const activeUserId = activeUserApi.userId;
+    const plainKey = symkey;
+
+    if (
+      activeUserId === null ||
+      newPIN === null ||
+      newPassphrase === null ||
+      plainKey === null
+    ) {
+      return;
     }
+    const newKeyWrapPassword = newPIN + newPassphrase;
+
+    const hasBioAuth = SecureStore.getItem(
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
+    );
+
+    if (hasBioAuth === "true") {
+      ///1. Get new key pair and replace the wrap on the sym key
+      const newKeyPairRes = await newKeyPair(plainKey);
+      const newSymKeyWrap = await updateSymKeyWrap(
+        newKeyWrapPassword,
+        plainKey,
+      );
+
+      if (
+        newKeyPairRes.status !== "success" ||
+        newSymKeyWrap.status !== "success"
+      ) {
+        console.error("Failed to get updated key pair or sym key wrap");
+        return;
+      }
+
+      const { wrappedSymKey } = newSymKeyWrap;
+      const { encryptedPrivateKey, publicKey } = newKeyPairRes;
+      const RCKBackup = keyRegenTempStoreAPI.newRCK;
+
+      if (RCKBackup === null) {
+        console.error("New RCK missing");
+        return;
+      }
+
+      if (typeof encryptedPrivateKey !== "string") {
+        return;
+      }
+
+      ///2. Commit changes to account and device info to the remote DB
+      const remoteDBCommitRes = await remoteDBCommit(
+        wrappedSymKey,
+        RCKBackup,
+        encryptedPrivateKey,
+        publicKey,
+      );
+
+      if (remoteDBCommitRes.status === "error") {
+        console.error("API Call failed to update account or device");
+        return;
+      }
+
+      ///3. Commit changes to local DB and update secure store
+      localDBCommit(
+        encryptedPrivateKey,
+        wrappedSymKey,
+        RCKBackup,
+        newPassphrase,
+        newKeyWrapPassword,
+      );
+    }
+    ///TO DO: cover the no bio auth case
   }, [newPassphrase]);
 
   return (
