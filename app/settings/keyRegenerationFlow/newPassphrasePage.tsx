@@ -142,7 +142,7 @@ export default function Main() {
         PSKBackup,
       });
       const accountUpdatePromise = fetch(
-        `${API_URL}/${activeUserApi.userId}/updateAccount`,
+        `${API_URL}/users/${activeUserApi.userId}/update`,
         {
           body: accountUpdatePayload,
           headers: { "Content-Type": "application/json" },
