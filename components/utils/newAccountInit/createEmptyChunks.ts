@@ -90,8 +90,6 @@ async function createEmptyChunks(jwkKeyData: string, userId: string) {
     personalDiaryGroupInsertHelperVals.values,
   );
 
-  console.log("3B");
-
   return Promise.all([
     timeTrackingChunkPromise,
     dayPlannerChunkPromise,

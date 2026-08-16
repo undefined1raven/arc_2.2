@@ -10,20 +10,15 @@ interface NewUserData {
   setRecoveryCodes: (recoveryCodes: string[]) => void;
   secretKey: string | null;
   setSecretKey: (secretKey: string) => void;
+  setDevicePublicKey: (devicePublicKey: string) => void;
+  devicePublicKey: string | null;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
     id: string;
     signupTime: number;
-    publicKey: string;
-    passwordHash?: string;
-    emailAddress?: string;
-    passkeys?: string;
     PIKBackup?: string;
     PSKBackup?: string;
     RCKBackup?: string;
-    trustedDevices?: string;
-    oauthState?: string;
-    securityLogs?: string;
     timeTrackingFeatureConfig: string;
     diaryFeatureConfig: string;
     dayPlannerFeatureConfig: string;
@@ -38,6 +33,10 @@ const useNewUserData = create<NewUserData>((set, get) => ({
   newPIN: null,
   setNewPIN: (newPIN) => {
     set({ newPIN });
+  },
+  devicePublicKey: null,
+  setDevicePublicKey(devicePublicKey) {
+    set({ devicePublicKey });
   },
   useBiometricAuth: false,
   setUseBiometricAuth: (useBiometricAuth) => {

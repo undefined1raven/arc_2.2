@@ -88,6 +88,7 @@ export default function Main() {
     const newKeyPairData = newKeyPair.payload;
     const privateKey = newKeyPairData.privateKey;
     const publicKey = newKeyPairData.publicKey;
+    ///TO DO: UPDATE DEVICE INFO IN THE DB
 
     const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
       "encrypt",
@@ -103,8 +104,7 @@ export default function Main() {
     }
     const encryptedPrivateKey = JSON.stringify(encryptedPrivateKeyRes.payload);
     return db
-      .runAsync(`UPDATE users SET publicKey = ?, PSKBackup = ? WHERE id = ?`, [
-        publicKey,
+      .runAsync(`UPDATE users SET PSKBackup = ? WHERE id = ?`, [
         encryptedPrivateKey,
         activeUserApi.userId,
       ])

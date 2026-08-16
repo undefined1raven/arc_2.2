@@ -45,12 +45,6 @@ function AccountSettingsMain() {
       goTo: "/settings/accountSettings/accountKeys",
     },
     {
-      name: "accountType",
-      title: "Account Type",
-      description: "Choose whether to use a local or cloud account",
-      goTo: "/settings/accountSettings/accountType",
-    },
-    {
       name: "devInfo",
       title: "Dev Info",
       description: "Development Information",

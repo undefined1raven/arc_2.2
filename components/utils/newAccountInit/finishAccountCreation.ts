@@ -20,13 +20,12 @@ async function getNewDeviceInfoAndSendToBackend() {
   const newUserDataApi = useNewUserData.getState();
   const deviceId = await checkAndSetDeviceId();
   const deviceCreatedAt = Date.now();
-  const devicePubKey = newUserDataApi.userData?.publicKey;
   const accountId = newUserDataApi.userData?.id;
-
+  const devicePubKey = newUserDataApi.devicePublicKey;
   if (
     typeof deviceId !== "string" ||
     accountId === undefined ||
-    devicePubKey === undefined
+    devicePubKey === null
   ) {
     return { error: "Failed to get new account info", status: "error" };
   } else {
@@ -61,9 +60,7 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
   delete newUserPayload?.dayPlannerFeatureConfig;
   delete newUserPayload?.diaryFeatureConfig;
   delete newUserPayload?.timeTrackingFeatureConfig;
-  newUserPayload["accountType"] = "online";
   newUserPayload["PIKBackup"] = wrappedSymKey;
-
   ///Send user info to backend
   return fetch(`${API_URL}/users/new`, {
     method: "POST",
@@ -80,6 +77,24 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
     .catch((e) => {
       return { status: "error", error: e };
     });
+}
+
+async function accountSaveApiCalls(wrappedSymKey: string) {
+  const newAccountApiCallRes = await sendAccountInfoToBackend(wrappedSymKey);
+
+  const newDeviceApiCallRes = await getNewDeviceInfoAndSendToBackend();
+
+  const apiCallResponses = [newAccountApiCallRes, newDeviceApiCallRes];
+
+  if (
+    apiCallResponses.some((res) => {
+      return res?.status !== "success";
+    })
+  ) {
+    console.error("Account creation API call fail: ", res);
+    return { status: "error" };
+  }
+  return { status: "success" };
 }
 
 async function finishAccountCreation() {
@@ -105,7 +120,6 @@ async function finishAccountCreation() {
   }
 
   await createEmptyChunks(symmetricKeyJwk, userId);
-
   cryptoOpsApi
     .performOperation("wrapKey", {
       password: newUserDataApi.newPIN + newUserDataApi.secretKey,
@@ -145,6 +159,14 @@ async function finishAccountCreation() {
             secureStoreKeyNames.accountConfig.useBiometricAuth,
             "false",
           );
+
+          const accountSaveRes = await accountSaveApiCalls(wrappedSymKey);
+
+          if (accountSaveRes.status !== "success") {
+            console.error("Account Creation API call fail");
+            return;
+          }
+
           ///Redirect to home
           saveNewUser(wrappedSymKey)
             .then(() => {
@@ -156,8 +178,10 @@ async function finishAccountCreation() {
             });
         }
         if (typeof newUserDataApi.secretKey !== "string") {
+          console.error("Private key missing in new user data ");
           return;
         }
+
         if (newUserDataApi.useBiometricAuth === false) {
           await saveSecretKeyOnDevice(newUserDataApi.secretKey);
           basicSecureStoreSave(userId);
@@ -179,25 +203,11 @@ async function finishAccountCreation() {
                 return;
               }
 
-              const newDeviceApiCallResPromise =
-                getNewDeviceInfoAndSendToBackend();
+              const accountSaveRes = await accountSaveApiCalls(wrappedSymKey);
+              console.log("ASR 2", accountSaveRes);
 
-              const newAccountApiCallPromise =
-                sendAccountInfoToBackend(wrappedSymKey);
-
-              const apiCallResponses = await Promise.allSettled([
-                newAccountApiCallPromise,
-                newDeviceApiCallResPromise,
-              ]);
-
-              if (
-                apiCallResponses.some((res) => {
-                  return (
-                    res?.value === undefined || res?.value?.status !== "success"
-                  );
-                })
-              ) {
-                console.log("Account creation API call fail: ", res);
+              if (accountSaveRes.status !== "success") {
+                console.error("Account Creation API call fail");
                 return;
               }
 

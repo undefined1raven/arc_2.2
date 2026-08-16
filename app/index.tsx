@@ -28,7 +28,6 @@ export default function Main() {
             hasChecked: true,
             isLoggedIn: false,
             userId: null,
-            accountType: null,
           });
           SplashScreen.hideAsync();
           router.replace("/NewAccountMain/page");
@@ -53,7 +52,7 @@ export default function Main() {
               });
 
               NavigationBar.setBackgroundColorAsync(
-                colorSet.pageBackgroundColors[1]
+                colorSet.pageBackgroundColors[1],
               );
               SplashScreen.hideAsync();
             })
@@ -66,7 +65,6 @@ export default function Main() {
             hasChecked: true,
             isLoggedIn: true,
             userId: res.userId,
-            accountType: res.accountType,
           });
           router.replace("/localAccountAuth/localAccountAuth");
         }

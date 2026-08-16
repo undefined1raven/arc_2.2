@@ -67,22 +67,15 @@ async function saveNewUser(PIKBackup: string) {
   await Promise.allSettled(newFCChunksSaveToDBPromises);
 
   return db.runAsync(
-    `INSERT INTO users (id, signupTime, publicKey, passwordHash, emailAddress, passkeys, PIKBackup, PSKBackup, RCKBackup, trustedDevices, oauthState, securityLogs, version) VALUES (${"?, ".repeat(
-      12,
+    `INSERT INTO users (id, signupTime, PIKBackup, PSKBackup, RCKBackup, version) VALUES (${"?, ".repeat(
+      5,
     )} ?);`,
     [
       newUserData?.id ?? null,
       newUserData?.signupTime ?? null,
-      newUserData?.publicKey ?? null,
-      newUserData?.passwordHash ?? null,
-      newUserData?.emailAddress ?? null,
-      newUserData?.passkeys ?? null,
       PIKBackup ?? null,
       newUserData?.PSKBackup ?? null,
       newUserData?.RCKBackup ?? null,
-      newUserData?.trustedDevices ?? null,
-      newUserData?.oauthState ?? null,
-      newUserData?.securityLogs ?? null,
       newUserData?.version ?? null,
     ],
   );

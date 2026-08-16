@@ -36,9 +36,6 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const navMenuApi = useNavMenuApi();
   const pathname = usePathname();
-  const activeUserAccountType = useActiveUser(
-    (state) => state?.activeUser?.accountType ?? null,
-  );
 
   const navMenuDisallowedPaths = [
     "/NewAccountMain/page",
@@ -68,7 +65,6 @@ export default function RootLayout() {
     "/settings/keyRegenerationFlow/newPinPage",
     "/settings/keyRegenerationFlow/newRecoveryCodes",
     "/settings/keyRegenerationFlow/newPassphrasePage",
-    "/settings/accountSettings/accountType",
     "/dayPlanner/historicDayView",
     "/diary/diaryFeatureConfig/diaryFeatureConfig",
     "/activeDayView/taskEditorView",
@@ -281,10 +277,6 @@ export default function RootLayout() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
-                  name="settings/accountSettings/accountType"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
                   name="settings/devInfo/devInfoMain"
                   options={{ headerShown: false }}
                 />
@@ -312,9 +304,6 @@ export default function RootLayout() {
               <StatusBar style="auto" />
               <StatusIndicators></StatusIndicators>
 
-              {activeUserAccountType === "online" && (
-                <OnlineSyncHandler></OnlineSyncHandler>
-              )}
               {navMenuApi.showMenu &&
                 navMenuDisallowedPaths.includes(pathname) === false && (
                   <NavMenuBar></NavMenuBar>

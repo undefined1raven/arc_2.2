@@ -224,6 +224,9 @@ async function createNewAccountBasics() {
     activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
     activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
 
+    const newDevicePublicKey = newKeyPair.publicKey;
+    useNewUserData.getState().setDevicePublicKey(newDevicePublicKey);
+
     const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
       "encrypt",
       {
@@ -240,7 +243,6 @@ async function createNewAccountBasics() {
     const userData = {
       id: userId,
       signupTime: signupTime,
-      publicKey: newKeyPair.publicKey,
       version: "0.0.2",
       ...featureConfigPartials,
       PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),

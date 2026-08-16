@@ -14,7 +14,6 @@ export type CheckTablesReturnSig = {
   error: null | string;
   isEmpty?: boolean;
   userId?: string;
-  accountType: "local" | "online" | null;
 };
 
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
@@ -28,7 +27,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   promiseArray.push(activityTransitions);
 
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, publicKey TEXT NOT NULL, passwordHash TEXT, emailAddress TEXT, passkeys TEXT, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, trustedDevices TEXT, oauthState TEXT, securityLogs TEXT, version TEXT NOT NULL, accountType TEXT);",
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -89,8 +88,6 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
         .then(async (firstUser: any) => {
           const isEmpty = firstUser === null;
           const userId = firstUser?.id;
-          const accountType: "local" | "online" | null =
-            firstUser?.accountType ?? "local";
           const currentDeviceId = await SecureStore.getItemAsync(deviceId);
           if (currentDeviceId === null || typeof currentDeviceId !== "string") {
             const newDeviceId = Crypto.randomUUID();
@@ -101,7 +98,6 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
             error: null,
             isEmpty: isEmpty,
             userId: userId,
-            accountType: accountType,
           };
         })
         .catch((e) => {

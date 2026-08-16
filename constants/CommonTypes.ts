@@ -169,16 +169,9 @@ type FeatureConfigType = {
 type UserData = {
   id: string;
   signupTime: string;
-  publicKey: string;
-  passwordHash: string | null;
-  emailAddress: string | null;
-  passkeys: string | null;
   PIKBackup: string | null;
   PSKBackup: string | null;
   RCKBackup: string | null;
-  trustedDevices: string | null;
-  oauthState: string | null;
-  securityLogs: string | null;
   arcFeatureConfig: string;
   SIDFeatureConfig: string;
   tessFeatureConfig: string;
