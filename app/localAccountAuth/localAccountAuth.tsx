@@ -15,18 +15,13 @@ import { FingerprintDeco } from "@/components/deco/FingerprintDeco";
 import Text from "@/components/common/Text";
 import { useActiveUser } from "@/stores/activeUser";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
-import { router, useGlobalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import TextInput from "@/components/common/TextInput";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
-import { useSQLiteContext } from "expo-sqlite";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
-import {
-  checkAndSetDeviceId,
-  deleteDeviceId,
-} from "@/components/utils/auth/getDeviceId";
 
 function localAccountAuth() {
   const activeUserApi = useActiveUser();

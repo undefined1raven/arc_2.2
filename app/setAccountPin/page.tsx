@@ -56,9 +56,11 @@ export default function Main() {
     if (!canContinue || symmetricKeyJwk === null) {
       return;
     }
-
+    if (typeof newUserDataApi.secretKey !== "string") {
+      return;
+    }
     setIsWaitingRecoveryCodes(true);
-    await getNewRecoveryCodes(symmetricKeyJwk, newPin)
+    await getNewRecoveryCodes(symmetricKeyJwk, newUserDataApi.secretKey)
       .then((response) => {
         if (response.status !== "failed") {
           const currentNewUserData = newUserDataApi.userData;
@@ -72,7 +74,7 @@ export default function Main() {
         }
       })
       .catch(() => {});
-  }, [newPin, canContinue, useBiometricAuth]);
+  }, [newUserDataApi.secretKey, canContinue, useBiometricAuth]);
 
   return (
     <TouchableWithoutFeedback

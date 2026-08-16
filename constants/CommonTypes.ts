@@ -54,6 +54,16 @@ type TessTaskType = {
   version: "0.1.0";
 };
 
+type DeviceType = {
+  device_id: string;
+  device_public_key: string;
+  created_at: number;
+  account_id: string;
+  device_name: string;
+  last_seen: number;
+  revoked_at?: number;
+};
+
 type TessDayLogType = {
   day: string;
   isActive?: boolean;
@@ -293,5 +303,5 @@ export type {
   ActivityTransitionLog,
   DayType,
   Budget_ChunksType,
-  BudgetAccountName,
+  DeviceType,
 };

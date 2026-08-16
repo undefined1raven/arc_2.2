@@ -6,13 +6,23 @@ function getDeviceId(): string | null {
   return currentDeviceId;
 }
 
-async function checkAndSetDeviceId() {
+async function checkAndSetDeviceId(): Promise<
+  string | { error: string; status: "error" }
+> {
   const currentDeviceId = await SecureStore.getItemAsync(deviceId);
 
   if (currentDeviceId === null || typeof currentDeviceId !== "string") {
     const newDeviceId = Crypto.randomUUID();
     console.log("Creating new device id");
-    await SecureStore.setItemAsync(deviceId, `ADI-${newDeviceId}`);
+    return SecureStore.setItemAsync(deviceId, `ADI-${newDeviceId}`)
+      .then((r) => {
+        return newDeviceId;
+      })
+      .catch((e) => {
+        return { error: `Failed to save device ID: ${e}`, status: "error" };
+      });
+  } else {
+    return currentDeviceId;
   }
 }
 

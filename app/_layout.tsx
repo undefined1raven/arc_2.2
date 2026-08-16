@@ -27,8 +27,6 @@ import { OnlineSyncHandler } from "@/components/functional/OnlineSyncHandler";
 import { HashColumnMigration } from "@/components/utils/db/migrations/HashColumnMigration";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
-import { initialDataSync } from "@/components/utils/api/initialDataSync";
-import { useTransferStore } from "@/stores/dataSyncApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CriticalSyncOverlay } from "./dataDownloadScreen/dataDownloadOverlay";
 import { onLoginOnce } from "./functions/onLoginOnce";
@@ -92,22 +90,6 @@ export default function RootLayout() {
   const timeTrackingFeatureConifg = useFeatureConfigs(
     (state) => state.timeTrackingFeatureConfig,
   );
-
-  const tasks = useTransferStore((state) => state.tasks);
-
-  useEffect(() => {
-    if (tasks.length > 0) {
-      AsyncStorage.setItem(
-        "lastSync",
-        JSON.stringify(
-          tasks.map((t) => {
-            delete t.payload;
-            return t;
-          }),
-        ),
-      );
-    }
-  }, [tasks]);
 
   useEffect(() => {
     if (loaded) {

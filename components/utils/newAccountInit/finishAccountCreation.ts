@@ -12,6 +12,75 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import { createEmptyChunks } from "@/components/utils/newAccountInit/createEmptyChunks";
 import { saveSecretKeyOnDevice } from "@/components/utils/newAccountInit/saveSecretKeyOnDevice";
 import { useNewUserData } from "@/stores/newUserData";
+import { API_URL } from "@/constants/API_URL";
+import { checkAndSetDeviceId } from "../auth/getDeviceId";
+import { DeviceType } from "@/constants/CommonTypes";
+
+async function getNewDeviceInfoAndSendToBackend() {
+  const newUserDataApi = useNewUserData.getState();
+  const deviceId = await checkAndSetDeviceId();
+  const deviceCreatedAt = Date.now();
+  const devicePubKey = newUserDataApi.userData?.publicKey;
+  const accountId = newUserDataApi.userData?.id;
+
+  if (
+    typeof deviceId !== "string" ||
+    accountId === undefined ||
+    devicePubKey === undefined
+  ) {
+    return { error: "Failed to get new account info", status: "error" };
+  } else {
+    const deviceName = deviceId.slice(5, 10).toUpperCase();
+
+    const newDevicePayload: DeviceType = {
+      device_id: deviceId,
+      device_public_key: devicePubKey,
+      created_at: deviceCreatedAt,
+      account_id: accountId,
+      device_name: deviceName,
+      last_seen: deviceCreatedAt,
+    };
+
+    return fetch(`${API_URL}/devices/new`, {
+      body: JSON.stringify(newDevicePayload),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }).then((r) => {
+      if (r.ok) {
+        return { status: "success" };
+      } else {
+        return { status: "error", error: r.statusText };
+      }
+    });
+  }
+}
+
+async function sendAccountInfoToBackend(wrappedSymKey: string) {
+  const newUserDataApi = useNewUserData.getState();
+  const newUserPayload = { ...newUserDataApi.userData } as any;
+  delete newUserPayload?.dayPlannerFeatureConfig;
+  delete newUserPayload?.diaryFeatureConfig;
+  delete newUserPayload?.timeTrackingFeatureConfig;
+  newUserPayload["accountType"] = "online";
+  newUserPayload["PIKBackup"] = wrappedSymKey;
+
+  ///Send user info to backend
+  return fetch(`${API_URL}/users/new`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newUserPayload),
+  })
+    .then((r) => {
+      if (r.ok) {
+        return { status: "success" };
+      } else {
+        return { status: "error", error: r.statusText };
+      }
+    })
+    .catch((e) => {
+      return { status: "error", error: e };
+    });
+}
 
 async function finishAccountCreation() {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
@@ -107,6 +176,28 @@ async function finishAccountCreation() {
           await SecureStore.setItemAsync(getSymmetricKey(userId), wrappedSymKey)
             .then(async () => {
               if (typeof newUserDataApi.newPIN !== "string") {
+                return;
+              }
+
+              const newDeviceApiCallResPromise =
+                getNewDeviceInfoAndSendToBackend();
+
+              const newAccountApiCallPromise =
+                sendAccountInfoToBackend(wrappedSymKey);
+
+              const apiCallResponses = await Promise.allSettled([
+                newAccountApiCallPromise,
+                newDeviceApiCallResPromise,
+              ]);
+
+              if (
+                apiCallResponses.some((res) => {
+                  return (
+                    res?.value === undefined || res?.value?.status !== "success"
+                  );
+                })
+              ) {
+                console.log("Account creation API call fail: ", res);
                 return;
               }
 

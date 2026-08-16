@@ -1,4 +1,3 @@
-import { initialDataSync } from "@/components/utils/api/initialDataSync";
 import {
   ArcTaskLogType,
   SIDGroupType,
@@ -137,7 +136,6 @@ function loadLastWeekTimeTrackingData() {
 
 ///Called once after the user logs in and crypto keys are available
 async function onLoginOnce() {
-  initialDataSync();
   loadRecentDayPlannerData();
   loadLastWeekTimeTrackingData();
   getDayPlannerActiveDay();

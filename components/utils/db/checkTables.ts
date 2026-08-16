@@ -145,7 +145,6 @@ async function NukeLocalData() {
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.useBiometricAuth,
   );
-  await deleteDeviceId();
 }
 
 async function deleteLimitedChunks() {

@@ -8,6 +8,7 @@ function newRecoveryCode() {
 }
 import * as Crypto from "expo-crypto";
 import { useActiveKeys } from "@/stores/decryptedKeys";
+import { encodeWrappedSymkey } from "./encoding/wrappedSymkey";
 
 async function getNewRecoveryCodes(
   symmetricKeyData: string,
@@ -47,9 +48,14 @@ async function getNewRecoveryCodes(
     const allKeyVariants: string[] = [];
     for (const result of results) {
       if (result.status === "fulfilled") {
-        const wrappedSimKey = result.value.payload;
-        const stringifiedWrappedSimKey = JSON.stringify(wrappedSimKey);
-        allKeyVariants.push(stringifiedWrappedSimKey);
+        const wrappedSimKey = encodeWrappedSymkey(result.value.payload);
+        if (wrappedSimKey === null) {
+          return {
+            error: "Failed to wrap key: encoding failed",
+            status: "failed",
+          };
+        }
+        allKeyVariants.push(wrappedSimKey);
       } else {
         console.error("Failed to wrap key", result.reason);
         return {
@@ -184,8 +190,7 @@ async function generateSecretKey(): Promise<{
 
 async function createNewAccountBasics() {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
-  const newUserDataApi = useNewUserData.getState();
-  const userId = `local.user-${v4()}`;
+  const userId = `user-${v4()}`;
   const signupTime = Date.now();
   let userDataGlobal = {};
 
