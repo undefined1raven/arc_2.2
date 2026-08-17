@@ -49,6 +49,7 @@ export default function Main() {
       RCKBackup: string,
       newPassphrase: string,
       newKeyWrapPassword: string,
+      biometricAuth: boolean,
     ) => {
       const activeUserId = activeUserApi.userId;
 
@@ -82,25 +83,30 @@ export default function Main() {
           )
             .then(async () => {
               ///Restart app
+              const secureStoreUpdatePromises = [];
               const updateNoBioPassphraseStorage = SecureStore.setItemAsync(
                 noBioSKName,
                 newPassphrase,
               );
-              const updateBioAuthSecureStoreKeyPromise =
-                SecureStore.setItemAsync(
-                  secureStoreKeyNames.accountConfig.pin,
-                  newKeyWrapPassword,
-                  {
-                    requireAuthentication: true,
-                    authenticationPrompt:
-                      "Authenticate to use your screen lock to unlock",
-                  },
-                );
+              secureStoreUpdatePromises.push(updateNoBioPassphraseStorage);
 
-              Promise.all([
-                updateBioAuthSecureStoreKeyPromise,
-                updateNoBioPassphraseStorage,
-              ])
+              if (biometricAuth === true) {
+                ///Only do full password save if the biometric auth is enabled
+                const updateBioAuthSecureStoreKeyPromise =
+                  SecureStore.setItemAsync(
+                    secureStoreKeyNames.accountConfig.pin,
+                    newKeyWrapPassword,
+                    {
+                      requireAuthentication: true,
+                      authenticationPrompt:
+                        "Authenticate to use your screen lock to unlock",
+                    },
+                  );
+                secureStoreUpdatePromises.push(
+                  updateBioAuthSecureStoreKeyPromise,
+                );
+              }
+              Promise.all(secureStoreUpdatePromises)
                 .then(() => {
                   Updates.reloadAsync();
                 })
@@ -191,62 +197,60 @@ export default function Main() {
     }
     const newKeyWrapPassword = newPIN + newPassphrase;
 
-    const hasBioAuth = SecureStore.getItem(
-      secureStoreKeyNames.accountConfig.useBiometricAuth,
+    const hasBioAuth =
+      (await SecureStore.getItemAsync(
+        secureStoreKeyNames.accountConfig.useBiometricAuth,
+      )) === "true";
+
+    ///1. Get new key pair and replace the wrap on the sym key
+    const newKeyPairRes = await newKeyPair(plainKey);
+    const newSymKeyWrap = await updateSymKeyWrap(newKeyWrapPassword, plainKey);
+
+    if (
+      newKeyPairRes.status !== "success" ||
+      newSymKeyWrap.status !== "success"
+    ) {
+      console.error("Failed to get updated key pair or sym key wrap");
+      return;
+    }
+
+    const { wrappedSymKey } = newSymKeyWrap;
+    const { encryptedPrivateKey, publicKey } = newKeyPairRes;
+    const RCKBackup = keyRegenTempStoreAPI.newRCK;
+
+    if (RCKBackup === null) {
+      console.error("New RCK missing");
+      return;
+    }
+
+    if (typeof encryptedPrivateKey !== "string") {
+      return;
+    }
+
+    ///2. Commit changes to account and device info to the remote DB
+    const remoteDBCommitRes = await remoteDBCommit(
+      wrappedSymKey,
+      RCKBackup,
+      encryptedPrivateKey,
+      publicKey,
     );
 
-    if (hasBioAuth === "true") {
-      ///1. Get new key pair and replace the wrap on the sym key
-      const newKeyPairRes = await newKeyPair(plainKey);
-      const newSymKeyWrap = await updateSymKeyWrap(
-        newKeyWrapPassword,
-        plainKey,
-      );
-
-      if (
-        newKeyPairRes.status !== "success" ||
-        newSymKeyWrap.status !== "success"
-      ) {
-        console.error("Failed to get updated key pair or sym key wrap");
-        return;
-      }
-
-      const { wrappedSymKey } = newSymKeyWrap;
-      const { encryptedPrivateKey, publicKey } = newKeyPairRes;
-      const RCKBackup = keyRegenTempStoreAPI.newRCK;
-
-      if (RCKBackup === null) {
-        console.error("New RCK missing");
-        return;
-      }
-
-      if (typeof encryptedPrivateKey !== "string") {
-        return;
-      }
-
-      ///2. Commit changes to account and device info to the remote DB
-      const remoteDBCommitRes = await remoteDBCommit(
-        wrappedSymKey,
-        RCKBackup,
-        encryptedPrivateKey,
-        publicKey,
-      );
-
-      if (remoteDBCommitRes.status === "error") {
-        console.error("API Call failed to update account or device");
-        return;
-      }
-
-      ///3. Commit changes to local DB and update secure store
-      localDBCommit(
-        encryptedPrivateKey,
-        wrappedSymKey,
-        RCKBackup,
-        newPassphrase,
-        newKeyWrapPassword,
-      );
+    if (remoteDBCommitRes.status === "error") {
+      console.error("API Call failed to update account or device");
+      return;
     }
-    ///TO DO: cover the no bio auth case
+
+    console.log("BIO AUTH", hasBioAuth);
+
+    ///3. Commit changes to local DB and update secure store
+    localDBCommit(
+      encryptedPrivateKey,
+      wrappedSymKey,
+      RCKBackup,
+      newPassphrase,
+      newKeyWrapPassword,
+      hasBioAuth,
+    );
   }, [newPassphrase]);
 
   return (
