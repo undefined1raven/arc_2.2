@@ -50,6 +50,7 @@ export default function Main() {
       newPassphrase: string,
       newKeyWrapPassword: string,
       biometricAuth: boolean,
+      publicKey: string,
     ) => {
       const activeUserId = activeUserApi.userId;
 
@@ -76,6 +77,12 @@ export default function Main() {
             getPrivateKey(userId),
             encryptedPrivateKey,
           );
+
+          await SecureStore.setItemAsync(
+            secureStoreKeyNames.userPublicKey,
+            publicKey,
+          );
+
           console.log("Key pair updated successfully");
           await SecureStore.setItemAsync(
             getSymmetricKey(activeUserId),
@@ -250,6 +257,7 @@ export default function Main() {
       newPassphrase,
       newKeyWrapPassword,
       hasBioAuth,
+      publicKey,
     );
   }, [newPassphrase]);
 

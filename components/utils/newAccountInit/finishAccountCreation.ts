@@ -144,6 +144,12 @@ async function finishAccountCreation() {
             console.error("Error encoding wrapped symmetric key");
             return;
           }
+
+          if (newUserDataApi.devicePublicKey === null) {
+            console.error("Device public key not found");
+            return;
+          }
+
           console.log("Saving new user with wrapped symmetric key");
           await SecureStore.setItemAsync(
             getSymmetricKey(userId),
@@ -158,6 +164,11 @@ async function finishAccountCreation() {
           await SecureStore.setItemAsync(
             secureStoreKeyNames.accountConfig.useBiometricAuth,
             "false",
+          );
+
+          await SecureStore.setItemAsync(
+            secureStoreKeyNames.userPublicKey,
+            newUserDataApi.devicePublicKey,
           );
 
           const accountSaveRes = await accountSaveApiCalls(wrappedSymKey);
@@ -197,6 +208,17 @@ async function finishAccountCreation() {
             console.error("Error encoding wrapped symmetric key");
             return;
           }
+
+          if (newUserDataApi.devicePublicKey === null) {
+            console.error("Device public key not found");
+            return;
+          }
+
+          await SecureStore.setItemAsync(
+            secureStoreKeyNames.userPublicKey,
+            newUserDataApi.devicePublicKey,
+          );
+
           await SecureStore.setItemAsync(getSymmetricKey(userId), wrappedSymKey)
             .then(async () => {
               if (typeof newUserDataApi.newPIN !== "string") {

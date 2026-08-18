@@ -12,6 +12,7 @@ const secureStoreKeyNames = {
   userDataKeys: {
     timeTrackingActiveTask: "timeTrackingActiveTask",
   },
+  userPublicKey: "activePublicKey",
 };
 
 const authChallengeStack = "authChallengeStack"; //deprecated
