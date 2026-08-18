@@ -99,24 +99,51 @@ function stringToCharCodeArray(str) {
     ////[End] Basic error handling
 
 
+function bytesToBase64Url(bytes) {
+  const base64Chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  let result = "";
+
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const b = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const c = i + 2 < bytes.length ? bytes[i + 2] : 0;
+
+    result += base64Chars[a >> 2];
+    result += base64Chars[((a & 3) << 4) | (b >> 4)];
+    result += i + 1 < bytes.length
+      ? base64Chars[((b & 15) << 2) | (c >> 6)]
+      : "=";
+    result += i + 2 < bytes.length
+      ? base64Chars[c & 63]
+      : "=";
+  }
+
+  return result
+    .replace(/\\+/g, "-")
+    .replace(/\\//g, "_")
+    .replace(/=+$/, "");
+}
+
     /////[Start] DPoP Signature Generation
     async function generateDPoPSignature(args) {
       const importPayload = await importCryptoKey({
         jwkKeyData: args.jwkKeyData,
         keyType: "private",
-      });
-      if (!importPayload?.payload?.key) {
-        return returnErrorResponse("Error importing private key");
-      }
-      const key = importPayload.payload.key;
-      const encoder = new TextEncoder();
-      let data = encoder.encode(args.data);
-      return window.crypto.subtle
+        });
+        if (!importPayload?.payload?.key) {
+          return returnErrorResponse("Error importing private key: ", importPayload);
+          }
+          const key = importPayload.payload.key;
+          const encoder = new TextEncoder();
+          let data = encoder.encode(args.data);
+          return window.crypto.subtle
         .sign({ name: "ECDSA", hash: { name: "SHA-256" } }, key, data)
         .then((signature) => {
           return {
             status: "success",
-            payload: { signature: stringToCharCodeArray(ab2str(signature)) },
+            payload: { signature: bytesToBase64Url(signature) },
           };
         })
         .catch((e) => {
@@ -261,16 +288,15 @@ function stringToCharCodeArray(str) {
         return returnErrorResponse(e);
       }
       if (args.keyType === "private") {
-        return window.crypto.subtle
-          .importKey(
+          return window.crypto.subtle.importKey(
             "jwk",
             parsedJwk,
             {
-              name: "RSA-OAEP",
-              hash: "SHA-256",
+              name: "ECDSA",
+              namedCurve: "P-256",
             },
             true,
-            ["decrypt"]
+            ["sign"]
           )
           .then((key) => {
             return { status: "success", payload: { key: key } };
@@ -279,16 +305,15 @@ function stringToCharCodeArray(str) {
             return returnErrorResponse(e);
           });
       } else if (args.keyType === "public") {
-        return window.crypto.subtle
-          .importKey(
+          return window.crypto.subtle.importKey(
             "jwk",
             parsedJwk,
             {
-              name: "RSA-OAEP",
-              hash: "SHA-256",
+              name: "ECDSA",
+              namedCurve: "P-256",
             },
             true,
-            ["encrypt"]
+            ["verify"]
           )
           .catch((e) => {
             return returnErrorResponse(e);
