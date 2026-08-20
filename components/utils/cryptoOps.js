@@ -99,7 +99,10 @@ function stringToCharCodeArray(str) {
     ////[End] Basic error handling
 
 
-function bytesToBase64Url(bytes) {
+
+function bytesToBase64Url(buffer) {
+  const bytes = new Uint8Array(buffer);
+
   const base64Chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

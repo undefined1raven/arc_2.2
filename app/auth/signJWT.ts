@@ -13,7 +13,7 @@ type SignResponse =
       error: string;
     };
 
-async function signJWT(signingInput: string): Promise<SignResponse> {
+async function privateKeySign(signingInput: string): Promise<SignResponse> {
   const crypoOpsApi = useCryptoOpsQueue.getState();
 
   const activePrivateKey = useActiveKeys.getState().activePrivateKey;
@@ -36,4 +36,4 @@ async function signJWT(signingInput: string): Promise<SignResponse> {
     });
 }
 
-export { signJWT };
+export { privateKeySign };

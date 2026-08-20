@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import * as crypto from "expo-crypto";
 import { hashAccessToken } from "./hashAccessToken";
 import { strToBase64Url } from "@/components/utils/encoding/strToBase64url";
-import { signJWT } from "./signJWT";
+import { privateKeySign } from "./signJWT";
 
 export async function createDpopProof(
   method: string,
@@ -59,7 +59,7 @@ export async function createDpopProof(
 
   ///5. Sign JWT
   const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const signingResponse = await signJWT(signingInput);
+  const signingResponse = await privateKeySign(signingInput);
   if (signingResponse.status !== "success") {
     console.error("Error while signing JWT:", signingResponse);
     return {
