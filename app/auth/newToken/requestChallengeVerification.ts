@@ -6,7 +6,9 @@ async function requestChallengeVerification(
   plainChallenge: string,
   deviceId: string,
   accountId: string,
-) {
+): Promise<
+  { error: string; status: "error" } | { status: "success"; token: string }
+> {
   const payload = JSON.stringify({
     signedChallenge,
     plainChallenge,
@@ -25,9 +27,8 @@ async function requestChallengeVerification(
         .then((res) => {
           if (r.ok === true && typeof res.token === "string") {
             SecureStore.setItem(secureStoreKeyNames.authToken, res.token);
-            return { status: "success" };
+            return { status: "success", token: res.token };
           } else {
-            console.log("here", r.ok, res);
             return {
               status: "error",
               error: "API Failed to return auth token",

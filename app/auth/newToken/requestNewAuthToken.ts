@@ -5,7 +5,9 @@ import { useActiveUser } from "@/stores/activeUser";
 import { privateKeySign } from "../signJWT";
 import { requestChallengeVerification } from "./requestChallengeVerification";
 
-async function requestNewAuthToken() {
+async function requestNewAuthToken(): Promise<
+  { error: string; status: "error" } | { status: "success"; token: string }
+> {
   const accountId = useActiveUser.getState().activeUser.userId;
   const deviceId = getDeviceId();
 
