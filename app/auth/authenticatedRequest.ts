@@ -7,7 +7,10 @@ async function authenticatedRequest(
   requestPath: string,
   fetchOptions: RequestInit,
   retry: boolean = true,
-) {
+): Promise<
+  | { status: "error"; error: string }
+  | { status: "success"; json: object; response: ResponseInit }
+> {
   let authToken = await SecureStore.getItemAsync(secureStoreKeyNames.authToken);
 
   if (authToken === null) {
@@ -49,7 +52,7 @@ async function authenticatedRequest(
         return authenticatedRequest(requestPath, fetchOptions, false);
       }
       const json = await r.json();
-      return { response: r, json };
+      return { response: r, json, status: "success" };
     })
     .catch((e) => {
       return { status: "error", error: e };
