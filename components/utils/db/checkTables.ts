@@ -1,4 +1,3 @@
-import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
@@ -19,6 +18,41 @@ export type CheckTablesReturnSig = {
 async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await getLocalCache();
   var promiseArray: Promise<any>[] = [];
+
+  const createSyncOutboxTable = db.runAsync(`
+CREATE TABLE IF NOT EXISTS syncOutbox (
+    mutation_id TEXT PRIMARY KEY,
+
+    account_id TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+
+    feature TEXT NOT NULL,
+    chunk_id TEXT NOT NULL,
+
+    base_hash TEXT,
+
+    hash TEXT NOT NULL,
+    encrypted_content TEXT NOT NULL,
+
+    updated_at INTEGER NOT NULL,
+    UNIQUE (account_id, chunk_id)
+);
+
+CREATE INDEX idx_sync_outbox_account
+ON syncOutbox(account_id, device_id);
+`);
+  promiseArray.push(createSyncOutboxTable);
+
+  const syncCursor = db.execAsync(`
+  CREATE TABLE IF NOT EXISTS syncCursor (
+    account_id TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+    cursor INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (account_id, device_id)
+  );
+`);
+  promiseArray.push(syncCursor);
 
   //Behavioral data tables
   const activityTransitions = db.runAsync(
@@ -128,6 +162,9 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE personalDiaryGroups");
   db.runAsync("DROP TABLE featureConfigChunks");
   db.runAsync("DROP TABLE activityTransitions");
+  db.runAsync("DROP TABLE syncOutbox");
+  db.runAsync("DROP TABLE syncCursor");
+
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.activePrivateKey,
   );

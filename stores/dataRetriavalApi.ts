@@ -21,6 +21,8 @@ import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFr
 import { useActiveKeys } from "./decryptedKeys";
 import { featureConfigChunkSize } from "@/components/utils/constants/chunking";
 import { getLocalCache } from "@/components/utils/localDb";
+import { updatedChunkToOutboxItem } from "./sync/updatedChunkToOutboxItem";
+import { addToOutbox } from "./sync/outboxOps";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -169,6 +171,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = updatedChunkToOutboxItem(
+            newChunk,
+            latestChunk,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return {
             status: "success",
             payload: result,
@@ -213,6 +225,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return query
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = updatedChunkToOutboxItem(
+            newChunk,
+            null,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return {
             status: "success",
             payload: result,
@@ -674,6 +696,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       );
       return savePromise
         .then((result) => {
+          const outboxItem = updatedChunkToOutboxItem(
+            updatedChunk,
+            encryptedChunk,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           statusIndicatorApi.setIsSavingLocalData(false);
           return { status: "success" };
         })
@@ -867,6 +898,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       return savePromise
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = updatedChunkToOutboxItem(
+            updatedChunk,
+            dataMatchChunk,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return { status: "success" };
         })
         .catch((e) => {
@@ -946,6 +987,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         )
         .then((result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = updatedChunkToOutboxItem(
+            newChunk,
+            latestChunk,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return { status: "success", payload: result };
         })
         .catch((e) => {
@@ -1011,6 +1062,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             version: "0.1.1",
             hash: hash,
           };
+
+          const outboxItem = updatedChunkToOutboxItem(
+            newChunk,
+            null,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
 
           return db
             .runAsync(

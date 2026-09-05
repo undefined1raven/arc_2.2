@@ -42,6 +42,7 @@ async function authenticatedRequest(
   return fetch(`${API_URL}${requestPath}`, {
     ...fetchOptions,
     headers: {
+      "Content-Type": "application/json",
       ...(fetchOptions.headers ?? {}),
       Authorization: `DPoP ${authToken}`,
       DPoP: dpopProof,

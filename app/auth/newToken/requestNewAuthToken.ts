@@ -30,6 +30,7 @@ async function requestNewAuthToken(): Promise<
         .json()
         .then(async (res: CreateChallengeResponse) => {
           if (typeof res.challenge !== "string") {
+            console.error("Invalid response from createChallenge:", res);
             return {
               error: "Failed to fetch challenge. Invalid response.",
               status: "error",

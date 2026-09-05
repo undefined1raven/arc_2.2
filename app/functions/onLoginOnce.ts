@@ -12,6 +12,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { retroBehaviorLogs } from "./retroBehaviorLogs";
 import { useTimeStatsData } from "@/stores/viewState/timeStatsData";
 import { useTimeTrackingDataExplorer } from "@/stores/viewState/timeTrackingDataExplorer";
+import { getLocalCache } from "@/components/utils/localDb";
+import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { OutboxItem, useOutboxStore, CursorRow } from "@/stores/sync/outbox";
 
 ///Get UI blocking data at login
 function getDayPlannerActiveDay() {
@@ -134,8 +137,49 @@ function loadLastWeekTimeTrackingData() {
     });
 }
 
+async function syncInit() {
+  const db = await getLocalCache();
+
+  const accountId = useActiveUser.getState().activeUser.userId;
+  const deviceId = getDeviceId();
+
+  ///Initialize the sync cursor for the current account and device if it doesn't exist
+  await db.runAsync(
+    `INSERT OR IGNORE INTO syncCursor
+     (account_id, device_id, cursor, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    accountId,
+    deviceId,
+    0,
+    Date.now(),
+  );
+
+  // Return the syncCursor row for this account/device if it exists
+  const cursorRow: CursorRow | null = await db.getFirstAsync(
+    `SELECT * FROM syncCursor WHERE account_id = ? AND device_id = ?`,
+    accountId,
+    deviceId,
+  );
+  const syncCursorRow = cursorRow || null;
+
+  const outboxStore = useOutboxStore.getState();
+  if (syncCursorRow !== null && typeof syncCursorRow.cursor === "number") {
+    outboxStore.setCursor(syncCursorRow.cursor);
+  }
+
+  ///Get the current outbox and load it into the outbox store
+  const outboxRows = await db.getAllAsync(
+    `SELECT * FROM syncOutbox WHERE account_id = ? AND device_id = ?`,
+    accountId,
+    deviceId,
+  );
+
+  outboxStore.setOutbox(outboxRows as OutboxItem[]);
+}
+
 ///Called once after the user logs in and crypto keys are available
 async function onLoginOnce() {
+  syncInit();
   loadRecentDayPlannerData();
   loadLastWeekTimeTrackingData();
   getDayPlannerActiveDay();
