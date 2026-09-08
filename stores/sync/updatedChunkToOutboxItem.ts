@@ -37,7 +37,20 @@ function updatedChunkToOutboxItem(
     chunk_id: updatedChunk.id,
     encrypted_content: encrypted_content,
     updated_at: updated_at,
+    version: updatedChunk.version,
   };
+
+  if (
+    featureType === "timeTrackingChunks" ||
+    featureType === "dayPlannerChunks"
+  ) {
+    outboxItem["time_range_start"] = updatedChunk.timeRangeStart;
+    outboxItem["time_range_end"] = updatedChunk.timeRangeEnd;
+  }
+
+  if (featureType === "featureConfigChunks") {
+    outboxItem["type"] = updatedChunk.type;
+  }
   return outboxItem;
 }
 

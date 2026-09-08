@@ -10,6 +10,10 @@ export type OutboxItem = {
   hash: string;
   encrypted_content: string;
   updated_at: number;
+  time_range_start?: number; //Used by the timeTracking and dayPlanner features
+  time_range_end?: number;
+  type?: string; // Used by the featureConfigChunks
+  version: string;
 };
 
 export type CursorRow = {

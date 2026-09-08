@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS syncOutbox (
     hash TEXT NOT NULL,
     encrypted_content TEXT NOT NULL,
 
+    time_range_start INTEGER,
+    time_range_end INTEGER,
+
+    type TEXT,
+
+    version TEXT NOT NULL,
+
     updated_at INTEGER NOT NULL,
     UNIQUE (account_id, chunk_id)
 );
@@ -178,6 +185,7 @@ async function NukeLocalData() {
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.useBiometricAuth,
   );
+  SecureStore.deleteItemAsync(secureStoreKeyNames.authToken);
 }
 
 async function deleteLimitedChunks() {

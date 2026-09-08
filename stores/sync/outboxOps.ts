@@ -33,9 +33,13 @@ async function addToOutbox(item: OutboxItem) {
         base_hash,
         hash,
         encrypted_content,
-        updated_at
+        updated_at,
+        time_range_start,
+        time_range_end,
+        type,
+        version
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (account_id, chunk_id)
       DO UPDATE SET
       mutation_id = excluded.mutation_id,
@@ -52,6 +56,10 @@ async function addToOutbox(item: OutboxItem) {
         item.hash,
         item.encrypted_content,
         item.updated_at,
+        item.time_range_start ?? null,
+        item.time_range_end ?? null,
+        item.type ?? null,
+        item.version,
       ],
     );
 

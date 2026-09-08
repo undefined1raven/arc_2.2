@@ -50,6 +50,7 @@ async function authenticatedRequest(
   })
     .then(async (r) => {
       if (!r.ok && retry) {
+        await SecureStore.deleteItemAsync(secureStoreKeyNames.authToken);
         return authenticatedRequest(requestPath, fetchOptions, false);
       }
       const json = await r.json();
