@@ -16,6 +16,15 @@ export type OutboxItem = {
   version: string;
 };
 
+export type MutationServerResponse = {
+  commitResults: {
+    success: boolean;
+    commited: OutboxItem[];
+    conflicts: OutboxItem[];
+  }[];
+  lastCursor: number;
+};
+
 export type CursorRow = {
   account_id: string;
   device_id: string;

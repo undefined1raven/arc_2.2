@@ -169,10 +169,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       }
 
       return query
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
 
-          const outboxItem = updatedChunkToOutboxItem(
+          const outboxItem = await updatedChunkToOutboxItem(
             newChunk,
             latestChunk,
             tableName,
@@ -223,10 +223,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       }
 
       return query
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
 
-          const outboxItem = updatedChunkToOutboxItem(
+          const outboxItem = await updatedChunkToOutboxItem(
             newChunk,
             null,
             tableName,
@@ -695,8 +695,8 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         ],
       );
       return savePromise
-        .then((result) => {
-          const outboxItem = updatedChunkToOutboxItem(
+        .then(async (result) => {
+          const outboxItem = await updatedChunkToOutboxItem(
             updatedChunk,
             encryptedChunk,
             tableName,
@@ -896,10 +896,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         ],
       );
       return savePromise
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
 
-          const outboxItem = updatedChunkToOutboxItem(
+          const outboxItem = await updatedChunkToOutboxItem(
             updatedChunk,
             dataMatchChunk,
             "featureConfigChunks",
@@ -985,10 +985,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             newChunk.id,
           ],
         )
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
 
-          const outboxItem = updatedChunkToOutboxItem(
+          const outboxItem = await updatedChunkToOutboxItem(
             newChunk,
             latestChunk,
             "featureConfigChunks",
@@ -1063,7 +1063,7 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             hash: hash,
           };
 
-          const outboxItem = updatedChunkToOutboxItem(
+          const outboxItem = await updatedChunkToOutboxItem(
             newChunk,
             null,
             "featureConfigChunks",

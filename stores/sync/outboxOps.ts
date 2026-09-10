@@ -84,6 +84,8 @@ async function removeFromOutbox(mutation_id: string) {
     return { status: "failed", error: "Invalid mutation_id" };
   }
 
+  console.log("REMOVING FROM OUTBOX", mutation_id);
+
   const db = await getLocalCache();
   return db
     .runAsync(`DELETE FROM syncOutbox WHERE mutation_id = ?`, [mutation_id])

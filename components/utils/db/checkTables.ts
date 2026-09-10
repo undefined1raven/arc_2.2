@@ -19,6 +19,16 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await getLocalCache();
   var promiseArray: Promise<any>[] = [];
 
+  const canoicalChunksTable = db.runAsync(`
+    CREATE TABLE IF NOT EXISTS sync_canonical (
+    account_id TEXT NOT NULL,
+    chunk_id TEXT NOT NULL,
+
+    canonical_hash TEXT NOT NULL,
+
+    PRIMARY KEY (account_id, chunk_id));`);
+  promiseArray.push(canoicalChunksTable);
+
   const createSyncOutboxTable = db.runAsync(`
 CREATE TABLE IF NOT EXISTS syncOutbox (
     mutation_id TEXT PRIMARY KEY,
@@ -169,6 +179,8 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE personalDiaryGroups");
   db.runAsync("DROP TABLE featureConfigChunks");
   db.runAsync("DROP TABLE activityTransitions");
+  db.runAsync("DROP TABLE sync_canonical");
+
   db.runAsync("DROP TABLE syncOutbox");
   db.runAsync("DROP TABLE syncCursor");
 
