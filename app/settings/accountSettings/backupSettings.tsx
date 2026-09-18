@@ -11,6 +11,7 @@ import { NukeLocalData } from "@/components/utils/db/checkTables";
 import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { SimpleFooter } from "@/components/common/SimpleFooter";
 import { FlashList } from "@shopify/flash-list";
+import { forcePush } from "@/app/sync/forcePush";
 function AccountSettingsMain() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   type SettingOption = {
@@ -94,6 +95,12 @@ function AccountSettingsMain() {
               }}
               style={{ height: 50 }}
               label="Export Backup"
+            ></Button>
+            <Button
+              onClick={forcePush}
+              color={globalStyle.errorColor}
+              style={{ height: 50, borderColor: globalStyle.errorColor }}
+              label="Force Sync"
             ></Button>
           </View>
           <View style={{ marginTop: 10 }}>

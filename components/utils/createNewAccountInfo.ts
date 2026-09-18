@@ -9,6 +9,7 @@ function newRecoveryCode() {
 import * as Crypto from "expo-crypto";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { encodeWrappedSymkey } from "./encoding/wrappedSymkey";
+import { generateNewDeviceId } from "./auth/getDeviceId";
 
 async function getNewRecoveryCodes(
   symmetricKeyData: string,
@@ -240,6 +241,11 @@ async function createNewAccountBasics() {
       console.error("Failed to encrypt private key");
       return;
     }
+
+    const newDeviceId = generateNewDeviceId();
+
+    useNewUserData.getState().setNewDeviceId(newDeviceId);
+
     const userData = {
       id: userId,
       signupTime: signupTime,

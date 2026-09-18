@@ -1,16 +1,8 @@
-import * as SecureStore from "expo-secure-store";
-import { deviceId } from "../constants/secureStoreKeyNames";
-import * as Crypto from "expo-crypto";
 import { useActiveUser } from "@/stores/activeUser";
 import { getLocalCache } from "../localDb";
 import { LocalDeviceIdRow } from "@/constants/CommonTypes";
 
-function generateNewDeviceId() {
-  const newDeviceId = Crypto.randomUUID();
-  return newDeviceId;
-}
-
-async function getDeviceId(): Promise<null | string> {
+async function getPrivateKeyBackup() {
   const activeUserId = useActiveUser.getState().activeUser.userId;
   if (typeof activeUserId !== "string") {
     console.error(
@@ -38,11 +30,7 @@ async function getDeviceId(): Promise<null | string> {
     return null;
   }
 
-  return deviceInfo.device_id;
+  return deviceInfo.private_key_backup;
 }
 
-async function deleteDeviceId() {
-  await SecureStore.deleteItemAsync(deviceId);
-}
-
-export { getDeviceId, deleteDeviceId, generateNewDeviceId };
+export { getPrivateKeyBackup };

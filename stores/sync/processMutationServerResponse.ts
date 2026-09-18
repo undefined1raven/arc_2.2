@@ -17,12 +17,9 @@ async function processMutationServerResponse(
 
   for (const mutation of mutations) {
     const { hash, mutation_id, chunk_id } = mutation;
-    console.log("Processing mutation.id", mutation.mutation_id);
     promises.push(removeFromOutbox(mutation_id));
     promises.push(updateChunkCanonicalHash(chunk_id, hash));
   }
-
-  console.log("Promises:", promises.length);
 
   return Promise.all(promises)
     .then(async (r) => {
@@ -49,10 +46,10 @@ async function processMutationServerResponse(
         Date.now(),
       );
 
-      console.log("FROM EEE", r);
+      console.log("Last cursor updated: ", r);
     })
     .catch((e) => {
-      console.log("E", e);
+      console.error("syncCursor update error", e);
     });
 }
 

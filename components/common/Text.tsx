@@ -35,7 +35,7 @@ function Text({
   fontSize,
   textAlign,
   textAlignVertical,
-  numberOfLines = 1,
+  numberOfLines,
   ellipsizeMode = "tail",
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
@@ -51,7 +51,7 @@ function Text({
     >
       <RNText
         ellipsizeMode={ellipsizeMode ? ellipsizeMode : undefined}
-        numberOfLines={numberOfLines}
+        numberOfLines={numberOfLines ? numberOfLines : undefined}
         style={{
           textAlign: textAlign ? textAlign : "center",
           textAlignVertical: textAlignVertical ? textAlignVertical : "center",

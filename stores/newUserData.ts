@@ -12,6 +12,8 @@ interface NewUserData {
   setSecretKey: (secretKey: string) => void;
   setDevicePublicKey: (devicePublicKey: string) => void;
   devicePublicKey: string | null;
+  newDeviceId: string | null;
+  setNewDeviceId: (newDeviceId: string) => void;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
     id: string;
@@ -31,6 +33,10 @@ interface NewUserData {
 
 const useNewUserData = create<NewUserData>((set, get) => ({
   newPIN: null,
+  newDeviceId: null,
+  setNewDeviceId: (newDeviceId: string) => {
+    set({ newDeviceId });
+  },
   setNewPIN: (newPIN) => {
     set({ newPIN });
   },

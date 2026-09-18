@@ -6,7 +6,6 @@ import {
   secureStoreKeyNames,
 } from "../constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
-import { checkAndSetDeviceId, deleteDeviceId } from "../auth/getDeviceId";
 import { getLocalCache } from "../localDb";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
@@ -71,6 +70,15 @@ ON syncOutbox(account_id, device_id);
 `);
   promiseArray.push(syncCursor);
 
+  const deviceIds = db.execAsync(`
+  CREATE TABLE IF NOT EXISTS deviceIds (
+    account_id TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+    private_key_backup NOT NULL
+  );
+`);
+  promiseArray.push(deviceIds);
+
   //Behavioral data tables
   const activityTransitions = db.runAsync(
     "CREATE TABLE IF NOT EXISTS activityTransitions (previousActivity TEXT NOT NULL, nextActivity TEXT NOT NULL, dayType TEXT NOT NULL, timeBucket TEXT NOT NULL);",
@@ -78,7 +86,7 @@ ON syncOutbox(account_id, device_id);
   promiseArray.push(activityTransitions);
 
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL);",
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -180,7 +188,6 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE featureConfigChunks");
   db.runAsync("DROP TABLE activityTransitions");
   db.runAsync("DROP TABLE sync_canonical");
-
   db.runAsync("DROP TABLE syncOutbox");
   db.runAsync("DROP TABLE syncCursor");
 

@@ -3,12 +3,35 @@ import * as SQLite from "expo-sqlite";
 import { v4 } from "uuid";
 import * as Crypto from "expo-crypto";
 import { getLocalCache } from "../localDb";
+import { saveNewDeviceInfo } from "../newAccountInit/saveNewDeviceInfo";
 async function saveNewUser(PIKBackup: string) {
   console.log("------------SAVING NEW USER", Date.now());
 
   const newUserDataApi = useNewUserData.getState();
   const newUserData = newUserDataApi.userData;
   const db = await getLocalCache();
+
+  if (newUserData === null) {
+    throw new Error("Null new user data");
+  }
+
+  const accountId = newUserData.id;
+  const deviceId = newUserDataApi.newDeviceId;
+  const private_key_backup = newUserData.PSKBackup;
+
+  if (
+    typeof private_key_backup !== "string" ||
+    typeof deviceId !== "string" ||
+    typeof accountId !== "string"
+  ) {
+    throw new Error("Invalid new device info or account id");
+  }
+
+  await saveNewDeviceInfo({
+    account_id: accountId,
+    device_id: deviceId,
+    private_key_backup: private_key_backup,
+  });
 
   async function getFeatureConfigChunk(
     encryptedContent: string,

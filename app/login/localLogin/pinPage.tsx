@@ -3,28 +3,9 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { ThemedView } from "@/components/ThemedView";
 import { ARCLogoMini } from "@/components/deco/ARCLogoMini";
 import Text from "@/components/common/Text";
-import Animated from "react-native-reanimated";
-import Button from "@/components/common/Button";
-import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
-import { getInsertStringFromObject } from "@/components/utils/db/dbUtils";
-import * as Updates from "expo-updates";
-import * as SecureStore from "expo-secure-store";
-import * as SQLite from "expo-sqlite";
-import {
-  getPrivateKey,
-  getSymmetricKey,
-  secureStoreKeyNames,
-} from "@/components/utils/constants/secureStoreKeyNames";
-import { charCodeArrayToString } from "@/components/utils/fn/charOps";
 import TextInput from "@/components/common/TextInput";
-import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
-import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowDeco } from "@/components/deco/ArrowDeco";
 import { BottomMenu } from "./common/bottomMenu";
 import { useOfflineLoginTempStore } from "@/stores/offlineLoginTempStore";
 

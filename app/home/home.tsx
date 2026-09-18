@@ -9,6 +9,10 @@ import { useEffect } from "react";
 import { authenticatedRequest } from "../auth/authenticatedRequest";
 import { useActiveUser } from "@/stores/activeUser";
 import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { processMutationServerResponse } from "@/stores/sync/processMutationServerResponse";
+import { MutationServerResponse } from "@/stores/sync/outbox";
+import { syncPush } from "../sync/syncPush";
+import { checkOrInitLocalDeviceId } from "../login/localLogin/checkOrInitLocalDeviceId";
 
 const styles = StyleSheet.create({
   container: {
@@ -24,25 +28,8 @@ function Home() {
   const db = useSQLiteContext();
 
   useEffect(() => {
-    const userid = useActiveUser.getState().activeUser.userId;
-    const deviceid = getDeviceId();
-    db.getAllAsync("SELECT * FROM syncOutbox").then((r) => {
-      console.log("OUTBOX ITEMS", r);
-      authenticatedRequest("/sync/push", {
-        method: "POST",
-        body: JSON.stringify({
-          mutations: r,
-          userId: userid,
-          deviceId: deviceid,
-        }),
-      }).then((response) => {
-        if (response.status === "success") {
-          console.log("Request successful:", response.json);
-        } else {
-          console.error("Request failed:", response.error);
-        }
-      });
-    });
+    // syncPush();
+    checkOrInitLocalDeviceId();
   }, []);
 
   return (

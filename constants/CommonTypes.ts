@@ -57,6 +57,7 @@ type TessTaskType = {
 type DeviceType = {
   device_id: string;
   device_public_key: string;
+  private_key_backup: string;
   created_at: number;
   account_id: string;
   device_name: string;
@@ -68,6 +69,12 @@ type TessDayLogType = {
   day: string;
   isActive?: boolean;
   tasks: TessTaskType[];
+};
+
+type LocalDeviceIdRow = {
+  device_id: string;
+  account_id: string;
+  private_key_backup: string;
 };
 
 type ARCTasksType = {
@@ -297,4 +304,5 @@ export type {
   DayType,
   Budget_ChunksType,
   DeviceType,
+  LocalDeviceIdRow,
 };
