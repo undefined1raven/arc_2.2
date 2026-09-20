@@ -86,7 +86,7 @@ ON syncOutbox(account_id, device_id);
   promiseArray.push(activityTransitions);
 
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL);",
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL, publicKey TEXT NOT NULL);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(

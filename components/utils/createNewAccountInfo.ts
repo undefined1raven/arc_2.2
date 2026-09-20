@@ -10,6 +10,7 @@ import * as Crypto from "expo-crypto";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { encodeWrappedSymkey } from "./encoding/wrappedSymkey";
 import { generateNewDeviceId } from "./auth/getDeviceId";
+import { DeviceType } from "@/constants/CommonTypes";
 
 async function getNewRecoveryCodes(
   symmetricKeyData: string,
@@ -189,6 +190,54 @@ async function generateSecretKey(): Promise<{
     });
 }
 
+async function createNewDeviceBasics(
+  jwkKeyData: string,
+  userId: string,
+): Promise<DeviceType | null> {
+  const cryptoOpsApi = useCryptoOpsQueue.getState();
+  const newDeviceId = generateNewDeviceId();
+  const newKeyPairResponse = await cryptoOpsApi.performOperation(
+    "generateDPoPKeyPair",
+  );
+
+  if (newKeyPairResponse.status !== "success") {
+    console.error("Failed to generate key pair");
+    return null;
+  }
+  const newKeyPair = newKeyPairResponse.payload;
+
+  const devicePublicKey = newKeyPair.publicKey;
+  const devicePrivateKey = newKeyPair.privateKey;
+
+  const encryptedDevicePrivateKeyRes = await cryptoOpsApi.performOperation(
+    "encrypt",
+    {
+      keyType: "symmetric",
+      key: jwkKeyData,
+      charCodeData: stringToCharCodeArray(devicePrivateKey),
+    },
+  );
+
+  if (encryptedDevicePrivateKeyRes.status !== "success") {
+    console.error("Failed to encrypt private key");
+    return null;
+  }
+
+  const privateKeyBackup = encryptedDevicePrivateKeyRes.payload;
+
+  const deviceName = newDeviceId.slice(5, 11);
+
+  return {
+    device_id: newDeviceId,
+    device_public_key: devicePublicKey,
+    device_name: deviceName,
+    private_key_backup: privateKeyBackup,
+    created_at: Date.now(),
+    last_seen: Date.now(),
+    account_id: userId,
+  };
+}
+
 async function createNewAccountBasics() {
   const cryptoOpsApi = useCryptoOpsQueue.getState();
   const userId = `user-${v4()}`;
@@ -225,9 +274,6 @@ async function createNewAccountBasics() {
     activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
     activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
 
-    const newDevicePublicKey = newKeyPair.publicKey;
-    useNewUserData.getState().setDevicePublicKey(newDevicePublicKey);
-
     const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
       "encrypt",
       {
@@ -242,15 +288,15 @@ async function createNewAccountBasics() {
       return;
     }
 
-    const newDeviceId = generateNewDeviceId();
-
-    useNewUserData.getState().setNewDeviceId(newDeviceId);
+    const deviceInfo = await createNewDeviceBasics(newSymmetricKey.jwk, userId);
+    console.log("deviceInfo", deviceInfo);
 
     const userData = {
       id: userId,
       signupTime: signupTime,
       version: "0.0.2",
       ...featureConfigPartials,
+      publicKey: newKeyPair.publicKey,
       PSKBackup: JSON.stringify(encryptedPrivateKeyRes.payload),
     };
     userDataGlobal = userData;

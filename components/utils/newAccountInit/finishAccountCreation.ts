@@ -13,46 +13,7 @@ import { createEmptyChunks } from "@/components/utils/newAccountInit/createEmpty
 import { saveSecretKeyOnDevice } from "@/components/utils/newAccountInit/saveSecretKeyOnDevice";
 import { useNewUserData } from "@/stores/newUserData";
 import { API_URL } from "@/constants/API_URL";
-import { checkAndSetDeviceId } from "../auth/getDeviceId";
 import { DeviceType } from "@/constants/CommonTypes";
-
-async function getNewDeviceInfoAndSendToBackend() {
-  const newUserDataApi = useNewUserData.getState();
-  const deviceId = await checkAndSetDeviceId();
-  const deviceCreatedAt = Date.now();
-  const accountId = newUserDataApi.userData?.id;
-  const devicePubKey = newUserDataApi.devicePublicKey;
-  if (
-    typeof deviceId !== "string" ||
-    accountId === undefined ||
-    devicePubKey === null
-  ) {
-    return { error: "Failed to get new account info", status: "error" };
-  } else {
-    const deviceName = deviceId.slice(5, 10).toUpperCase();
-
-    const newDevicePayload: DeviceType = {
-      device_id: deviceId,
-      device_public_key: devicePubKey,
-      created_at: deviceCreatedAt,
-      account_id: accountId,
-      device_name: deviceName,
-      last_seen: deviceCreatedAt,
-    };
-
-    return fetch(`${API_URL}/devices/new`, {
-      body: JSON.stringify(newDevicePayload),
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    }).then((r) => {
-      if (r.ok) {
-        return { status: "success" };
-      } else {
-        return { status: "error", error: r.statusText };
-      }
-    });
-  }
-}
 
 async function sendAccountInfoToBackend(wrappedSymKey: string) {
   const newUserDataApi = useNewUserData.getState();
@@ -61,11 +22,40 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
   delete newUserPayload?.diaryFeatureConfig;
   delete newUserPayload?.timeTrackingFeatureConfig;
   newUserPayload["PIKBackup"] = wrappedSymKey;
+
+  const deviceId = newUserDataApi.deviceData?.deviceId;
+  const deviceCreatedAt = Date.now();
+  const accountId = newUserDataApi.userData?.id;
+  const devicePubKey = newUserDataApi.deviceData?.public_key;
+  const devicePrivateKeyBackup = newUserDataApi.deviceData?.private_key_backup;
+  if (
+    typeof deviceId !== "string" ||
+    accountId === undefined ||
+    typeof devicePubKey !== "string" ||
+    typeof devicePrivateKeyBackup !== "string"
+  ) {
+    return { error: "Failed to get new account info", status: "error" };
+  }
+  const deviceName = deviceId.slice(5, 10).toUpperCase();
+
+  const newDevicePayload: DeviceType = {
+    device_id: deviceId,
+    private_key_backup: devicePrivateKeyBackup,
+    device_public_key: devicePubKey,
+    created_at: deviceCreatedAt,
+    account_id: accountId,
+    device_name: deviceName,
+    last_seen: deviceCreatedAt,
+  };
+
   ///Send user info to backend
   return fetch(`${API_URL}/users/new`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newUserPayload),
+    body: JSON.stringify({
+      userPayload: newUserPayload,
+      devicePayload: newDevicePayload,
+    }),
   })
     .then((r) => {
       if (r.ok) {
@@ -82,9 +72,7 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
 async function accountSaveApiCalls(wrappedSymKey: string) {
   const newAccountApiCallRes = await sendAccountInfoToBackend(wrappedSymKey);
 
-  const newDeviceApiCallRes = await getNewDeviceInfoAndSendToBackend();
-
-  const apiCallResponses = [newAccountApiCallRes, newDeviceApiCallRes];
+  const apiCallResponses = [newAccountApiCallRes];
 
   if (
     apiCallResponses.some((res) => {

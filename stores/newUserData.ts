@@ -10,10 +10,12 @@ interface NewUserData {
   setRecoveryCodes: (recoveryCodes: string[]) => void;
   secretKey: string | null;
   setSecretKey: (secretKey: string) => void;
-  setDevicePublicKey: (devicePublicKey: string) => void;
-  devicePublicKey: string | null;
-  newDeviceId: string | null;
-  setNewDeviceId: (newDeviceId: string) => void;
+  deviceData: {
+    deviceId: string;
+    public_key: string;
+    private_key_backup: string;
+  } | null;
+  setDeviceData: (deviceData: NewUserData["deviceData"]) => void;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
     id: string;
@@ -33,16 +35,17 @@ interface NewUserData {
 
 const useNewUserData = create<NewUserData>((set, get) => ({
   newPIN: null,
-  newDeviceId: null,
-  setNewDeviceId: (newDeviceId: string) => {
-    set({ newDeviceId });
-  },
   setNewPIN: (newPIN) => {
     set({ newPIN });
   },
-  devicePublicKey: null,
-  setDevicePublicKey(devicePublicKey) {
-    set({ devicePublicKey });
+  deviceData: null,
+  setDeviceData: (deviceData: NewUserData["deviceData"]) => {
+    const currentDeviceData = get().deviceData;
+    if (currentDeviceData === null) {
+      set({ deviceData });
+    } else {
+      set({ deviceData: { ...currentDeviceData, ...deviceData } });
+    }
   },
   useBiometricAuth: false,
   setUseBiometricAuth: (useBiometricAuth) => {

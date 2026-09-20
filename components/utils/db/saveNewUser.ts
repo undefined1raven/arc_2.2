@@ -16,7 +16,7 @@ async function saveNewUser(PIKBackup: string) {
   }
 
   const accountId = newUserData.id;
-  const deviceId = newUserDataApi.newDeviceId;
+  const deviceId = newUserDataApi.deviceData?.deviceId;
   const private_key_backup = newUserData.PSKBackup;
 
   if (
