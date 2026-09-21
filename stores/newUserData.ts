@@ -1,4 +1,5 @@
 ////Used during the creation of a new account
+import { DeviceType } from "@/constants/CommonTypes";
 import { create } from "zustand";
 
 interface NewUserData {
@@ -10,11 +11,7 @@ interface NewUserData {
   setRecoveryCodes: (recoveryCodes: string[]) => void;
   secretKey: string | null;
   setSecretKey: (secretKey: string) => void;
-  deviceData: {
-    deviceId: string;
-    public_key: string;
-    private_key_backup: string;
-  } | null;
+  deviceData: DeviceType | null;
   setDeviceData: (deviceData: NewUserData["deviceData"]) => void;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
@@ -27,6 +24,7 @@ interface NewUserData {
     diaryFeatureConfig: string;
     dayPlannerFeatureConfig: string;
     version: string;
+    publicKey: string;
   } | null;
   updateUserData: (newUserData: Partial<NewUserData["userData"]>) => void;
   isGeneratingKeysAndConfig: boolean;

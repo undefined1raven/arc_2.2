@@ -1,8 +1,13 @@
-import { LocalDeviceIdRow } from "@/constants/CommonTypes";
 import { getLocalCache } from "../localDb";
+import { useNewUserData } from "@/stores/newUserData";
 
-async function saveNewDeviceInfo(deviceInfo: LocalDeviceIdRow) {
+async function saveNewDeviceInfo() {
+  const deviceInfo = useNewUserData.getState().deviceData;
   const db = await getLocalCache();
+
+  if (deviceInfo === null) {
+    throw new Error("Failed to save new device info");
+  }
 
   if (
     typeof deviceInfo.account_id !== "string" ||
@@ -14,16 +19,18 @@ async function saveNewDeviceInfo(deviceInfo: LocalDeviceIdRow) {
     );
   }
 
-  db.runAsync(
-    `INSERT INTO deviceIds account_id, device_id, private_key_backup VALUES (?, ?, ?)`,
+  await db.runAsync(
+    `INSERT INTO deviceIds (account_id, device_id, private_key_backup, last_seen, device_public_key, device_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       deviceInfo.account_id,
       deviceInfo.device_id,
       deviceInfo.private_key_backup,
+      deviceInfo.last_seen,
+      deviceInfo.device_public_key,
+      deviceInfo.device_name,
+      deviceInfo.created_at,
     ],
-  ).catch((e) => {
-    throw new Error(`Failed to save new device info to local DB: ${e}`);
-  });
+  );
 }
 
 export { saveNewDeviceInfo };

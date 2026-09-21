@@ -6,7 +6,7 @@ import { getLocalCache } from "../localDb";
 import { LocalDeviceIdRow } from "@/constants/CommonTypes";
 
 function generateNewDeviceId() {
-  const newDeviceId = Crypto.randomUUID();
+  const newDeviceId = "ADI-" + Crypto.randomUUID();
   return newDeviceId;
 }
 

@@ -231,7 +231,7 @@ async function createNewDeviceBasics(
     device_id: newDeviceId,
     device_public_key: devicePublicKey,
     device_name: deviceName,
-    private_key_backup: privateKeyBackup,
+    private_key_backup: JSON.stringify(privateKeyBackup),
     created_at: Date.now(),
     last_seen: Date.now(),
     account_id: userId,
@@ -289,7 +289,12 @@ async function createNewAccountBasics() {
     }
 
     const deviceInfo = await createNewDeviceBasics(newSymmetricKey.jwk, userId);
-    console.log("deviceInfo", deviceInfo);
+
+    if (deviceInfo === null) {
+      console.error("Failed to create new device info");
+    }
+
+    useNewUserData.getState().setDeviceData(deviceInfo);
 
     const userData = {
       id: userId,

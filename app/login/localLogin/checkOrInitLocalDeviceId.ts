@@ -35,6 +35,7 @@ async function checkOrInitLocalDeviceId() {
   } else {
     try {
       const res = await fetch(`${API_URL}/devices/findOne`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           device_id: deviceObj.device_id,

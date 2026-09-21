@@ -74,7 +74,11 @@ ON syncOutbox(account_id, device_id);
   CREATE TABLE IF NOT EXISTS deviceIds (
     account_id TEXT NOT NULL,
     device_id TEXT NOT NULL,
-    private_key_backup NOT NULL
+    private_key_backup NOT NULL,
+    last_seen TEXT NOT NULL,
+    device_public_key TEXT NOT NULL,
+    device_name TEXT NOT NULL,
+    created_at TEXT NOT NULL
   );
 `);
   promiseArray.push(deviceIds);
@@ -86,7 +90,7 @@ ON syncOutbox(account_id, device_id);
   promiseArray.push(activityTransitions);
 
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL, publicKey TEXT NOT NULL);",
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, PSKBackup TEXT NOT NULL, version TEXT NOT NULL, publicKey TEXT NOT NULL);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -190,6 +194,7 @@ async function NukeLocalData() {
   db.runAsync("DROP TABLE sync_canonical");
   db.runAsync("DROP TABLE syncOutbox");
   db.runAsync("DROP TABLE syncCursor");
+  db.runAsync("DROP TABLE deviceIds");
 
   SecureStore.deleteItemAsync(
     secureStoreKeyNames.accountConfig.activePrivateKey,
