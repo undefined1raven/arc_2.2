@@ -37,7 +37,7 @@ const getSymmetricKey = (userId: string) => {
   return `symmetricKey_${userId}`;
 };
 
-const getPrivateKey = (userId: string) => {
+const getAccountEncryptedPrivateKey = (userId: string) => {
   return `privateKey_${userId}`;
 };
 
@@ -48,7 +48,7 @@ const deviceId = `device_id`;
 export {
   noBioSKName,
   secureStoreKeyNames,
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   getUserDataKey,
   getUserThemeKey,

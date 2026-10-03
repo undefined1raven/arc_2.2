@@ -3,14 +3,14 @@ import { deviceId } from "../constants/secureStoreKeyNames";
 import * as Crypto from "expo-crypto";
 import { useActiveUser } from "@/stores/activeUser";
 import { getLocalCache } from "../localDb";
-import { LocalDeviceIdRow } from "@/constants/CommonTypes";
+import { DeviceType, LocalDeviceIdRow } from "@/constants/CommonTypes";
 
 function generateNewDeviceId() {
   const newDeviceId = "ADI-" + Crypto.randomUUID();
   return newDeviceId;
 }
 
-async function getDeviceId(): Promise<null | string> {
+async function getCurrentDeviceInfo(): Promise<null | DeviceType> {
   const activeUserId = useActiveUser.getState().activeUser.userId;
   if (typeof activeUserId !== "string") {
     console.error(
@@ -38,11 +38,11 @@ async function getDeviceId(): Promise<null | string> {
     return null;
   }
 
-  return deviceInfo.device_id;
+  return deviceInfo;
 }
 
 async function deleteDeviceId() {
   await SecureStore.deleteItemAsync(deviceId);
 }
 
-export { getDeviceId, deleteDeviceId, generateNewDeviceId };
+export { getCurrentDeviceInfo, deleteDeviceId, generateNewDeviceId };

@@ -1,4 +1,4 @@
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { API_URL } from "@/constants/API_URL";
 import { CreateChallengeResponse } from "@/constants/ApiTypes";
 import { useActiveUser } from "@/stores/activeUser";
@@ -9,7 +9,7 @@ async function requestNewAuthToken(): Promise<
   { error: string; status: "error" } | { status: "success"; token: string }
 > {
   const accountId = useActiveUser.getState().activeUser.userId;
-  const deviceId = getDeviceId();
+  const deviceId = (await getCurrentDeviceInfo())?.device_id || null;
 
   if (accountId === null) {
     return { error: "Account ID not available", status: "error" };
@@ -37,6 +37,7 @@ async function requestNewAuthToken(): Promise<
             };
           } else {
             const signedChallenge = await privateKeySign(res.challenge);
+
             if (signedChallenge.status === "error") {
               return { error: "Failed to sign challenge.", status: "error" };
             } else {

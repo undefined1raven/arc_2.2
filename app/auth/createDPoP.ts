@@ -4,6 +4,7 @@ import * as crypto from "expo-crypto";
 import { hashAccessToken } from "./hashAccessToken";
 import { strToBase64Url } from "@/components/utils/encoding/strToBase64url";
 import { privateKeySign } from "./signJWT";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 
 export async function createDpopProof(
   method: string,
@@ -13,9 +14,8 @@ export async function createDpopProof(
   ///1. Get info we need to craft the JWT
   let devicePublicKey: null | object = null;
   try {
-    const devicePublicKeyString = await SecureStore.getItemAsync(
-      secureStoreKeyNames.userPublicKey,
-    );
+    const devicePublicKeyString =
+      (await getCurrentDeviceInfo())?.device_public_key || null;
     if (devicePublicKeyString === null) {
       console.error("No device public key found");
       return { status: "error", error: "No device public key found" };

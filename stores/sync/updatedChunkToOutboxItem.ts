@@ -1,7 +1,7 @@
 import { OutboxItem } from "./outbox";
 import { v4 } from "uuid";
 import { useActiveUser } from "@/stores/activeUser";
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { getLocalCache } from "@/components/utils/localDb";
 
 async function updatedChunkToOutboxItem(
@@ -14,7 +14,8 @@ async function updatedChunkToOutboxItem(
   }
   const mutationId = `${featureType}-${v4()}`;
   const accountId = useActiveUser.getState().activeUser.userId;
-  const device_id = getDeviceId();
+  const device_id = (await getCurrentDeviceInfo())?.device_id || null;
+
   const db = await getLocalCache();
   if (!accountId || !device_id) {
     return null;
@@ -24,8 +25,6 @@ async function updatedChunkToOutboxItem(
   const encrypted_content = updatedChunk.encryptedContent;
   const updated_at = updatedChunk.tx;
 
-  console.log("A1");
-
   const canonicalHashResponse: null | { canonical_hash: string } = await db
     .getFirstAsync(
       "SELECT canonical_hash FROM sync_canonical WHERE chunk_id = ? AND account_id = ?",
@@ -34,8 +33,6 @@ async function updatedChunkToOutboxItem(
     .catch((e) => {
       console.error("FROM CANONICAL FETCH", e);
     });
-
-  console.log("A2", canonicalHashResponse);
 
   let base_hash = null;
   if (baseChunk && baseChunk.hash) {

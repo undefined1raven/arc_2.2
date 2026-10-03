@@ -13,7 +13,7 @@ import { retroBehaviorLogs } from "./retroBehaviorLogs";
 import { useTimeStatsData } from "@/stores/viewState/timeStatsData";
 import { useTimeTrackingDataExplorer } from "@/stores/viewState/timeTrackingDataExplorer";
 import { getLocalCache } from "@/components/utils/localDb";
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { OutboxItem, useOutboxStore, CursorRow } from "@/stores/sync/outbox";
 
 ///Get UI blocking data at login
@@ -141,7 +141,12 @@ async function syncInit() {
   const db = await getLocalCache();
 
   const accountId = useActiveUser.getState().activeUser.userId;
-  const deviceId = getDeviceId();
+  const deviceId = (await getCurrentDeviceInfo())?.device_id || null;
+
+  if (deviceId === null) {
+    console.error("Failed to init cursor: no valid device id was found");
+    return;
+  }
 
   ///Initialize the sync cursor for the current account and device if it doesn't exist
   await db.runAsync(

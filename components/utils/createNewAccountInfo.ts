@@ -272,7 +272,7 @@ async function createNewAccountBasics() {
 
     const activeKeysAPI = useActiveKeys.getState();
     activeKeysAPI.setActiveSymmetricKey(newSymmetricKey.jwk);
-    activeKeysAPI.setActivePrivateKey(newKeyPair.privateKey);
+    activeKeysAPI.setActiveDevicePrivateKey(newKeyPair.privateKey);
 
     const encryptedPrivateKeyRes = await cryptoOpsApi.performOperation(
       "encrypt",

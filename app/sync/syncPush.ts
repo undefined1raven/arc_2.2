@@ -1,13 +1,18 @@
 import { useActiveUser } from "@/stores/activeUser";
 import { getLocalCache } from "@/components/utils/localDb";
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { authenticatedRequest } from "../auth/authenticatedRequest";
 import { processMutationServerResponse } from "@/stores/sync/processMutationServerResponse";
 
 async function syncPush() {
   const db = await getLocalCache();
   const userid = useActiveUser.getState().activeUser.userId;
-  const deviceid = getDeviceId();
+  const deviceid = (await getCurrentDeviceInfo())?.device_id || null;
+
+  if (deviceid === null) {
+    console.error("Unable to perform sync push, no valid device id found");
+    return;
+  }
 
   const outbox = await db.getAllAsync("SELECT * FROM syncOutbox");
 
@@ -16,6 +21,7 @@ async function syncPush() {
   const batches = [];
 
   for (let i = 0; i < outbox.length; i += 30) {
+    console.log("BATCH", outbox.slice(i, i + 30));
     batches.push(outbox.slice(i, i + 30));
   }
 

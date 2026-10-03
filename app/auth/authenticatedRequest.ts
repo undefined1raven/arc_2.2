@@ -19,6 +19,7 @@ async function authenticatedRequest(
       newTokenResponse.status !== "success" ||
       typeof newTokenResponse.token !== "string"
     ) {
+      console.error("newTokenResponse", newTokenResponse);
       return { status: "error", error: "Auth token fetch failed [X-4]" };
     } else {
       authToken = newTokenResponse.token;
@@ -49,6 +50,8 @@ async function authenticatedRequest(
     },
   })
     .then(async (r) => {
+      const j = await r.json();
+      console.log("J", j);
       if (!r.ok && retry) {
         await SecureStore.deleteItemAsync(secureStoreKeyNames.authToken);
         return authenticatedRequest(requestPath, fetchOptions, false);

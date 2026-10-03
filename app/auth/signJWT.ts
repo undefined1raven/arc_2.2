@@ -16,15 +16,16 @@ type SignResponse =
 async function privateKeySign(signingInput: string): Promise<SignResponse> {
   const crypoOpsApi = useCryptoOpsQueue.getState();
 
-  const activePrivateKey = useActiveKeys.getState().activePrivateKey;
-  if (activePrivateKey === null) {
+  const activeDevicePrivateKey =
+    useActiveKeys.getState().activeDevicePrivateKey;
+  if (activeDevicePrivateKey === null) {
     console.error("Failed to get private key [KL-343]");
     return { status: "error", error: "No Private Key Found" };
   }
 
   return crypoOpsApi
     .performOperation("generateDPoPSignature", {
-      jwkKeyData: activePrivateKey,
+      jwkKeyData: activeDevicePrivateKey,
       data: signingInput,
     })
     .then((r) => {

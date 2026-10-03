@@ -15,7 +15,7 @@ import * as Updates from "expo-updates";
 import * as SecureStore from "expo-secure-store";
 import * as SQLite from "expo-sqlite";
 import {
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
@@ -206,7 +206,7 @@ function LocalLogin() {
                       userData.PIKBackup,
                     );
                     SecureStore.setItemAsync(
-                      getPrivateKey(userData.id),
+                      getAccountEncryptedPrivateKey(userData.id),
                       userData.PSKBackup,
                     );
 

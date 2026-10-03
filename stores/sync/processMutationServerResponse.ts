@@ -2,7 +2,7 @@ import { getLocalCache } from "@/components/utils/localDb";
 import { OutboxItem } from "./outbox";
 import { removeFromOutbox } from "./outboxOps";
 import { updateChunkCanonicalHash } from "./syncOps";
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { useActiveUser } from "../activeUser";
 
 async function processMutationServerResponse(
@@ -24,7 +24,7 @@ async function processMutationServerResponse(
   return Promise.all(promises)
     .then(async (r) => {
       const db = await getLocalCache();
-      const deviceId = getDeviceId();
+      const deviceId = (await getCurrentDeviceInfo())?.device_id || null;
       const accountId = useActiveUser.getState().activeUser.userId;
       await db.runAsync(
         `

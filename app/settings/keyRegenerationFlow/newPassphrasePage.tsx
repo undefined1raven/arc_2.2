@@ -19,7 +19,7 @@ import { useActiveUser } from "@/stores/activeUser";
 import { keyRegenTempStore } from "@/stores/keyRegenTempStore";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import {
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   noBioSKName,
   secureStoreKeyNames,
@@ -28,7 +28,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
 import { useSQLiteContext } from "expo-sqlite";
 import { API_URL } from "@/constants/API_URL";
-import { getDeviceId } from "@/components/utils/auth/getDeviceId";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import {
   basicSecureStoreSave,
   newKeyPair,
@@ -74,7 +74,7 @@ export default function Main() {
             return { status: "error", error: "UIDNS" };
           }
           await SecureStore.setItemAsync(
-            getPrivateKey(userId),
+            getAccountEncryptedPrivateKey(userId),
             encryptedPrivateKey,
           );
 
@@ -136,7 +136,7 @@ export default function Main() {
       PSKBackup: string,
       publicKey: string,
     ) => {
-      const deviceId = getDeviceId();
+      const deviceId = (await getCurrentDeviceInfo())?.device_id || null;
       if (deviceId === null) {
         return { status: "error", error: "Device ID missing" };
       }

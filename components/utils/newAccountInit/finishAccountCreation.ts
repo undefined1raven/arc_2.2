@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import {
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
@@ -81,11 +81,11 @@ async function finishAccountCreation() {
 
   const activeKeysAPI = useActiveKeys.getState();
   const symmetricKeyJwk = activeKeysAPI.activeSymmetricKey;
-  const privateKeyJwk = activeKeysAPI.activePrivateKey;
+  const activeDevicePrivateKey = activeKeysAPI.activeDevicePrivateKey;
 
   if (
     typeof symmetricKeyJwk !== "string" ||
-    typeof privateKeyJwk !== "string"
+    typeof activeDevicePrivateKey !== "string"
   ) {
     return;
   }
@@ -110,7 +110,7 @@ async function finishAccountCreation() {
   const armoredPrivateKey = newUserDataApi?.userData?.PSKBackup || null;
 
   async function basicSecureStoreSave(userId: string) {
-    if (typeof privateKeyJwk !== "string") {
+    if (typeof activeDevicePrivateKey !== "string") {
       return;
     }
 
@@ -136,7 +136,10 @@ async function finishAccountCreation() {
       return;
     }
 
-    await SecureStore.setItemAsync(getPrivateKey(userId), armoredPrivateKey);
+    await SecureStore.setItemAsync(
+      getAccountEncryptedPrivateKey(userId),
+      armoredPrivateKey,
+    );
 
     await SecureStore.setItemAsync(
       secureStoreKeyNames.accountConfig.useBiometricAuth,
@@ -179,7 +182,10 @@ async function finishAccountCreation() {
     if (armoredPrivateKey === null) {
       return;
     }
-    await SecureStore.setItemAsync(getPrivateKey(userId), armoredPrivateKey);
+    await SecureStore.setItemAsync(
+      getAccountEncryptedPrivateKey(userId),
+      armoredPrivateKey,
+    );
     await saveSecretKeyOnDevice(newUserDataApi.secretKey);
 
     const wrappedSymKey = encodeWrappedSymkey(symKeyWrapRes.payload);
