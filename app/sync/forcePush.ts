@@ -2,6 +2,7 @@ import { getLocalCache } from "@/components/utils/localDb";
 import { useActiveUser } from "@/stores/activeUser";
 import { addToOutbox } from "@/stores/sync/outboxOps";
 import { updatedChunkToOutboxItem } from "@/stores/sync/updatedChunkToOutboxItem";
+import { syncPush } from "./syncPush";
 
 async function forcePush() {
   const db = await getLocalCache();
@@ -91,6 +92,8 @@ async function forcePush() {
       addToOutbox(outboxItem);
     }
   }
+
+  await syncPush(true);
 }
 
 export { forcePush };

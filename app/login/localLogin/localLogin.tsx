@@ -78,21 +78,6 @@ function LocalLogin() {
     }
   }
 
-  // function writeBackupToDB(wait?: boolean) {
-  //   if (wait) {
-  //     return Promise.all(promiseArray);
-  //   } else {
-  //     Promise.all(promiseArray)
-  //       .then((res) => {
-  //         Updates.reloadAsync();
-  //       })
-  //       .catch((e) => {
-  //         showErrorMsg("Failed to import account.");
-  //         console.log(e);
-  //       });
-  //   }
-  // }
-
   return (
     <>
       <ThemedView style={styles.container}>
