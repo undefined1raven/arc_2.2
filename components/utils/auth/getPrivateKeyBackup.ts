@@ -20,6 +20,8 @@ async function getPrivateKeyBackup() {
     [activeUserId],
   );
 
+  console.log("deviceInfo", deviceInfo);
+
   if (deviceInfo === null) {
     console.error(
       JSON.stringify({

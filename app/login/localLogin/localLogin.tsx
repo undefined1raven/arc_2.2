@@ -6,25 +6,22 @@ import Text from "@/components/common/Text";
 import Animated from "react-native-reanimated";
 import Button from "@/components/common/Button";
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
 import { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
-import { getInsertStringFromObject } from "@/components/utils/db/dbUtils";
 import * as Updates from "expo-updates";
 import * as SecureStore from "expo-secure-store";
-import * as SQLite from "expo-sqlite";
 import {
   getAccountEncryptedPrivateKey,
   getSymmetricKey,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
-import { charCodeArrayToString } from "@/components/utils/fn/charOps";
-import TextInput from "@/components/common/TextInput";
 import { DatabaseBackupApi } from "@/components/utils/db/importExportFunctions";
 import { useOfflineLoginTempStore } from "@/stores/offlineLoginTempStore";
 import { getLocalCache, getTempLocalCache } from "@/components/utils/localDb";
 import { checkCreds } from "./checkCreds";
+import { checkOrInitLocalDeviceId } from "./checkOrInitLocalDeviceId";
+import * as FileSystem from "expo-file-system";
+import { checkTablesActual } from "@/components/utils/db/checkTables";
 
 function LocalLogin() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
@@ -116,6 +113,7 @@ function LocalLogin() {
         </Animated.View>
         <Button
           onClick={async () => {
+            console.log("Starting file picker");
             if (hasFile && offlineLoginTempStore.pin) {
               if (isLoginValid === false) {
                 return;
@@ -125,16 +123,28 @@ function LocalLogin() {
                 true,
               );
 
+              await checkTablesActual();
+
               if (permaDbImportRes.status === "error") {
                 return;
               }
 
+              if (typeof offlineLoginTempStore.passphrase !== "string") {
+                return;
+              }
+
+              const deviceCheckRes = await checkOrInitLocalDeviceId();
+
+              console.log("deviceCheckRes", deviceCheckRes);
+
+              if (deviceCheckRes?.status !== "success") {
+                console.error("DEVICE CHECK FAILED");
+                throw new Error("DEVICE CHECK FAILED");
+              }
+
               await SecureStore.setItemAsync(
                 secureStoreKeyNames.accountConfig.pin,
-                offlineLoginTempStore.pin +
-                  (offlineLoginTempStore.passphrase
-                    ? offlineLoginTempStore.passphrase
-                    : ""),
+                offlineLoginTempStore.pin + offlineLoginTempStore.passphrase,
                 {
                   requireAuthentication: true,
                   authenticationPrompt:
@@ -149,9 +159,9 @@ function LocalLogin() {
                     secureStoreKeyNames.accountConfig.useBiometricAuth,
                     "true",
                   );
+
                   Updates.reloadAsync();
                 });
-              // writeBackupToDB(false);
             } else {
               const result = await DocumentPicker.getDocumentAsync({
                 type: [
@@ -186,11 +196,11 @@ function LocalLogin() {
                     userData?.PIKBackup &&
                     userData?.id
                   ) {
-                    SecureStore.setItemAsync(
+                    await SecureStore.setItemAsync(
                       getSymmetricKey(userData.id),
                       userData.PIKBackup,
                     );
-                    SecureStore.setItemAsync(
+                    await SecureStore.setItemAsync(
                       getAccountEncryptedPrivateKey(userData.id),
                       userData.PSKBackup,
                     );
@@ -198,6 +208,7 @@ function LocalLogin() {
                     const isLoginValid: boolean = await checkCreds(
                       userData.PIKBackup,
                     );
+
                     if (isLoginValid === false) {
                       showErrorMsg(
                         "Pin or passphrase don't match the backup file ",

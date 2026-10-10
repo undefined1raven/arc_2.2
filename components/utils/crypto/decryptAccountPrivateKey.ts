@@ -5,14 +5,14 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import { useCryptoOpsQueue } from "@/stores/cryptoOpsQueue";
 import { charCodeArrayToString } from "../fn/charOps";
 
-async function decryptAccountPrivateKey(): Promise<
-  string | { error: string; status: "error" }
-> {
+async function decryptAccountPrivateKey(
+  userIdArg?: string | undefined,
+): Promise<string | { error: string; status: "error" }> {
   const activeKeyAPI = useActiveKeys.getState();
   const symKey = activeKeyAPI.activeSymmetricKey;
   const userId = useActiveUser.getState().activeUser.userId ?? null;
 
-  if (userId === null) {
+  if (userId === null && userIdArg === undefined) {
     return { error: "User ID is null", status: "error" };
   }
 
@@ -21,7 +21,7 @@ async function decryptAccountPrivateKey(): Promise<
   }
 
   const encryptedAccountPrivateKey = await SecureStore.getItemAsync(
-    getAccountEncryptedPrivateKey(userId),
+    getAccountEncryptedPrivateKey(userIdArg ? userIdArg : (userId as string)),
   );
 
   const cryptoApi = useCryptoOpsQueue.getState();

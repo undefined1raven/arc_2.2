@@ -16,6 +16,8 @@ import * as SecureStore from "expo-secure-store";
 import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { decryptAccountPrivateKey } from "@/components/utils/crypto/decryptAccountPrivateKey";
+import { getLocalCache } from "@/components/utils/localDb";
+import { syncPull } from "../sync/syncPull";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -28,7 +30,13 @@ const styles = StyleSheet.create({
 
 function Home() {
   useEffect(() => {
-    // syncPush();
+    getLocalCache().then((db) => {
+      db.getAllAsync(`SELECT * FROM deviceIds`).then((rows) => {
+        console.log("deviceIds in local db", rows);
+      });
+    });
+    syncPull();
+    syncPush();
     // checkOrInitLocalDeviceId();
   }, []);
 

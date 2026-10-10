@@ -13,7 +13,10 @@ type SignResponse =
       error: string;
     };
 
-async function privateKeySign(signingInput: string): Promise<SignResponse> {
+async function privateKeySign(
+  signingInput: string,
+  privateKeyJWK?: string | undefined,
+): Promise<SignResponse> {
   const crypoOpsApi = useCryptoOpsQueue.getState();
 
   const activeDevicePrivateKey =
@@ -25,7 +28,7 @@ async function privateKeySign(signingInput: string): Promise<SignResponse> {
 
   return crypoOpsApi
     .performOperation("generateDPoPSignature", {
-      jwkKeyData: activeDevicePrivateKey,
+      jwkKeyData: privateKeyJWK ? privateKeyJWK : activeDevicePrivateKey,
       data: signingInput,
     })
     .then((r) => {

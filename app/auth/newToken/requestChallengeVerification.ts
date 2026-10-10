@@ -29,6 +29,7 @@ async function requestChallengeVerification(
             SecureStore.setItem(secureStoreKeyNames.authToken, res.token);
             return { status: "success", token: res.token };
           } else {
+            console.error("[AUTH_VERIFY_CHALLENGE]", res);
             return {
               status: "error",
               error: "API Failed to return auth token",

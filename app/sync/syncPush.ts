@@ -21,24 +21,32 @@ async function syncPush(forcePush: boolean = false) {
 
   const batches = [];
 
-  for (let i = 0; i < outbox.length; i += 30) {
-    batches.push(outbox.slice(i, i + 30));
+  const maxMutationsPerBatch = 5;
+
+  for (let i = 0; i < outbox.length; i += maxMutationsPerBatch) {
+    batches.push(outbox.slice(i, i + maxMutationsPerBatch));
   }
   console.log("OUTBOX LEN", outbox.length, " BATCHES LEN", batches.length);
 
-  const responses = await Promise.all(
-    batches.map((batch) =>
-      authenticatedRequest("/sync/push", {
-        method: "POST",
-        body: JSON.stringify({
-          mutations: batch,
-          userId: userid,
-          deviceId: deviceid,
-          forcePush: forcePush,
+  const maxConcurrentRequests = 5;
+  const responses = [];
+
+  for (let i = 0; i < batches.length; i += maxConcurrentRequests) {
+    const batchResponses = await Promise.all(
+      batches.slice(i, i + maxConcurrentRequests).map((batch) =>
+        authenticatedRequest("/sync/push", {
+          method: "POST",
+          body: JSON.stringify({
+            mutations: batch,
+            userId: userid,
+            deviceId: deviceid,
+            forcePush: forcePush,
+          }),
         }),
-      }),
-    ),
-  );
+      ),
+    );
+    responses.push(...batchResponses);
+  }
 
   const allCommits = [];
   const cursors: number[] = [];
@@ -56,7 +64,9 @@ async function syncPush(forcePush: boolean = false) {
     // @ts-ignore
     const lastCursor = responseData.lastCursor;
 
-    allCommits.push(...commitResults.flatMap((x) => x.commited));
+    allCommits.push(
+      ...commitResults.flatMap((x: { commited: unknown[] }) => x.commited),
+    );
 
     if (typeof lastCursor === "number") {
       cursors.push(lastCursor);
