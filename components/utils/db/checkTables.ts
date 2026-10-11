@@ -223,7 +223,8 @@ async function NukeLocalData() {
 
 async function deleteLimitedChunks() {
   const db = await getLocalCache();
-  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 171417354700");
+  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 0");
+  await db.runAsync("DELETE FROM dayPlannerChunks WHERE tx > 0");
 }
 
 async function checkTables(): Promise<CheckTablesReturnSig> {

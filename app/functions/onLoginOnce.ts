@@ -15,6 +15,7 @@ import { useTimeTrackingDataExplorer } from "@/stores/viewState/timeTrackingData
 import { getLocalCache } from "@/components/utils/localDb";
 import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { OutboxItem, useOutboxStore, CursorRow } from "@/stores/sync/outbox";
+import { syncCall } from "../sync/syncCall";
 
 ///Get UI blocking data at login
 function getDayPlannerActiveDay() {
@@ -180,6 +181,8 @@ async function syncInit() {
   );
 
   outboxStore.setOutbox(outboxRows as OutboxItem[]);
+
+  void syncCall();
 }
 
 ///Called once after the user logs in and crypto keys are available

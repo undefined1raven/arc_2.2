@@ -82,13 +82,14 @@ async function syncPush(forcePush: boolean = false) {
   }
 
   if (Array.isArray(allCommits) && typeof lastCursor === "number") {
-    processMutationServerResponse(allCommits, lastCursor);
+    return processMutationServerResponse(allCommits, lastCursor);
   } else {
     console.error(
       "Failed to process mutation server response.",
       allCommits,
       lastCursor,
     );
+    return;
   }
 }
 

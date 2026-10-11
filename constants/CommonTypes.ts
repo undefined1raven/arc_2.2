@@ -65,6 +65,15 @@ type DeviceType = {
   revoked_at?: number;
 };
 
+type FeatureTableType =
+  | "timeTrackingChunks"
+  | "dayPlannerChunks"
+  | "featureConfigChunks"
+  | "personalDiaryChunks"
+  | "personalDiaryGroups";
+
+type FeatureConfigTypeNames = "timeTracking" | "dayPlanner" | "personalDiary";
+
 type TessDayLogType = {
   day: string;
   isActive?: boolean;
@@ -310,4 +319,6 @@ export type {
   Budget_ChunksType,
   DeviceType,
   LocalDeviceIdRow,
+  FeatureTableType,
+  FeatureConfigTypeNames,
 };

@@ -1,3 +1,7 @@
+import {
+  FeatureConfigTypeNames,
+  FeatureTableType,
+} from "@/constants/CommonTypes";
 import { create } from "zustand";
 
 export type OutboxItem = {
@@ -14,6 +18,21 @@ export type OutboxItem = {
   time_range_end?: number;
   type?: string; // Used by the featureConfigChunks
   version: string;
+};
+
+export type SyncOpsItem = {
+  id: string;
+  mutation_id: string;
+  chunk_id: string;
+  user_id: string;
+  encrypted_content: string;
+  tx: number;
+  time_range_start?: number;
+  hash: string;
+  time_range_end?: number;
+  feature_config_type?: FeatureConfigTypeNames;
+  version: string;
+  feature_table: FeatureTableType;
 };
 
 export type MutationServerResponse = {

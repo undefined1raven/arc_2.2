@@ -2,7 +2,8 @@ import { getLocalCache } from "@/components/utils/localDb";
 import { useActiveUser } from "@/stores/activeUser";
 import { authenticatedRequest } from "../auth/authenticatedRequest";
 import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
-import { OutboxItem } from "@/stores/sync/outbox";
+import { SyncPullResponse } from "@/constants/ApiTypes";
+import { commitMutations } from "./commitMutations";
 
 async function syncPull() {
   const db = await getLocalCache();
@@ -25,27 +26,82 @@ async function syncPull() {
     [userId],
   );
 
-  if (cursorRow === null || typeof cursorRow.cursor !== "number") {
+  let lastLocalCursor = cursorRow?.cursor;
+
+  if (lastLocalCursor === undefined) {
     console.error("[SYNC_PULL] Failed to get current cursor");
     return;
   }
-  console.log("cursorRow", cursorRow);
-  const pullRes = await authenticatedRequest(`/sync/pull`, {
+
+  const initialPullRes = await authenticatedRequest(`/sync/pull`, {
     method: "POST",
     body: JSON.stringify({
       userId: userId,
       deviceId: deviceId.device_id,
-      lastCursor: cursorRow.cursor,
+      lastCursor: lastLocalCursor,
     }),
   });
 
-  if (pullRes.status === "error") {
+  if (initialPullRes.status === "error") {
     console.error("[SYNC_PULL] Pull response error");
     return;
   }
 
-  const pullResJson: Partial<OutboxItem> = pullRes.json;
-  console.log("pullResJson", pullResJson);
+  const pullResJson = initialPullRes.json as unknown as SyncPullResponse;
+  await commitMutations(pullResJson);
+
+  try {
+    ///Update the last local cursor after the initial update
+    const commitedMutations = pullResJson.mutations;
+
+    if (commitedMutations.length === 0) {
+      return;
+    }
+
+    lastLocalCursor = parseInt(
+      commitedMutations[commitedMutations.length - 1].id,
+    );
+
+    ///Track retries to abort the pull at 3 failed fetches
+    let retries = 0;
+    let maxRemoteCursor = pullResJson.maxRemoteCursor;
+
+    while (lastLocalCursor < maxRemoteCursor) {
+      const pullResponse = await authenticatedRequest(`/sync/pull`, {
+        method: "POST",
+        body: JSON.stringify({
+          userId: userId,
+          deviceId: deviceId.device_id,
+          lastCursor: lastLocalCursor,
+        }),
+      });
+
+      if (pullResponse.status === "error") {
+        console.error("[SYNC_PULL] Pull response error");
+        retries++;
+        continue;
+      }
+      const pullResponseJson = pullResponse.json as unknown as SyncPullResponse;
+      const successfulCommit = await commitMutations(pullResponseJson);
+
+      const commitedMutations = pullResponseJson.mutations;
+
+      lastLocalCursor = parseInt(
+        commitedMutations[commitedMutations.length - 1].id,
+      );
+
+      if (successfulCommit) {
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return;
+  } catch (e) {
+    console.error(e);
+    return;
+  }
 }
 
 export { syncPull };
