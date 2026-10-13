@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import {
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   secureStoreKeyNames,
 } from "@/components/utils/constants/secureStoreKeyNames";
@@ -13,46 +13,7 @@ import { createEmptyChunks } from "@/components/utils/newAccountInit/createEmpty
 import { saveSecretKeyOnDevice } from "@/components/utils/newAccountInit/saveSecretKeyOnDevice";
 import { useNewUserData } from "@/stores/newUserData";
 import { API_URL } from "@/constants/API_URL";
-import { checkAndSetDeviceId } from "../auth/getDeviceId";
 import { DeviceType } from "@/constants/CommonTypes";
-
-async function getNewDeviceInfoAndSendToBackend() {
-  const newUserDataApi = useNewUserData.getState();
-  const deviceId = await checkAndSetDeviceId();
-  const deviceCreatedAt = Date.now();
-  const accountId = newUserDataApi.userData?.id;
-  const devicePubKey = newUserDataApi.devicePublicKey;
-  if (
-    typeof deviceId !== "string" ||
-    accountId === undefined ||
-    devicePubKey === null
-  ) {
-    return { error: "Failed to get new account info", status: "error" };
-  } else {
-    const deviceName = deviceId.slice(5, 10).toUpperCase();
-
-    const newDevicePayload: DeviceType = {
-      device_id: deviceId,
-      device_public_key: devicePubKey,
-      created_at: deviceCreatedAt,
-      account_id: accountId,
-      device_name: deviceName,
-      last_seen: deviceCreatedAt,
-    };
-
-    return fetch(`${API_URL}/devices/new`, {
-      body: JSON.stringify(newDevicePayload),
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    }).then((r) => {
-      if (r.ok) {
-        return { status: "success" };
-      } else {
-        return { status: "error", error: r.statusText };
-      }
-    });
-  }
-}
 
 async function sendAccountInfoToBackend(wrappedSymKey: string) {
   const newUserDataApi = useNewUserData.getState();
@@ -61,13 +22,44 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
   delete newUserPayload?.diaryFeatureConfig;
   delete newUserPayload?.timeTrackingFeatureConfig;
   newUserPayload["PIKBackup"] = wrappedSymKey;
+
+  const deviceId = newUserDataApi.deviceData?.device_id;
+  const deviceCreatedAt = newUserDataApi.deviceData?.created_at;
+  const accountId = newUserDataApi.userData?.id;
+  const devicePubKey = newUserDataApi.deviceData?.device_public_key;
+  const devicePrivateKeyBackup = newUserDataApi.deviceData?.private_key_backup;
+  const deviceName = newUserDataApi.deviceData?.device_name;
+  if (
+    typeof deviceId !== "string" ||
+    accountId === undefined ||
+    typeof devicePubKey !== "string" ||
+    typeof devicePrivateKeyBackup !== "string" ||
+    typeof deviceCreatedAt !== "number" ||
+    typeof deviceName !== "string"
+  ) {
+    return { error: "Failed to get new account info", status: "error" };
+  }
+
+  const newDevicePayload: DeviceType = {
+    device_id: deviceId,
+    private_key_backup: devicePrivateKeyBackup,
+    device_public_key: devicePubKey,
+    created_at: deviceCreatedAt,
+    account_id: accountId,
+    device_name: deviceName,
+    last_seen: deviceCreatedAt,
+  };
+
   ///Send user info to backend
   return fetch(`${API_URL}/users/new`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newUserPayload),
+    body: JSON.stringify({
+      userPayload: newUserPayload,
+      devicePayload: newDevicePayload,
+    }),
   })
-    .then((r) => {
+    .then(async (r) => {
       if (r.ok) {
         return { status: "success" };
       } else {
@@ -77,24 +69,6 @@ async function sendAccountInfoToBackend(wrappedSymKey: string) {
     .catch((e) => {
       return { status: "error", error: e };
     });
-}
-
-async function accountSaveApiCalls(wrappedSymKey: string) {
-  const newAccountApiCallRes = await sendAccountInfoToBackend(wrappedSymKey);
-
-  const newDeviceApiCallRes = await getNewDeviceInfoAndSendToBackend();
-
-  const apiCallResponses = [newAccountApiCallRes, newDeviceApiCallRes];
-
-  if (
-    apiCallResponses.some((res) => {
-      return res?.status !== "success";
-    })
-  ) {
-    console.error("Account creation API call fail: ", res);
-    return { status: "error" };
-  }
-  return { status: "success" };
 }
 
 async function finishAccountCreation() {
@@ -107,10 +81,11 @@ async function finishAccountCreation() {
 
   const activeKeysAPI = useActiveKeys.getState();
   const symmetricKeyJwk = activeKeysAPI.activeSymmetricKey;
-  const privateKeyJwk = activeKeysAPI.activePrivateKey;
+  const activeDevicePrivateKey = activeKeysAPI.activeDevicePrivateKey;
+
   if (
     typeof symmetricKeyJwk !== "string" ||
-    typeof privateKeyJwk !== "string"
+    typeof activeDevicePrivateKey !== "string"
   ) {
     return;
   }
@@ -120,129 +95,155 @@ async function finishAccountCreation() {
   }
 
   await createEmptyChunks(symmetricKeyJwk, userId);
-  cryptoOpsApi
-    .performOperation("wrapKey", {
-      password: newUserDataApi.newPIN + newUserDataApi.secretKey,
-      jwkKeyData: symmetricKeyJwk,
-      keyType: "symmetric",
-    })
-    .then(async (res) => {
-      const armoredPrivateKey = newUserDataApi?.userData?.PSKBackup || null;
-      if (typeof armoredPrivateKey !== "string") {
-        console.error("EPKM error");
-        return;
-      }
 
-      if (res.status === "success") {
-        async function basicSecureStoreSave(userId: string) {
-          if (typeof privateKeyJwk !== "string") {
-            return;
-          }
+  const symKeyWrapRes = await cryptoOpsApi.performOperation("wrapKey", {
+    password: newUserDataApi.newPIN + newUserDataApi.secretKey,
+    jwkKeyData: symmetricKeyJwk,
+    keyType: "symmetric",
+  });
 
-          const wrappedSymKey = encodeWrappedSymkey(res.payload);
-          if (wrappedSymKey === null) {
-            console.error("Error encoding wrapped symmetric key");
-            return;
-          }
-          console.log("Saving new user with wrapped symmetric key");
-          await SecureStore.setItemAsync(
-            getSymmetricKey(userId),
-            wrappedSymKey,
-          );
+  if (symKeyWrapRes.status === "error") {
+    console.error("Failed to wrap sym key");
+    return;
+  }
 
-          await SecureStore.setItemAsync(
-            getPrivateKey(userId),
-            //@ts-expect-error
-            armoredPrivateKey,
-          );
-          await SecureStore.setItemAsync(
-            secureStoreKeyNames.accountConfig.useBiometricAuth,
-            "false",
-          );
+  const armoredPrivateKey = newUserDataApi?.userData?.PSKBackup || null;
 
-          const accountSaveRes = await accountSaveApiCalls(wrappedSymKey);
+  async function basicSecureStoreSave(userId: string) {
+    if (typeof activeDevicePrivateKey !== "string") {
+      return;
+    }
 
-          if (accountSaveRes.status !== "success") {
-            console.error("Account Creation API call fail");
-            return;
-          }
+    const wrappedSymKey = encodeWrappedSymkey(symKeyWrapRes.payload);
+    if (wrappedSymKey === null) {
+      console.error("Error encoding wrapped symmetric key");
+      return;
+    }
 
-          ///Redirect to home
-          saveNewUser(wrappedSymKey)
-            .then(() => {
-              console.log("Saved new user");
-              reloadAsync();
-            })
-            .catch((e) => {
-              console.error("Error saving new user", e);
-            });
-        }
-        if (typeof newUserDataApi.secretKey !== "string") {
-          console.error("Private key missing in new user data ");
+    if (typeof newUserDataApi.deviceData?.device_public_key !== "string") {
+      console.error("Device public key not found");
+      return;
+    }
+
+    if (typeof newUserDataApi.userData?.publicKey !== "string") {
+      return;
+    }
+
+    console.log("Saving new user with wrapped symmetric key");
+    await SecureStore.setItemAsync(getSymmetricKey(userId), wrappedSymKey);
+
+    if (armoredPrivateKey === null) {
+      return;
+    }
+
+    await SecureStore.setItemAsync(
+      getAccountEncryptedPrivateKey(userId),
+      armoredPrivateKey,
+    );
+
+    await SecureStore.setItemAsync(
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
+      "false",
+    );
+
+    await SecureStore.setItemAsync(
+      secureStoreKeyNames.userPublicKey,
+      newUserDataApi.userData?.publicKey,
+    );
+
+    const accountSaveRes = await sendAccountInfoToBackend(wrappedSymKey);
+    console.log("DEVIEC ACC SAVE", accountSaveRes);
+
+    if (accountSaveRes.status !== "success") {
+      console.error("Account Creation API call fail");
+      return;
+    }
+
+    ///Redirect to home
+    saveNewUser(wrappedSymKey)
+      .then(() => {
+        console.log("Saved new user");
+        reloadAsync();
+      })
+      .catch((e) => {
+        console.error("Error saving new user", e);
+      });
+  }
+
+  if (typeof newUserDataApi.secretKey !== "string") {
+    console.error("Private key missing in new user data ");
+    return;
+  }
+
+  if (newUserDataApi.useBiometricAuth === false) {
+    await saveSecretKeyOnDevice(newUserDataApi.secretKey);
+    basicSecureStoreSave(userId);
+  } else {
+    if (armoredPrivateKey === null) {
+      return;
+    }
+    await SecureStore.setItemAsync(
+      getAccountEncryptedPrivateKey(userId),
+      armoredPrivateKey,
+    );
+    await saveSecretKeyOnDevice(newUserDataApi.secretKey);
+
+    const wrappedSymKey = encodeWrappedSymkey(symKeyWrapRes.payload);
+    if (wrappedSymKey === null) {
+      console.error("Error encoding wrapped symmetric key");
+      return;
+    }
+
+    if (typeof newUserDataApi.userData?.publicKey !== "string") {
+      return;
+    }
+
+    await SecureStore.setItemAsync(
+      secureStoreKeyNames.userPublicKey,
+      newUserDataApi.userData?.publicKey,
+    );
+
+    SecureStore.setItemAsync(getSymmetricKey(userId), wrappedSymKey)
+      .then(async () => {
+        if (typeof newUserDataApi.newPIN !== "string") {
           return;
         }
 
-        if (newUserDataApi.useBiometricAuth === false) {
-          await saveSecretKeyOnDevice(newUserDataApi.secretKey);
-          basicSecureStoreSave(userId);
-        } else {
-          await SecureStore.setItemAsync(
-            getPrivateKey(userId),
-            armoredPrivateKey,
-          );
-          await saveSecretKeyOnDevice(newUserDataApi.secretKey);
+        const accountSaveRes = await sendAccountInfoToBackend(wrappedSymKey);
+        console.log("ASR 2", accountSaveRes);
 
-          const wrappedSymKey = encodeWrappedSymkey(res.payload);
-          if (wrappedSymKey === null) {
-            console.error("Error encoding wrapped symmetric key");
-            return;
-          }
-          await SecureStore.setItemAsync(getSymmetricKey(userId), wrappedSymKey)
-            .then(async () => {
-              if (typeof newUserDataApi.newPIN !== "string") {
-                return;
-              }
-
-              const accountSaveRes = await accountSaveApiCalls(wrappedSymKey);
-              console.log("ASR 2", accountSaveRes);
-
-              if (accountSaveRes.status !== "success") {
-                console.error("Account Creation API call fail");
-                return;
-              }
-
-              ///Redirect to home
-              await SecureStore.setItemAsync(
-                secureStoreKeyNames.accountConfig.useBiometricAuth,
-                "true",
-              );
-              await SecureStore.setItemAsync(
-                secureStoreKeyNames.accountConfig.pin,
-                newUserDataApi.newPIN + newUserDataApi.secretKey,
-                {
-                  requireAuthentication: true,
-                  authenticationPrompt:
-                    "Authenticate to use your screen lock to unlock",
-                },
-              );
-              saveNewUser(wrappedSymKey)
-                .then(() => {
-                  console.log("Saved new user");
-                  reloadAsync();
-                })
-                .catch((e) => {
-                  console.log("Error saving new user", e);
-                });
-            })
-            .catch(async (err) => {
-              basicSecureStoreSave(userId);
-            });
+        if (accountSaveRes.status !== "success") {
+          console.error("Account Creation API call fail");
+          return;
         }
-      }
-    })
-    .catch((err) => {
-      console.error("Error wrapping symmetric key:", err);
-    });
+
+        ///Redirect to home
+        await SecureStore.setItemAsync(
+          secureStoreKeyNames.accountConfig.useBiometricAuth,
+          "true",
+        );
+        await SecureStore.setItemAsync(
+          secureStoreKeyNames.accountConfig.pin,
+          newUserDataApi.newPIN + newUserDataApi.secretKey,
+          {
+            requireAuthentication: true,
+            authenticationPrompt:
+              "Authenticate to use your screen lock to unlock",
+          },
+        );
+        saveNewUser(wrappedSymKey)
+          .then(() => {
+            console.log("Saved new user");
+            reloadAsync();
+          })
+          .catch((e) => {
+            console.log("Error saving new user", e);
+          });
+      })
+      .catch(async (err) => {
+        basicSecureStoreSave(userId);
+      });
+  }
 }
 
 export { finishAccountCreation };

@@ -4,6 +4,8 @@ import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/T
 import DayOverviewCard from "@/components/homeDashboardCards/dayOverviewCard";
 import { WeekOverview } from "@/components/homeDashboardCards/weekOverview/weekOverview";
 import { HabitTracker } from "@/components/homeDashboardCards/habitTracker/habitTracker";
+import { useEffect } from "react";
+import { syncCall } from "../sync/syncCall";
 
 const styles = StyleSheet.create({
   container: {

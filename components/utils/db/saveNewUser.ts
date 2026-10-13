@@ -3,12 +3,30 @@ import * as SQLite from "expo-sqlite";
 import { v4 } from "uuid";
 import * as Crypto from "expo-crypto";
 import { getLocalCache } from "../localDb";
+import { saveNewDeviceInfo } from "../newAccountInit/saveNewDeviceInfo";
 async function saveNewUser(PIKBackup: string) {
   console.log("------------SAVING NEW USER", Date.now());
 
   const newUserDataApi = useNewUserData.getState();
   const newUserData = newUserDataApi.userData;
   const db = await getLocalCache();
+
+  if (newUserData === null) {
+    throw new Error("Null new user data");
+  }
+
+  const accountId = newUserData.id;
+  const deviceId = newUserDataApi.deviceData?.device_id;
+  const device_private_key_backup =
+    newUserDataApi.deviceData?.private_key_backup;
+
+  if (
+    typeof device_private_key_backup !== "string" ||
+    typeof deviceId !== "string" ||
+    typeof accountId !== "string"
+  ) {
+    throw new Error("Invalid new device info or account id");
+  }
 
   async function getFeatureConfigChunk(
     encryptedContent: string,
@@ -66,9 +84,16 @@ async function saveNewUser(PIKBackup: string) {
 
   await Promise.allSettled(newFCChunksSaveToDBPromises);
 
-  return db.runAsync(
-    `INSERT INTO users (id, signupTime, PIKBackup, PSKBackup, RCKBackup, version) VALUES (${"?, ".repeat(
-      5,
+  try {
+    await saveNewDeviceInfo();
+  } catch (e) {
+    console.error("Failed to save device info locally", e);
+    throw new Error("Failed to save device info locally");
+  }
+
+  await db.runAsync(
+    `INSERT INTO users (id, signupTime, PIKBackup, PSKBackup, RCKBackup, version, publicKey) VALUES (${"?, ".repeat(
+      6,
     )} ?);`,
     [
       newUserData?.id ?? null,
@@ -77,8 +102,11 @@ async function saveNewUser(PIKBackup: string) {
       newUserData?.PSKBackup ?? null,
       newUserData?.RCKBackup ?? null,
       newUserData?.version ?? null,
+      newUserData.publicKey ?? null,
     ],
   );
+
+  return;
 }
 
 export { saveNewUser };

@@ -1,4 +1,3 @@
-import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
@@ -7,7 +6,6 @@ import {
   secureStoreKeyNames,
 } from "../constants/secureStoreKeyNames";
 import { useActiveUser } from "@/stores/activeUser";
-import { checkAndSetDeviceId, deleteDeviceId } from "../auth/getDeviceId";
 import { getLocalCache } from "../localDb";
 export type CheckTablesReturnSig = {
   status: "failed" | "success";
@@ -20,6 +18,63 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   const db = await getLocalCache();
   var promiseArray: Promise<any>[] = [];
 
+  const canoicalChunksTable = db.runAsync(`
+    CREATE TABLE IF NOT EXISTS sync_canonical (
+    account_id TEXT NOT NULL,
+    chunk_id TEXT NOT NULL,
+
+    canonical_hash TEXT NOT NULL,
+
+    PRIMARY KEY (account_id, chunk_id));`);
+  promiseArray.push(canoicalChunksTable);
+
+  const createSyncOutboxTable = db.runAsync(`
+CREATE TABLE IF NOT EXISTS syncOutbox (
+    mutation_id TEXT PRIMARY KEY,
+
+    account_id TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+
+    feature TEXT NOT NULL,
+    chunk_id TEXT NOT NULL,
+
+    base_hash TEXT,
+
+    hash TEXT NOT NULL,
+    encrypted_content TEXT NOT NULL,
+
+    time_range_start INTEGER,
+    time_range_end INTEGER,
+
+    type TEXT,
+
+    version TEXT NOT NULL,
+
+    updated_at INTEGER NOT NULL,
+    UNIQUE (account_id, chunk_id)
+);
+
+CREATE INDEX idx_sync_outbox_account
+ON syncOutbox(account_id, device_id);
+`);
+  promiseArray.push(createSyncOutboxTable);
+
+  const syncCursor = db.runAsync(`
+  CREATE TABLE IF NOT EXISTS syncCursor (
+    account_id TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+    cursor INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (account_id, device_id)
+  );
+`);
+  promiseArray.push(syncCursor);
+
+  const deviceIds = db.runAsync(
+    "CREATE TABLE IF NOT EXISTS deviceIds (account_id TEXT NOT NULL, device_id TEXT NOT NULL, private_key_backup TEXT NOT NULL, last_seen INTEGER NOT NULL, device_public_key TEXT NOT NULL, device_name TEXT NOT NULL, created_at INTEGER NOT NULL);",
+  );
+  promiseArray.push(deviceIds);
+
   //Behavioral data tables
   const activityTransitions = db.runAsync(
     "CREATE TABLE IF NOT EXISTS activityTransitions (previousActivity TEXT NOT NULL, nextActivity TEXT NOT NULL, dayType TEXT NOT NULL, timeBucket TEXT NOT NULL);",
@@ -27,7 +82,7 @@ async function checkTablesActual(): Promise<CheckTablesReturnSig> {
   promiseArray.push(activityTransitions);
 
   const usersTablePromise = db.runAsync(
-    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, PSKBackup TEXT, RCKBackup TEXT, version TEXT NOT NULL);",
+    "CREATE TABLE IF NOT EXISTS users (id TEXT NOT NULL PRIMARY KEY, signupTime NUMBER NOT NULL, PIKBackup TEXT, RCKBackup TEXT, PSKBackup TEXT NOT NULL, version TEXT NOT NULL, publicKey TEXT NOT NULL);",
   );
   promiseArray.push(usersTablePromise);
   const userDataTablePromise = db.runAsync(
@@ -117,35 +172,59 @@ async function removeBT() {
 async function NukeLocalData() {
   const db = await getLocalCache();
   const userId = useActiveUser.getState().activeUser.userId;
-  db.runAsync("DROP TABLE users");
-  db.runAsync("DROP TABLE userData");
-  db.runAsync("DROP TABLE timeTrackingChunks");
-  db.runAsync("DROP TABLE timeTrackingDerivedDataChunks");
-  db.runAsync("DROP TABLE dayPlannerDerivedDataChunks");
-  db.runAsync("DROP TABLE personalDiaryDerivedDataChunks");
-  db.runAsync("DROP TABLE dayPlannerChunks");
-  db.runAsync("DROP TABLE personalDiaryChunks");
-  db.runAsync("DROP TABLE personalDiaryGroups");
-  db.runAsync("DROP TABLE featureConfigChunks");
-  db.runAsync("DROP TABLE activityTransitions");
-  SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.activePrivateKey,
+
+  const promises: Promise<any>[] = [];
+
+  promises.push(db.runAsync("DROP TABLE users"));
+  promises.push(db.runAsync("DROP TABLE userData"));
+  promises.push(db.runAsync("DROP TABLE timeTrackingChunks"));
+  promises.push(db.runAsync("DROP TABLE timeTrackingDerivedDataChunks"));
+  promises.push(db.runAsync("DROP TABLE dayPlannerDerivedDataChunks"));
+  promises.push(db.runAsync("DROP TABLE personalDiaryDerivedDataChunks"));
+  promises.push(db.runAsync("DROP TABLE dayPlannerChunks"));
+  promises.push(db.runAsync("DROP TABLE personalDiaryChunks"));
+  promises.push(db.runAsync("DROP TABLE personalDiaryGroups"));
+  promises.push(db.runAsync("DROP TABLE featureConfigChunks"));
+  promises.push(db.runAsync("DROP TABLE activityTransitions"));
+  promises.push(db.runAsync("DROP TABLE sync_canonical"));
+  promises.push(db.runAsync("DROP TABLE syncOutbox"));
+  promises.push(db.runAsync("DROP TABLE syncCursor"));
+  promises.push(db.runAsync("DROP TABLE deviceIds"));
+
+  promises.push(
+    SecureStore.deleteItemAsync(
+      secureStoreKeyNames.accountConfig.activePrivateKey,
+    ),
   );
-  SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.activeSymmetricKey,
+  promises.push(
+    SecureStore.deleteItemAsync(
+      secureStoreKeyNames.accountConfig.activeSymmetricKey,
+    ),
   );
-  AsyncStorage.removeItem(`${userId}-habitCardData`);
-  SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.privateKey);
-  SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.symmetricKey);
-  SecureStore.deleteItemAsync(secureStoreKeyNames.accountConfig.pin);
-  SecureStore.deleteItemAsync(
-    secureStoreKeyNames.accountConfig.useBiometricAuth,
+  promises.push(AsyncStorage.removeItem(`${userId}-habitCardData`));
+  promises.push(
+    SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.privateKey),
   );
+  promises.push(
+    SecureStore.deleteItemAsync(secureStoreKeyNames.temporary.symmetricKey),
+  );
+  promises.push(
+    SecureStore.deleteItemAsync(secureStoreKeyNames.accountConfig.pin),
+  );
+  promises.push(
+    SecureStore.deleteItemAsync(
+      secureStoreKeyNames.accountConfig.useBiometricAuth,
+    ),
+  );
+  promises.push(SecureStore.deleteItemAsync(secureStoreKeyNames.authToken));
+
+  await Promise.all(promises);
 }
 
 async function deleteLimitedChunks() {
   const db = await getLocalCache();
-  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 171417354700");
+  await db.runAsync("DELETE FROM timeTrackingChunks WHERE tx > 0");
+  await db.runAsync("DELETE FROM dayPlannerChunks WHERE tx > 0");
 }
 
 async function checkTables(): Promise<CheckTablesReturnSig> {
@@ -165,4 +244,4 @@ async function checkTables(): Promise<CheckTablesReturnSig> {
     });
 }
 
-export { checkTables, NukeLocalData };
+export { checkTables, NukeLocalData, checkTablesActual };

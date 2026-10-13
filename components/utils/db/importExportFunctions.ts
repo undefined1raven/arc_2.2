@@ -7,6 +7,9 @@ export const DatabaseBackupApi = {
   getDatabasePath: async (): Promise<string> => {
     return FileSystem.documentDirectory + "SQLite/localCache";
   },
+  getTempDatabasePath: async (): Promise<string> => {
+    return FileSystem.documentDirectory + "SQLite/tempLocalCache";
+  },
 
   // Simple export - no additional encryption needed
   exportDatabase: async (): Promise<{
@@ -76,23 +79,18 @@ export const DatabaseBackupApi = {
   },
 
   // Simple import - encrypted data stays encrypted
-  importDatabase: async (): Promise<{
+  importDatabase: async (
+    result: any,
+    final: boolean,
+  ): Promise<{
     status: "success" | "error";
     message: string;
     fileName?: string;
   }> => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/x-sqlite3", "application/octet-stream", "*/*"],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled) {
-        return { status: "error", message: "Import cancelled" };
-      }
-
       const selectedFile = result.assets[0];
       const dbPath = await DatabaseBackupApi.getDatabasePath();
+      const tempDbPath = await DatabaseBackupApi.getTempDatabasePath();
 
       // Create safety backup of current database
       const safetyBackupPath = `${
@@ -103,11 +101,19 @@ export const DatabaseBackupApi = {
         to: safetyBackupPath,
       });
 
-      // Replace with imported database (encrypted data)
-      await FileSystem.copyAsync({
-        from: selectedFile.uri,
-        to: dbPath,
-      });
+      if (final) {
+        // Replace with imported database (encrypted data)
+        await FileSystem.copyAsync({
+          from: selectedFile.uri,
+          to: dbPath,
+        });
+        await FileSystem.deleteAsync(tempDbPath, { idempotent: true });
+      } else {
+        await FileSystem.copyAsync({
+          from: selectedFile.uri,
+          to: tempDbPath,
+        });
+      }
 
       return {
         status: "success",
@@ -154,14 +160,14 @@ export const DatabaseBackupApi = {
   getLocalBackups: async (): Promise<string[]> => {
     try {
       const files = await FileSystem.readDirectoryAsync(
-        FileSystem.documentDirectory
+        FileSystem.documentDirectory,
       );
       return files
         .filter(
           (file) =>
             file.startsWith("local-backup-") ||
             file.startsWith("arc-backup-") ||
-            file.startsWith("safety-backup-")
+            file.startsWith("safety-backup-"),
         )
         .sort()
         .reverse(); // Most recent first
@@ -180,7 +186,7 @@ export const DatabaseBackupApi = {
       for (const backup of toDelete) {
         await FileSystem.deleteAsync(
           `${FileSystem.documentDirectory}${backup}`,
-          { idempotent: true }
+          { idempotent: true },
         );
       }
     } catch (error) {

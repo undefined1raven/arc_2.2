@@ -100,7 +100,7 @@ export default function RootLayout() {
       typeof symKey === "string" &&
       timeTrackingFeatureConifg !== null
     ) {
-      onLoginOnce();
+      void onLoginOnce();
     }
   }, [activeUserId, symKey, timeTrackingFeatureConifg]);
 
