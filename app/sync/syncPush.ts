@@ -3,14 +3,23 @@ import { getLocalCache } from "@/components/utils/localDb";
 import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { authenticatedRequest } from "../auth/authenticatedRequest";
 import { processMutationServerResponse } from "@/stores/sync/processMutationServerResponse";
+import { useSyncLog } from "@/stores/sync/syncOps";
 
 async function syncPush(forcePush: boolean = false) {
   const db = await getLocalCache();
   const userid = useActiveUser.getState().activeUser.userId;
   const deviceid = (await getCurrentDeviceInfo())?.device_id || null;
 
+  const syncLog = useSyncLog.getState();
+
   if (deviceid === null) {
     console.error("Unable to perform sync push, no valid device id found");
+    syncLog.setLastPushStatus({
+      status: "error",
+      message:
+        "[SYNC_PUSH] Unable to perform sync push, no valid device id found",
+      tx: Date.now(),
+    });
     return;
   }
 
@@ -78,6 +87,11 @@ async function syncPush(forcePush: boolean = false) {
   console.log("ALL COMMITS", allCommits.length, "LAST CURSOR", lastCursor);
 
   if (allCommits.length === 0) {
+    syncLog.setLastPushStatus({
+      status: "success",
+      message: "[SYNC_PUSH] No mutations to commit",
+      tx: Date.now(),
+    });
     return;
   }
 

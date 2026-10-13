@@ -27,7 +27,7 @@ function DiaryGroupMain() {
   const diaryApi = useDiaryData();
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const personalDiaryFeatureConfig = useFeatureConfigs(
-    (store) => store.personalDiaryFeatureConfig
+    (store) => store.personalDiaryFeatureConfig,
   );
   const selectedGroup = useSelectedDiaryGroup((store) => store.selectedGroup);
 
@@ -66,7 +66,7 @@ function DiaryGroupMain() {
       const dataRetrivalAPI = dataRetrivalApi.getState();
 
       const updatedNotes = diaryApi.notes.map((n) =>
-        n.noteID === noteId ? updatedNote : n
+        n.noteID === noteId ? updatedNote : n,
       );
       diaryApi.setNotes(updatedNotes);
       setLongSelectIndex(null);
@@ -77,7 +77,7 @@ function DiaryGroupMain() {
           noteId,
           updatedNote,
           chunkID,
-          "replace"
+          "replace",
         )
         .then(() => {})
         .catch((err) => {
@@ -89,7 +89,7 @@ function DiaryGroupMain() {
       diaryApi.notes,
       diaryApi.noteChunkMapping,
       diaryApi.setNotes,
-    ]
+    ],
   );
 
   const addNote = useCallback(() => {
@@ -161,7 +161,7 @@ function DiaryGroupMain() {
                     .sort(
                       (a, b) =>
                         (b.metdata?.createdAt || 0) -
-                        (a.metdata?.createdAt || 0)
+                        (a.metdata?.createdAt || 0),
                     )
                     .filter((n) => !n.deleted)}
                   renderItem={({ item, index }) => {
@@ -367,7 +367,7 @@ function DiaryGroupMain() {
                         label=""
                         onClick={() => {
                           router.push(
-                            "/diary/diaryGroupConfig/diaryGroupConfig"
+                            "/diary/diaryGroupConfig/diaryGroupConfig",
                           );
                         }}
                       >

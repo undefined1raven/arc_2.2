@@ -1,6 +1,31 @@
 import { getLocalCache } from "@/components/utils/localDb";
 import { SQLiteDatabase } from "expo-sqlite";
 import { useActiveUser } from "../activeUser";
+import { create } from "zustand";
+
+type SyncLogType = {
+  status: "error" | "success";
+  message: string;
+  tx: number;
+} | null;
+
+interface ISyncLog {
+  pushStatus: SyncLogType;
+  pullStatus: SyncLogType;
+  setLastPushStatus: (log: SyncLogType) => void;
+  setLastPullStatus: (log: SyncLogType) => void;
+}
+
+const useSyncLog = create<ISyncLog>((set, get) => ({
+  pullStatus: null,
+  pushStatus: null,
+  setLastPullStatus: (log) => {
+    set({ pullStatus: log });
+  },
+  setLastPushStatus: (log) => {
+    set({ pushStatus: log });
+  },
+}));
 
 async function updateChunkCanonicalHash(
   chunk_id: string,
@@ -36,4 +61,4 @@ async function updateChunkCanonicalHash(
     });
 }
 
-export { updateChunkCanonicalHash };
+export { updateChunkCanonicalHash, useSyncLog };

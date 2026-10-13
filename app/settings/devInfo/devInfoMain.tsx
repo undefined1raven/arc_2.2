@@ -8,6 +8,8 @@ import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import Text from "@/components/common/Text";
 import Button from "@/components/common/Button";
+import { useSyncLog } from "@/stores/sync/syncOps";
+import { ArrowDeco } from "@/components/deco/ArrowDeco";
 
 function devInfoMain() {
   const [listData, setListData] = useState<
@@ -20,55 +22,55 @@ function devInfoMain() {
   >([]);
   const globalStyle = useGlobalStyleStore((gs) => gs.globalStyle);
   const db = useSQLiteContext();
+  const syncLog = useSyncLog();
+  // const refreshData = useCallback(() => {
+  //   let TTC = db.getAllSync(
+  //     "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM timeTrackingChunks"
+  //   );
+  //   let DPC = db.getAllSync(
+  //     "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM dayPlannerChunks"
+  //   );
+  //   let PDC = db.getAllSync(
+  //     "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM personalDiaryChunks"
+  //   );
+  //   let PDG = db.getAllSync(
+  //     "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM personalDiaryGroups"
+  //   );
+  //   let FCC = db.getAllSync(
+  //     "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM featureConfigChunks"
+  //   );
 
-  const refreshData = useCallback(() => {
-    let TTC = db.getAllSync(
-      "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM timeTrackingChunks"
-    );
-    let DPC = db.getAllSync(
-      "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM dayPlannerChunks"
-    );
-    let PDC = db.getAllSync(
-      "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM personalDiaryChunks"
-    );
-    let PDG = db.getAllSync(
-      "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM personalDiaryGroups"
-    );
-    let FCC = db.getAllSync(
-      "SELECT id, hash, LENGTH(encryptedContent) as encryptedContentLen FROM featureConfigChunks"
-    );
+  //   TTC = TTC.map((r) => {
+  //     //@ts-expect-error
+  //     return { ...r, tableName: "timeTracking" };
+  //   });
+  //   DPC = DPC.map((r) => {
+  //     //@ts-expect-error
+  //     return { ...r, tableName: "dayPlanner" };
+  //   });
+  //   PDC = PDC.map((r) => {
+  //     //@ts-expect-error
+  //     return { ...r, tableName: "personalNotes" };
+  //   });
+  //   PDG = PDG.map((r) => {
+  //     //@ts-expect-error
+  //     return { ...r, tableName: "personalGroups" };
+  //   });
 
-    TTC = TTC.map((r) => {
-      //@ts-expect-error
-      return { ...r, tableName: "timeTracking" };
-    });
-    DPC = DPC.map((r) => {
-      //@ts-expect-error
-      return { ...r, tableName: "dayPlanner" };
-    });
-    PDC = PDC.map((r) => {
-      //@ts-expect-error
-      return { ...r, tableName: "personalNotes" };
-    });
-    PDG = PDG.map((r) => {
-      //@ts-expect-error
-      return { ...r, tableName: "personalGroups" };
-    });
+  //   FCC = FCC.map((r) => {
+  //     //@ts-expect-error
+  //     return { ...r, tableName: "featureConfigChunks" };
+  //   });
 
-    FCC = FCC.map((r) => {
-      //@ts-expect-error
-      return { ...r, tableName: "featureConfigChunks" };
-    });
+  //   const data = [...TTC, ...DPC, ...PDC, ...PDG, ...FCC];
 
-    const data = [...TTC, ...DPC, ...PDC, ...PDG, ...FCC];
+  //   //@ts-expect-error
+  //   setListData(data);
+  // }, []);
 
-    //@ts-expect-error
-    setListData(data);
-  }, []);
-
-  useEffect(() => {
-    refreshData();
-  }, []);
+  // useEffect(() => {
+  //   refreshData();
+  // }, []);
 
   const spaceItem = useCallback(() => {
     return (
@@ -153,29 +155,84 @@ function devInfoMain() {
         keyboardDismissMode={false}
         style={{ ...styles.container, height: "100%" }}
       >
-        <View style={{ width: "100%", height: "100%", zIndex: 0 }}>
-          <FlashList
+        <View style={{ width: "100%", height: "50%", zIndex: 0 }}>
+          {/* <FlashList
             ItemSeparatorComponent={spaceItem}
             renderItem={renderItem}
             data={listData}
-          ></FlashList>
+          ></FlashList> */}
         </View>
-        <Button
-          onClick={async () => {
-            setTimeout(() => {
-              refreshData();
-            }, 50);
-          }}
-          label="R"
+        <View
           style={{
-            width: 60,
-            position: "absolute",
-            right: 5,
-            bottom: 120,
-            height: 60,
-            zIndex: 1,
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 10,
           }}
-        ></Button>
+        >
+          <View
+            style={{
+              width: "100%",
+              height: 80,
+              display: "flex",
+              flexDirection: "row",
+              gap: 5,
+              alignItems: "center",
+              borderRadius: globalStyle.borderRadius,
+              backgroundColor:
+                (syncLog.pullStatus === null
+                  ? globalStyle.color
+                  : syncLog.pullStatus.status === "success"
+                    ? globalStyle.successColor
+                    : globalStyle.errorColor) + layoutCardLikeBackgroundOpacity,
+            }}
+          >
+            <View style={{ width: 50, height: "35%" }}>
+              <ArrowDeco
+                style={{
+                  width: 15,
+                  height: 15,
+                  transform: [{ rotate: "90deg" }],
+                }}
+              ></ArrowDeco>
+            </View>
+            <Text
+              label={syncLog.pullStatus?.message || "No pull request"}
+            ></Text>
+          </View>
+          <View
+            style={{
+              width: "100%",
+              height: 80,
+              display: "flex",
+              flexDirection: "row",
+              gap: 5,
+              alignItems: "center",
+              borderRadius: globalStyle.borderRadius,
+              backgroundColor:
+                (syncLog.pushStatus === null
+                  ? globalStyle.color
+                  : syncLog.pushStatus.status === "success"
+                    ? globalStyle.successColor
+                    : globalStyle.errorColor) + layoutCardLikeBackgroundOpacity,
+            }}
+          >
+            <View style={{ width: 50, height: "35%" }}>
+              <ArrowDeco
+                style={{
+                  width: 15,
+                  height: 15,
+                  transform: [{ rotate: "-90deg" }],
+                }}
+              ></ArrowDeco>
+            </View>
+            <Text
+              label={syncLog.pushStatus?.message || "No push request"}
+            ></Text>
+          </View>
+        </View>
       </ThemedView>
     </>
   );

@@ -1,7 +1,7 @@
 import { getLocalCache } from "@/components/utils/localDb";
 import { OutboxItem } from "./outbox";
 import { removeFromOutbox } from "./outboxOps";
-import { updateChunkCanonicalHash } from "./syncOps";
+import { updateChunkCanonicalHash, useSyncLog } from "./syncOps";
 import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 import { useActiveUser } from "../activeUser";
 
@@ -45,6 +45,13 @@ async function processMutationServerResponse(
         lastCursor,
         Date.now(),
       );
+
+      const syncLog = useSyncLog.getState();
+      syncLog.setLastPushStatus({
+        status: "success",
+        message: "[SYNC_PUSH] Sync push successful",
+        tx: Date.now(),
+      });
 
       console.log("Last cursor updated: ", r);
     })

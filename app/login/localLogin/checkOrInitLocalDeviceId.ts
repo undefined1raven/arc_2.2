@@ -27,16 +27,14 @@ async function saveDeviceInfoToLocalDb(deviceObj: DeviceType) {
       ],
     )
     .then((res) => {
-      console.error("AHHHH, Device info saved to local database", res);
+      console.error("Device info saved to local database", res);
     })
     .catch((error) => {
-      console.error("AHHHH, Error saving device info to local database", error);
+      console.error("Error saving device info to local database", error);
     });
 }
 
 async function createAndRegisterNewDevice(userObj: { id: string }) {
-  console.log("------------------------------------------R3");
-
   const newDeviceId = generateNewDeviceId();
   const cryptoOps = useCryptoOpsQueue.getState();
   const newDeviceKeyPairRes = await cryptoOps.performOperation(
@@ -46,8 +44,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
     throw new Error("Failed to generate new key pair for device");
   }
 
-  console.log("------------------------------------------R4");
-
   const publicKey = newDeviceKeyPairRes.payload.publicKey;
   const privateKey = newDeviceKeyPairRes.payload.privateKey;
   const symKey = useActiveKeys.getState().activeSymmetricKey;
@@ -55,8 +51,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
   if (symKey === null) {
     throw new Error("No active symmetric key found");
   }
-
-  console.log("------------------------------------------R5");
 
   const encryptedDevicePrivateKeyRes = await cryptoOps.performOperation(
     "encrypt",
@@ -66,8 +60,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
       charCodeData: stringToCharCodeArray(privateKey),
     },
   );
-
-  console.log("------------------------------------------R6");
 
   const newDeviceObj: DeviceType = {
     device_id: newDeviceId,
@@ -88,8 +80,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
     },
   );
 
-  console.log("------------------------------------------R7");
-
   try {
     if (challengeRes.ok === false) {
       throw new Error("Failed to get challenge for device registration");
@@ -104,8 +94,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
       challenge: challengeResponseJson.challenge,
     };
 
-    console.log("------------------------------------------R8");
-
     const encryptedAccountPrivateKey = await SecureStore.getItemAsync(
       getAccountEncryptedPrivateKey(userObj.id),
     );
@@ -113,8 +101,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
     if (encryptedAccountPrivateKey === null) {
       throw new Error("No encrypted account private key found");
     }
-
-    console.log("------------------------------------------R9");
 
     const accountPrivateKeyRes = await decryptAccountPrivateKey(userObj.id);
 
@@ -129,8 +115,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
       JSON.stringify(sortObjectKeys(payloadToSign)),
       accountPrivateKeyRes as string,
     );
-
-    console.log("------------------------------------------R10");
 
     if (signatureResult.status === "error") {
       throw new Error("Failed to sign device registration payload");
@@ -150,21 +134,15 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
       },
     );
 
-    console.log("------------------------------------------R11");
-
     if (registrationResult.ok === false) {
       throw new Error("Failed to register new device");
     }
 
     try {
-      console.log("------------------------------------------R12");
-
       const registrationResultJson = await registrationResult.json();
       if (registrationResultJson.status !== "success") {
         throw new Error("Device registration failed on server");
       }
-      console.log("------------------------------------------R13");
-
       if (registrationResultJson.status === "success") {
         await saveDeviceInfoToLocalDb(newDeviceObj);
         return true;
@@ -179,8 +157,6 @@ async function createAndRegisterNewDevice(userObj: { id: string }) {
 }
 
 async function checkOrInitLocalDeviceId() {
-  console.log("------------------R1");
-
   const db = await getLocalCache();
   const userObj: { id: string } | null =
     await db.getFirstAsync(`SELECT id FROM users`);
@@ -200,7 +176,6 @@ async function checkOrInitLocalDeviceId() {
       );
       return { status: "error", error: e };
     });
-  console.log("------------------R2", deviceObj);
   if (deviceObj === null) {
     ///Create and register new device
     console.log("Starting device registration");
