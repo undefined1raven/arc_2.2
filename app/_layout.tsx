@@ -45,7 +45,6 @@ export default function RootLayout() {
     "/downloadRecoveryCodes/page",
     "/setAccountPin/page",
     "/localAccountAuth/localAccountAuth",
-    "/timeTrackingFeatureConfig/EditActivities",
     "/dayPlanner/statusEditor/statusEditor",
     "/diary/groupView/groupMain",
     "/diary/diaryNoteView/diaryNoteView",
@@ -166,10 +165,6 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="login/localLogin/pinPage"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="timeTrackingFeatureConfig/EditActivities"
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen

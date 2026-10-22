@@ -40,12 +40,9 @@ async function updatedChunkToOutboxItem(
   }
   if (canonicalHashResponse !== null) {
     //@ts-ignore
-    console.log("FOUND CAN HASH:", canonicalHashResponse.canonical_hash);
     const canonical_hash = canonicalHashResponse.canonical_hash;
     base_hash = canonical_hash;
   }
-
-  console.log("A3");
 
   const outboxItem: OutboxItem = {
     mutation_id: mutationId,
@@ -71,8 +68,6 @@ async function updatedChunkToOutboxItem(
   if (featureType === "featureConfigChunks") {
     outboxItem["type"] = updatedChunk.type;
   }
-
-  console.log("OUTBOX ITEM", outboxItem);
 
   return outboxItem;
 }

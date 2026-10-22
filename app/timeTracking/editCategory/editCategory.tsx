@@ -11,15 +11,14 @@ import { ARCCategoryType, ARCTasksType } from "@/constants/CommonTypes";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { debounce } from "lodash";
-import { Selection } from "@/components/common/Selection";
-import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
+
 function EditCategory() {
   const categoryToEdit = useTimeTrackingSelectedActivity(
-    (s) => s.categoryToEdit
+    (s) => s.categoryToEdit,
   );
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const timeTrackingFeatureConfig = useFeatureConfigs(
-    (s) => s.timeTrackingFeatureConfig
+    (s) => s.timeTrackingFeatureConfig,
   );
   const updateAcitivty = useCallback(
     debounce((updatedCategory: ARCTasksType) => {
@@ -36,7 +35,7 @@ function EditCategory() {
           ["itme", idKey],
           updatedCategory.itme[idKey],
           updatedCategory,
-          "replace"
+          "replace",
         )
         .catch((error) => {
           console.error("Failed to update activity:", error);
@@ -53,10 +52,10 @@ function EditCategory() {
           return fcItem;
         });
       featureConfigApi.setTimeTrackingFeatureConfig(
-        updatedTimeTrackingFeatureConfig
+        updatedTimeTrackingFeatureConfig,
       );
     }, 300),
-    [categoryToEdit]
+    [categoryToEdit],
   );
 
   return (

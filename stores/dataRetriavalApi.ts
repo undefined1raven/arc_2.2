@@ -565,8 +565,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (valueToMatch === null || valueToMatch === undefined) {
       return { status: "error", error: "Invalid valueToMatch" };
     }
-    if (newValue === null || newValue === undefined) {
-      return { status: "error", error: "Invalid newValue" };
+    if (replaceOrAppend === "append" || replaceOrAppend === "replace") {
+      if (newValue === undefined || newValue === null) {
+        return { status: "error", error: "Invalid newValue" };
+      }
     }
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
@@ -743,8 +745,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (valueToMatch === null || valueToMatch === undefined) {
       return { status: "error", error: "Invalid valueToMatch" };
     }
-    if (newValue === null || newValue === undefined) {
-      return { status: "error", error: "Invalid newValue" };
+    if (
+      replaceOrAppendValue === "replace" ||
+      replaceOrAppendValue === "append"
+    ) {
+      if (newValue === null || newValue === undefined) {
+        return { status: "error", error: "Invalid newValue" };
+      }
     }
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string

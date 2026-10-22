@@ -2,11 +2,9 @@ import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
 import Text from "@/components/common/Text";
 import TextInput from "@/components/common/TextInput";
-import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { TrashIcon } from "@/components/deco/TrashIcon";
 import { ThemedView } from "@/components/ThemedView";
-import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 import { FeatureConfigColorInput } from "@/components/ui/FeatureConfigColorInput";
 import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySettingPage";
 import { FeatureConfigValueInput } from "@/components/ui/FeatureConfigValueInput";
@@ -14,30 +12,19 @@ import { TessStatusType } from "@/constants/CommonTypes";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useVirtualKeyboard } from "@/stores/virtualKeyboard";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { v4 } from "uuid";
 
 function statusEditor() {
   const [isPickingStatus, setIsPickingStatus] = useState(true);
-  const virtualKeyboardApi = useVirtualKeyboard();
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const dayPlannerFeatureConfig = useFeatureConfigs(
-    (r) => r.dayPlannerFeatureConfig
+    (r) => r.dayPlannerFeatureConfig,
   );
 
   const [statusToEdit, setStatusToEdit] = useState<TessStatusType | null>(null);
-
-  const getPreviewValue = useCallback((color: string, defaultColor: string) => {
-    if (color === "default" || typeof color !== "string") {
-      return defaultColor;
-    }
-    return color;
-  }, []);
 
   const [longSelectIndex, setLongSelectIndex] = useState<null | number>(null);
 
@@ -58,11 +45,11 @@ function statusEditor() {
 
       return () =>
         BackHandler.removeEventListener("hardwareBackPress", onBackPress);
-    }, [isPickingStatus])
+    }, [isPickingStatus]),
   );
 
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
-    null
+    null,
   );
 
   const debouncedUpdate = useCallback(
@@ -75,7 +62,7 @@ function statusEditor() {
       }, 300);
       setDebounceTimeout(timeout);
     },
-    [debounceTimeout]
+    [debounceTimeout],
   );
 
   const handleStatusUpdate = useCallback(
@@ -86,7 +73,7 @@ function statusEditor() {
 
         const statusIndex = dayPlannerFeatureConfig.findIndex(
           (status: TessStatusType) =>
-            status.statusID === statusToEdit?.statusID || statusId
+            status.statusID === statusToEdit?.statusID || statusId,
         );
         if (statusIndex === -1) {
           console.error("Status to edit not found in the list.");
@@ -104,7 +91,7 @@ function statusEditor() {
             ["statusID"],
             statusToEdit?.statusID || statusId || "",
             newStatus,
-            "replace"
+            "replace",
           )
           .then((result) => {
             console.log(`Status ${field} updated:`, result);
@@ -114,7 +101,7 @@ function statusEditor() {
           });
       });
     },
-    [debouncedUpdate, statusToEdit]
+    [debouncedUpdate, statusToEdit],
   );
 
   const getCurrentColors = useCallback(() => {
@@ -180,6 +167,10 @@ function statusEditor() {
       })
       .catch((error) => {});
   }, [dayPlannerFeatureConfig]);
+
+  const separator = useCallback(() => {
+    return <View style={{ height: 10 }}></View>;
+  }, []);
 
   const updateColorValue = useCallback(
     (colorType: "color" | "textColor", value: string) => {
@@ -252,7 +243,7 @@ function statusEditor() {
       globalStyle.theme,
       getCurrentColors,
       handleStatusUpdate,
-    ]
+    ],
   );
 
   return (
@@ -261,6 +252,7 @@ function statusEditor() {
         <ReversedListWithControls
           key={dayPlannerFeatureConfig.filter((r) => !r.deleted).length}
           showActionButton={true}
+          ItemSeparatorComponent={separator}
           extraData={longSelectIndex}
           onActionButtonClick={createNewStatus}
           searchKeys={["name"]}
@@ -286,7 +278,6 @@ function statusEditor() {
                 }}
                 style={{
                   height: 55,
-                  marginBottom: 10,
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
@@ -335,22 +326,21 @@ function statusEditor() {
                   </View>
                 ) : (
                   <EditDeco
-                    height={30}
-                    width={30}
+                    height={35}
+                    width={35}
                     style={{ position: "absolute", right: 10, zIndex: -1 }}
                   ></EditDeco>
                 )}
               </Button>
             );
           }}
-          showBackButton={false}
-          onSearch={() => {}}
+          showBackButton={true}
           onBackButtonClick={() => {
             setIsPickingStatus(true);
           }}
           showSearchBar={true}
           data={dayPlannerFeatureConfig.filter(
-            (r: TessStatusType) => !r.deleted
+            (r: TessStatusType) => !r.deleted,
           )}
         ></ReversedListWithControls>
       ) : (

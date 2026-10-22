@@ -26,7 +26,6 @@ type ReversedListWithControlsProps = {
   showBackButton: boolean;
   onBackButtonClick: () => void;
   showSearchBar: boolean;
-  onSearch: (query: string) => void;
   searchKeys?: string[];
   showActionButton?: boolean;
   onActionButtonClick?: () => void;
@@ -43,7 +42,6 @@ function ReversedListWithControls({
   showBackButton,
   onBackButtonClick,
   showSearchBar,
-  onSearch,
   searchKeys,
   showActionButton = false,
   extraData,
@@ -109,6 +107,7 @@ function ReversedListWithControls({
           width: "100%",
           top: "0%",
           flexGrow: 1,
+          marginBottom: 2,
         }}
       >
         <FlashList
@@ -172,8 +171,24 @@ function ReversedListWithControls({
           justifyContent: "center",
           alignItems: "center",
           flexDirection: "row",
+          gap: 10,
         }}
       >
+        {showBackButton && (
+          <Button
+            style={{
+              height: "100%",
+              width: "20%",
+              marginBottom: 0,
+              bottom: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            label={backButtonLabel}
+            onClick={onBackButtonClick}
+          ></Button>
+        )}
         <View
           style={{
             flexGrow: 1,
@@ -205,22 +220,6 @@ function ReversedListWithControls({
             style={{ position: "absolute", left: 8, zIndex: -1 }}
           ></SearchIcon>
         </View>
-        {showBackButton && (
-          <Button
-            style={{
-              height: "100%",
-              width: "20%",
-              marginBottom: 0,
-              bottom: 0,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginLeft: 5,
-            }}
-            label={backButtonLabel}
-            onClick={onBackButtonClick}
-          ></Button>
-        )}
       </Animated.View>
       {virtualKeyboardApi.isVisible && (
         <Animated.View style={{ height: 25, width: "100%" }}></Animated.View>
