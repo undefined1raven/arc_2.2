@@ -13,6 +13,7 @@ import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
 import { v4 } from "uuid";
@@ -336,7 +337,7 @@ function statusEditor() {
           }}
           showBackButton={true}
           onBackButtonClick={() => {
-            setIsPickingStatus(true);
+            router.back();
           }}
           showSearchBar={true}
           data={dayPlannerFeatureConfig.filter(

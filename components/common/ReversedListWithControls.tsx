@@ -110,14 +110,31 @@ function ReversedListWithControls({
           marginBottom: 2,
         }}
       >
-        <FlashList
-          extraData={extraData}
-          inverted={true}
-          data={currentData}
-          estimatedItemSize={estimatedItemSize}
-          renderItem={renderItem}
-          ItemSeparatorComponent={ItemSeparatorComponent}
-        />
+        {currentData.length > 0 ? (
+          <FlashList
+            extraData={extraData}
+            inverted={true}
+            data={currentData}
+            estimatedItemSize={estimatedItemSize}
+            renderItem={renderItem}
+            ItemSeparatorComponent={ItemSeparatorComponent}
+          />
+        ) : (
+          <Text
+            backgroundColor={
+              globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity
+            }
+            label="No items to show"
+            style={{
+              width: "65%",
+              height: 40,
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+            }}
+          ></Text>
+        )}
         {showActionButton && (
           <Animated.View
             entering={FadeInDown.delay(150).duration(120)}
@@ -153,10 +170,15 @@ function ReversedListWithControls({
                   width: "100%",
                   borderRadius: globalStyle.globalStyle.borderRadius,
                   height: "100%",
-                  backgroundColor: globalStyle.globalStyle.colorAltLight,
+                  backgroundColor:
+                    globalStyle.globalStyle.foregroundContrastColor,
                 }}
               ></View>
-              <AddIcon height={20} width={20}></AddIcon>
+              <AddIcon
+                color={globalStyle.globalStyle.foregroundContrastTextColor}
+                height={20}
+                width={20}
+              ></AddIcon>
             </Button>
           </Animated.View>
         )}
@@ -204,6 +226,7 @@ function ReversedListWithControls({
               setSearchFilter(text);
             }}
             style={{
+              color: globalStyle.globalStyle.textColor,
               height: "100%",
               marginBottom: 0,
               fontSize: globalStyle.globalStyle.regularMobileFont,

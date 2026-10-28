@@ -36,7 +36,6 @@ import { layoutAnimationsDuration } from "@/constants/animations";
 import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import TimeTrackingVisualization from "./TimeTrackingVisualization";
 import { EditDeco } from "@/components/deco/EditDeco";
-import { AddIcon } from "@/components/deco/AddIcon";
 import { router } from "expo-router";
 //@ts-ignore
 import FuzzySearch from "fuzzy-search";
@@ -430,7 +429,9 @@ function TimeTrackingCard() {
             >
               <Button
                 onClick={() => {
-                  router.push("/timeTrackingFeatureConfig/EditActivities");
+                  router.push(
+                    "/timeTracking/editActivity/editActivitySelection",
+                  );
                 }}
                 backgroundColor={globalStyle.globalStyle.colorAccent + "15"}
                 style={{

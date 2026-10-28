@@ -66,7 +66,6 @@ function DiaryFeatureConfig() {
           }}
           style={{
             height: 55,
-            marginBottom: 10,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",

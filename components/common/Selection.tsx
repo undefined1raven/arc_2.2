@@ -259,10 +259,14 @@ function Selection({
                     width: "100%",
                     borderRadius: globalStyle.borderRadius,
                     height: "100%",
-                    backgroundColor: globalStyle.colorAltLight,
+                    backgroundColor: globalStyle.foregroundContrastColor,
                   }}
                 ></View>
-                <AddIcon height={20} width={20}></AddIcon>
+                <AddIcon
+                  color={globalStyle.foregroundContrastTextColor}
+                  height={20}
+                  width={20}
+                ></AddIcon>
               </Button>
             </Animated.View>
           )}

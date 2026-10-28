@@ -2,6 +2,7 @@ import Button from "@/components/common/Button";
 import Text from "@/components/common/Text";
 import { AddIcon } from "@/components/deco/AddIcon";
 import { dayPlannerTaskStatusColorRetrieval } from "@/components/utils/dataProcessing/dayPlannerTaskStatusColorRetrieval";
+import { layoutAnimationsDuration } from "@/constants/animations";
 import {
   FeatureConfigTessType,
   TessDayLogType,
@@ -16,8 +17,6 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { Animated, View } from "react-native";
-import { FadeIn } from "react-native-reanimated";
-import { v4 } from "uuid";
 function ActiveDayTaskList() {
   const globalStyle = useGlobalStyleStore((store) => store.globalStyle);
   const activeDay = useDayPlannerActiveDay((state) => state.activeDay);
@@ -50,57 +49,6 @@ function ActiveDayTaskList() {
     },
     [],
   );
-
-  const addTaskToDay = useCallback(() => {
-    if (
-      activeDay === undefined ||
-      activeDay === null ||
-      typeof activeDay.tasks.length !== "number"
-    ) {
-      return;
-    }
-    let defaultStatusId: string | undefined = dayPlannerFeatureConfig.find(
-      (status: TessStatusType) => status.name === "To Do",
-    )?.statusID;
-    if (!defaultStatusId) {
-      defaultStatusId = dayPlannerFeatureConfig[0].statusID;
-    }
-
-    const newTask: TessDayLogType["tasks"][number] = {
-      name: "New Task",
-      description: "",
-      TTID: `T-${v4()}`,
-      statusID: defaultStatusId,
-      labels: [],
-      doRemind: false,
-      start: Date.now(),
-      end: Date.now(),
-      deleted: false,
-      version: "0.1.0",
-    };
-    const allTasks = [...activeDay.tasks, newTask];
-    const newDay: TessDayLogType = {
-      ...activeDay,
-      tasks: allTasks,
-    };
-    useDayPlannerActiveDay.getState().setActiveDay(newDay);
-    updateRecentDaysWithUpdatedDay(newDay);
-    dataRetriavalAPI
-      .modifyEntry(
-        "dayPlannerChunks",
-        ["day"],
-        newDay.day,
-        newDay,
-        undefined,
-        "replace",
-      )
-      .then((r) => {
-        console.log("Day updated", r);
-      })
-      .catch((e) => {
-        console.error("Error updating day", e);
-      });
-  }, [activeDay, dayPlannerFeatureConfig]);
 
   const taskRenderItem = useCallback(
     (taskObj: { item: TessDayLogType["tasks"][number] }, index: number) => {
@@ -238,59 +186,14 @@ function ActiveDayTaskList() {
   }
 
   return (
-    <Animated.View
-      style={{ width: "100%", flex: 1, height: "100%", marginBottom: 10 }}
-    >
-      <View
-        style={{
-          position: "absolute",
-          bottom: 5,
-          zIndex: 2,
-          right: 5,
-          height: 35,
-          width: 100,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Button
-          onClick={() => {
-            addTaskToDay();
-          }}
-          backgroundColor={globalStyle.colorAccent + "15"}
-          style={{
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            display: "flex",
-            flex: 1,
-            justifyContent: "center",
-            borderTopWidth: 0,
-            borderBottomWidth: 0,
-            alignItems: "center",
-          }}
-        >
-          <AddIcon width={18} height={18}></AddIcon>
-        </Button>
-      </View>
-
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 1,
-        }}
-      >
-        <FlashList
-          keyExtractor={(item) => item.TTID}
-          renderItem={taskRenderItem}
-          data={activeDay?.tasks}
-          estimatedItemSize={62}
-        ></FlashList>
-      </View>
-    </Animated.View>
+    <View style={{ width: "100%", flex: 1, height: "100%", marginBottom: 10 }}>
+      <FlashList
+        keyExtractor={(item) => item.TTID}
+        renderItem={taskRenderItem}
+        data={activeDay?.tasks}
+        estimatedItemSize={62}
+      ></FlashList>
+    </View>
   );
 }
 

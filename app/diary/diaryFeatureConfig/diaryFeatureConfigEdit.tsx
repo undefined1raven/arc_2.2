@@ -2,7 +2,6 @@ import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
 import Text from "@/components/common/Text";
 import TextInput from "@/components/common/TextInput";
-import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { TrashIcon } from "@/components/deco/TrashIcon";
 import { ThemedView } from "@/components/ThemedView";
@@ -221,7 +220,7 @@ function diaryFCStatusEditor() {
           }}
         >
           <TextInput
-            defaultValue={"Example Task"}
+            defaultValue={"Example"}
             onChange={(e) => {}}
             readOnly={true}
             textAlign="left"
