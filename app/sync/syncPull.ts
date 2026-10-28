@@ -61,7 +61,7 @@ async function syncPull() {
   });
 
   if (initialPullRes.status === "error") {
-    console.error("[SYNC_PULL] Pull response error");
+    console.error("[SYNC_PULL] Pull response error", initialPullRes);
     syncLog.setLastPullStatus({
       status: "error",
       message: "[SYNC_PULL] Pull response error",

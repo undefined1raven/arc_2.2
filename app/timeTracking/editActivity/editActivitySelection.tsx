@@ -12,11 +12,14 @@ import { router } from "expo-router";
 import { useTimeTrackingSelectedActivity } from "@/stores/viewState/timeTrackingSelectedActivity";
 import { v4 } from "uuid";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { EditDeco } from "@/components/deco/EditDeco";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
 
 function EditActivitiySelection() {
   const timeTrackingFeatureConfig = useFeatureConfigs(
-    (s) => s.timeTrackingFeatureConfig
+    (s) => s.timeTrackingFeatureConfig,
   );
+  const globalStyle = useGlobalStyleStore().globalStyle;
 
   const createNewActivity = useCallback(() => {
     const newAcivity: ARCTasksType = {
@@ -67,15 +70,31 @@ function EditActivitiySelection() {
           selectedActivityToEditApi.setActivityToEdit(activity);
           router.push("/timeTracking/editActivity/editActivity");
         }}
-        textStyle={{ textAlign: "left", paddingLeft: 10 }}
-        style={{ width: "100%", height: 65 }}
+        textStyle={{
+          textAlign: "left",
+          paddingLeft: 10,
+        }}
+        style={{
+          width: "100%",
+          height: 65,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         label={activity.itme?.name}
-      ></Button>
+      >
+        <EditDeco
+          color={globalStyle.color}
+          width={35}
+          height={35}
+          style={{ position: "absolute", right: 10, zIndex: -1 }}
+        ></EditDeco>
+      </Button>
     );
   }, []);
 
   const separator = useCallback(() => {
-    return <View style={{ height: 5 }}></View>;
+    return <View style={{ height: 10 }}></View>;
   }, []);
 
   return (
@@ -85,14 +104,11 @@ function EditActivitiySelection() {
           estimatedItemSize={65}
           showActionButton={true}
           ItemSeparatorComponent={separator}
-          renderItem={(item) => {
-            return renderItem(item);
-          }}
+          renderItem={(item) => renderItem(item)}
           onActionButtonClick={createNewActivity}
           showSearchBar={true}
-          onSearch={(query) => {}}
           searchKeys={["itme.name"]}
-          showBackButton={false}
+          showBackButton={true}
           onBackButtonClick={() => {
             router.back();
           }}

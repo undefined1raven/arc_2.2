@@ -20,10 +20,10 @@ import {
   processDataInTimeRange,
   useTimeTrackingDataExplorer,
 } from "@/stores/viewState/timeTrackingDataExplorer";
+import { DatePickerModal } from "react-native-paper-dates";
+import { getLocalCache } from "@/components/utils/localDb";
 function Home() {
-  const [customTimeRangeStart, setCustomTimeRangeStart] = useState<
-    string | null
-  >(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
 
   const hasTimeTrackingData = useTimeStatsData(
     (s) => s.dataInTimeRange !== null,
@@ -32,48 +32,66 @@ function Home() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const setActiveDayView = useTimeStatsData((s) => s.setActiveDayView);
   const isFetchingData = useTimeStatsData((s) => s.isFetchingData);
+  const globalTimeRangeStart = useTimeStatsData((s) => s.globalTimeRageStart);
+
   const getDataInTimeRange = useCallback(
-    (timeRangeStart: number, timeRangeEnd: number) => {
+    async (timeRangeStart: number, timeRangeEnd: number) => {
       const timeStatsApi = useTimeStatsData.getState();
       const timeExplorerApi = useTimeTrackingDataExplorer.getState();
       const dataRetrivalAPI = dataRetrivalApi.getState();
       timeStatsApi.setIsFetchingData(true);
-      dataRetrivalAPI
-        .getDataInTimeRange(
-          "timeTrackingChunks",
-          timeRangeStart,
-          timeRangeEnd,
-          null,
-        )
-        .then((data) => {
-          timeStatsApi.setIsFetchingData(false);
-          if (data.status !== "success" || !data.payload) {
-            console.error("Failed to fetch time tracking data");
-            return;
-          }
-          timeExplorerApi.setDataInTimeRange(data.payload);
-          timeStatsApi.setDataInTimeRange(data.payload);
-          const currentSelectedActivities = timeExplorerApi.selectedActivities;
-          const newViewState = processDataInTimeRange(
-            data.payload,
-            currentSelectedActivities,
-          );
-          timeExplorerApi.setViewState(newViewState);
-        })
-        .catch((error) => {
-          console.error("Error fetching time tracking data:", error);
-        });
+      const data = await dataRetrivalAPI.getDataInTimeRange(
+        "timeTrackingChunks",
+        timeRangeStart,
+        timeRangeEnd,
+        null,
+      );
+
+      timeStatsApi.setIsFetchingData(false);
+      if (data.status !== "success" || !data.payload) {
+        console.error("Failed to fetch time tracking data");
+        return;
+      }
+      timeExplorerApi.setDataInTimeRange(data.payload);
+      timeStatsApi.setDataInTimeRange(data.payload);
+      const currentSelectedActivities = timeExplorerApi.selectedActivities;
+      const newViewState = processDataInTimeRange(
+        data.payload,
+        currentSelectedActivities,
+      );
+      timeExplorerApi.setViewState(newViewState);
     },
     [],
   );
 
+  const defaultStartTime = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 14);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
   useEffect(() => {
     const timeStatsApi = useTimeStatsData.getState();
+    if (timeStatsApi.globalTimeRageStart === null) {
+      getLocalCache().then(async (db) => {
+        const firstChunk: null | { timeRangeStart: number } =
+          await db.getFirstAsync(`SELECT timeRangeStart
+          FROM timeTrackingChunks
+          ORDER BY timeRangeStart ASC
+      LIMIT 1;`);
+
+        const globalTimeRangeStart = firstChunk?.timeRangeStart;
+        if (typeof globalTimeRangeStart === "number") {
+          const timeStatsApi = useTimeStatsData.getState();
+          timeStatsApi.setGlobalTimeRangeStart(globalTimeRangeStart);
+        }
+      });
+    }
+
     if (timeStatsApi.dataInTimeRange === null) {
-      const lastWeekStartAtMidnight = new Date();
-      lastWeekStartAtMidnight.setDate(lastWeekStartAtMidnight.getDate() - 14);
-      lastWeekStartAtMidnight.setHours(0, 0, 0, 0);
-      getDataInTimeRange(lastWeekStartAtMidnight.getTime(), Date.now());
+      console.log("EMPTY INIT TRIGGERED");
+      getDataInTimeRange(defaultStartTime.getTime(), Date.now());
     }
   }, []);
 
@@ -100,13 +118,42 @@ function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    if (customTimeRangeStart === null) return;
-    const timeRangeStart = new Date(customTimeRangeStart).getTime();
-    const timeRangeEnd = new Date(timeRangeStart);
-    timeRangeEnd.setDate(timeRangeEnd.getDate() + 14);
-    getDataInTimeRange(timeRangeStart, timeRangeEnd.getTime());
-  }, [customTimeRangeStart]);
+  const onConfirmTimeRange = useCallback(
+    ({
+      startDate,
+      endDate,
+    }: {
+      startDate: undefined | string;
+      endDate: undefined | string;
+    }) => {
+      const now = new Date();
+      const defaultEnd = now.getTime();
+      const defaultStart = new Date(now);
+      defaultStart.setDate(defaultStart.getDate() - 14);
+
+      const parsedStart = startDate ? new Date(startDate).getTime() : NaN;
+      const parsedEnd = endDate ? new Date(endDate).getTime() : NaN;
+
+      const isValidRange =
+        Number.isFinite(parsedStart) &&
+        Number.isFinite(parsedEnd) &&
+        parsedStart <= parsedEnd;
+
+      const timeRangeStart = isValidRange
+        ? parsedStart
+        : defaultStart.getTime();
+
+      const timeRangeEnd = isValidRange ? parsedEnd : defaultEnd;
+
+      getDataInTimeRange(timeRangeStart, timeRangeEnd);
+      setIsDatePickerOpen(false);
+    },
+    [],
+  );
+
+  const onDismiss = useCallback(() => {
+    setIsDatePickerOpen(false);
+  }, []);
 
   const renderItem = useCallback(({ item }) => {
     const typedItem = item as string;
@@ -192,95 +239,93 @@ function Home() {
             width: "100%",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             flexDirection: "row",
-            paddingLeft: 10,
-            borderRadius: globalStyle.borderRadius,
-            backgroundColor:
-              globalStyle.color + layoutCardLikeBackgroundOpacity,
+            gap: 15,
           }}
         >
-          <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
+          <Text
+            label="Time Tracking Explorer"
+            textAlign="left"
+            fontSize={globalStyle.mediumMobileFont}
+            style={{
+              flexGrow: 1,
+              height: "100%",
+              borderRadius: globalStyle.borderRadius,
+              backgroundColor:
+                globalStyle.color + layoutCardLikeBackgroundOpacity,
+            }}
+          >
+            {isFetchingData && (
+              <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
+            )}
+          </Text>
+
+          <Button
+            fontSize={globalStyle.regularMobileFont}
+            style={{
+              height: "100%",
+              display: "flex",
+              minWidth: 50,
+              alignItems: "center",
+              justifyContent: "center",
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+            }}
+            onClick={() => {
+              router.push(
+                "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
+              );
+            }}
+          >
+            <BarChartDeco
+              style={{ zIndex: -1 }}
+              height={28}
+              width={35}
+            ></BarChartDeco>
+          </Button>
+          <Button
+            fontSize={globalStyle.regularMobileFont}
+            style={{
+              width: 150,
+              height: "100%",
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+            }}
+            onClick={() => {
+              setIsDatePickerOpen(true);
+            }}
+          >
             <Text
+              style={{ zIndex: -1 }}
+              fontSize={globalStyle.regularMobileFont}
               label={`${getDisplayText(
                 viewData[viewData.length - 1],
               )} - ${getDisplayText(viewData[0])}`}
             ></Text>
-            {isFetchingData && (
-              <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
-            )}
-          </View>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              height: "100%",
+          </Button>
+          <DatePickerModal
+            locale="en"
+            mode="range"
+            visible={isDatePickerOpen}
+            onDismiss={onDismiss}
+            saveLabel="Save"
+            label="Pick data range"
+            startDate={new Date(viewData[0])}
+            validRange={{
+              startDate:
+                globalTimeRangeStart === null
+                  ? undefined
+                  : new Date(globalTimeRangeStart),
+              endDate: new Date(),
             }}
-          >
-            <Button
-              fontSize={globalStyle.regularMobileFont}
-              style={{
-                width: 80,
-                height: "100%",
-                borderWidth: 0,
-                borderLeftWidth: 1,
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                gap: 10,
-              }}
-              onClick={() => {
-                router.push(
-                  "/timeTrackingStats/dataExplorer/timeTrackingDataExplorer",
-                );
-              }}
-            >
-              <BarChartDeco
-                style={{ zIndex: -1 }}
-                height={28}
-                width={35}
-              ></BarChartDeco>
-            </Button>
-            <Button
-              fontSize={globalStyle.regularMobileFont}
-              style={{
-                width: 130,
-                height: "100%",
-                borderWidth: 0,
-                borderLeftWidth: 1,
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                gap: 10,
-              }}
-              onClick={() => {
-                const twoWeeksAgo = new Date();
-                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-                DateTimePickerAndroid.open({
-                  value: twoWeeksAgo,
-                  maximumDate: new Date(),
-                  onChange: (event, date) => {
-                    if (event.type === "set" && date) {
-                      setCustomTimeRangeStart(date.toISOString().split("T")[0]);
-                    }
-                  },
-                });
-              }}
-            >
-              <CalendarDeco style={{ zIndex: -1 }}></CalendarDeco>
-              <Text
-                style={{ zIndex: -1 }}
-                fontSize={globalStyle.regularMobileFont}
-                label={getDisplayText(viewData[viewData.length - 1])}
-              ></Text>
-            </Button>
-          </View>
+            endDate={new Date(viewData[viewData.length - 1])}
+            onConfirm={onConfirmTimeRange}
+          />
         </Animated.View>
       </ThemedView>
     </>

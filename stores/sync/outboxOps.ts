@@ -1,7 +1,7 @@
+import { syncCall } from "@/app/sync/syncCall";
 import useOutboxStore, { OutboxItem } from "./outbox";
 import { checkObjectKeys } from "@/components/utils/fn/checkObjectKeys";
 import { getLocalCache } from "@/components/utils/localDb";
-
 const requiredOutboxKeys: (keyof OutboxItem)[] = [
   "hash",
   "base_hash",
@@ -64,6 +64,8 @@ async function addToOutbox(item: OutboxItem) {
     );
 
     useOutboxStore.getState().appendOutbox(item);
+
+    void syncCall();
 
     return {
       status: "success",

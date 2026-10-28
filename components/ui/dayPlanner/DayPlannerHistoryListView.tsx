@@ -11,7 +11,6 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, useWindowDimensions, View } from "react-native";
-import { BarChart, LineChart } from "react-native-gifted-charts";
 
 function DayPlannerHistoryListView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);

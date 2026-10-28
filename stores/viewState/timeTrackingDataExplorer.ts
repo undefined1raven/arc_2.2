@@ -148,6 +148,7 @@ const useTimeTrackingDataExplorer = create<ITimeTrackingDataExplorer>(
         set({ viewState: viewData });
       }
     },
+
     dataInTimeRange: null,
     setDataInTimeRange: (data: ArcTaskLogType[] | null) => {
       set({ dataInTimeRange: data });

@@ -26,7 +26,6 @@ type ReversedListWithControlsProps = {
   showBackButton: boolean;
   onBackButtonClick: () => void;
   showSearchBar: boolean;
-  onSearch: (query: string) => void;
   searchKeys?: string[];
   showActionButton?: boolean;
   onActionButtonClick?: () => void;
@@ -43,7 +42,6 @@ function ReversedListWithControls({
   showBackButton,
   onBackButtonClick,
   showSearchBar,
-  onSearch,
   searchKeys,
   showActionButton = false,
   extraData,
@@ -109,16 +107,34 @@ function ReversedListWithControls({
           width: "100%",
           top: "0%",
           flexGrow: 1,
+          marginBottom: 2,
         }}
       >
-        <FlashList
-          extraData={extraData}
-          inverted={true}
-          data={currentData}
-          estimatedItemSize={estimatedItemSize}
-          renderItem={renderItem}
-          ItemSeparatorComponent={ItemSeparatorComponent}
-        />
+        {currentData.length > 0 ? (
+          <FlashList
+            extraData={extraData}
+            inverted={true}
+            data={currentData}
+            estimatedItemSize={estimatedItemSize}
+            renderItem={renderItem}
+            ItemSeparatorComponent={ItemSeparatorComponent}
+          />
+        ) : (
+          <Text
+            backgroundColor={
+              globalStyle.globalStyle.color + layoutCardLikeBackgroundOpacity
+            }
+            label="No items to show"
+            style={{
+              width: "65%",
+              height: 40,
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+            }}
+          ></Text>
+        )}
         {showActionButton && (
           <Animated.View
             entering={FadeInDown.delay(150).duration(120)}
@@ -154,10 +170,15 @@ function ReversedListWithControls({
                   width: "100%",
                   borderRadius: globalStyle.globalStyle.borderRadius,
                   height: "100%",
-                  backgroundColor: globalStyle.globalStyle.colorAltLight,
+                  backgroundColor:
+                    globalStyle.globalStyle.foregroundContrastColor,
                 }}
               ></View>
-              <AddIcon height={20} width={20}></AddIcon>
+              <AddIcon
+                color={globalStyle.globalStyle.foregroundContrastTextColor}
+                height={20}
+                width={20}
+              ></AddIcon>
             </Button>
           </Animated.View>
         )}
@@ -172,8 +193,24 @@ function ReversedListWithControls({
           justifyContent: "center",
           alignItems: "center",
           flexDirection: "row",
+          gap: 10,
         }}
       >
+        {showBackButton && (
+          <Button
+            style={{
+              height: "100%",
+              width: "20%",
+              marginBottom: 0,
+              bottom: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            label={backButtonLabel}
+            onClick={onBackButtonClick}
+          ></Button>
+        )}
         <View
           style={{
             flexGrow: 1,
@@ -189,6 +226,7 @@ function ReversedListWithControls({
               setSearchFilter(text);
             }}
             style={{
+              color: globalStyle.globalStyle.textColor,
               height: "100%",
               marginBottom: 0,
               fontSize: globalStyle.globalStyle.regularMobileFont,
@@ -205,22 +243,6 @@ function ReversedListWithControls({
             style={{ position: "absolute", left: 8, zIndex: -1 }}
           ></SearchIcon>
         </View>
-        {showBackButton && (
-          <Button
-            style={{
-              height: "100%",
-              width: "20%",
-              marginBottom: 0,
-              bottom: 0,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginLeft: 5,
-            }}
-            label={backButtonLabel}
-            onClick={onBackButtonClick}
-          ></Button>
-        )}
       </Animated.View>
       {virtualKeyboardApi.isVisible && (
         <Animated.View style={{ height: 25, width: "100%" }}></Animated.View>

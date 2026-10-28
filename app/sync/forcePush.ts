@@ -3,10 +3,13 @@ import { useActiveUser } from "@/stores/activeUser";
 import { addToOutbox } from "@/stores/sync/outboxOps";
 import { updatedChunkToOutboxItem } from "@/stores/sync/updatedChunkToOutboxItem";
 import { syncPush } from "./syncPush";
+import { useStatusIndicatorStore } from "@/stores/statusIndicatorStore";
 
 async function forcePush() {
   const db = await getLocalCache();
   const userId = useActiveUser.getState().activeUser.userId;
+  const statusIndicatorApi = useStatusIndicatorStore.getState();
+  statusIndicatorApi.setIsDownloadingFromRemoteStorage(true);
 
   if (typeof userId !== "string") {
     return;
@@ -94,6 +97,8 @@ async function forcePush() {
   }
 
   await syncPush(true);
+
+  statusIndicatorApi.setIsDownloadingFromRemoteStorage(false);
 }
 
 export { forcePush };
