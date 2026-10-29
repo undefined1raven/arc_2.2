@@ -98,19 +98,90 @@ function DayPlannerHistoryListView() {
   return (
     <View
       style={{
-        flex: 1,
+        height: "100%",
         width: "100%",
         display: "flex",
-        gap: 5,
+        gap: 10,
+        marginBottom: 5,
       }}
     >
-      <FlashList
-        estimatedItemSize={60}
-        inverted={true}
-        data={recentDays ?? []}
-        renderItem={renderItem}
-        ItemSeparatorComponent={separatorRenderItem}
-      ></FlashList>
+      <View
+        style={{
+          width: "100%",
+          display: "flex",
+          flexGrow: 1,
+        }}
+      >
+        <FlashList
+          estimatedItemSize={60}
+          inverted={true}
+          data={recentDays ?? []}
+          renderItem={renderItem}
+          ItemSeparatorComponent={separatorRenderItem}
+        ></FlashList>
+      </View>
+      <View
+        style={{
+          height: 40,
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 15,
+          flexShrink: 0,
+          flexDirection: "row",
+        }}
+      >
+        <Text
+          fontSize={globalStyle.mediumMobileFont}
+          label="Time period"
+          textAlign="left"
+          style={{
+            height: "100%",
+            flex: 1,
+            backgroundColor:
+              globalStyle.color + layoutCardLikeBackgroundOpacity,
+          }}
+        ></Text>
+        <Button
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: "100%",
+            borderTopWidth: 0,
+            borderBottomWidth: 0,
+            flexDirection: "row",
+          }}
+        >
+          <Text
+            label="21 Oct"
+            style={{ flex: 2, zIndex: -1 }}
+            fontSize={globalStyle.mediumMobileFont}
+          ></Text>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: globalStyle.color,
+              height: 1,
+              zIndex: -1,
+            }}
+          ></View>
+          <Text
+            label="29 Oct"
+            style={{ flex: 2, zIndex: -1 }}
+            fontSize={globalStyle.mediumMobileFont}
+          ></Text>
+        </Button>
+      </View>
+      <View
+        style={{
+          width: "100%",
+          height: 1,
+          backgroundColor: globalStyle.colorAccent,
+        }}
+      ></View>
     </View>
   );
 }

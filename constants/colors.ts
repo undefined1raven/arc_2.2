@@ -507,7 +507,7 @@ const themeColors: Themes = {
   },
   midnightBlue: {
     light: {
-      androidRippleColor: "#000000",
+      androidRippleColor: "#2f4175",
       statusBarColor: "#070039",
       pageBackgroundColors: ["#070039", "#040410"],
       color: "#AEC3FF",

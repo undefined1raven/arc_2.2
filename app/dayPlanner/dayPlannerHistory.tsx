@@ -43,6 +43,7 @@ function DayPlannerHistory() {
             alignItems: "center",
             gap: 15,
             flexDirection: "row",
+            marginBottom: 5,
           }}
         >
           <Text
@@ -52,8 +53,6 @@ function DayPlannerHistory() {
             style={{
               width: "50%",
               height: "100%",
-              paddingRight: 20,
-              paddingLeft: 20,
               backgroundColor:
                 globalStyle.color + layoutCardLikeBackgroundOpacity,
             }}

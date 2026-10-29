@@ -70,8 +70,7 @@ function Button({
           : {
               color: androidRippleColor
                 ? androidRippleColor
-                : globalStyles.globalStyle.androidRippleColor +
-                  ANDROID_RIPPLE_TRANSPARENCY,
+                : globalStyles.globalStyle.androidRippleColor,
             }
       }
       android_disableSound={true}
