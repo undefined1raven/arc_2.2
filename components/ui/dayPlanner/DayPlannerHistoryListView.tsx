@@ -9,8 +9,9 @@ import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useDayPlannerActiveDay } from "@/stores/viewState/dayPlannerActiveDay";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, useWindowDimensions, View } from "react-native";
+import { useCallback, useState } from "react";
+import { View } from "react-native";
+import { DatePickerModal } from "react-native-paper-dates";
 
 function DayPlannerHistoryListView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -18,7 +19,16 @@ function DayPlannerHistoryListView() {
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (f) => f.dayPlannerFeatureConfig,
   );
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const recentDays = useDayPlannerActiveDay((r) => r.recentDays);
+
+  const onDismiss = useCallback(() => {
+    setIsDatePickerOpen(false);
+  }, []);
+
+  const onConfirmTimeRange = useCallback(() => {
+    setIsDatePickerOpen(false);
+  }, []);
 
   const renderItem = useCallback(({ item }: { item: TessDayLogType }) => {
     const completionPercentage = computeDayPlannerCompletion(
@@ -144,6 +154,9 @@ function DayPlannerHistoryListView() {
           }}
         ></Text>
         <Button
+          onClick={() => {
+            setIsDatePickerOpen(true);
+          }}
           style={{
             flex: 1,
             display: "flex",
@@ -182,6 +195,19 @@ function DayPlannerHistoryListView() {
           backgroundColor: globalStyle.colorAccent,
         }}
       ></View>
+      <DatePickerModal
+        locale="en"
+        mode="range"
+        visible={isDatePickerOpen}
+        onDismiss={onDismiss}
+        saveLabel="Save"
+        label="Pick data range"
+        startDate={new Date(recentDayPlannerData[0].day)}
+        endDate={
+          new Date(recentDayPlannerData[recentDayPlannerData.length - 1].day)
+        }
+        onConfirm={onConfirmTimeRange}
+      />
     </View>
   );
 }

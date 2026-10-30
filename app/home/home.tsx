@@ -6,6 +6,8 @@ import { WeekOverview } from "@/components/homeDashboardCards/weekOverview/weekO
 import { HabitTracker } from "@/components/homeDashboardCards/habitTracker/habitTracker";
 import { useEffect } from "react";
 import { syncCall } from "../sync/syncCall";
+import { loadDiaryGroups } from "../functions/onLoginOnce";
+import { useDiaryData } from "@/stores/diary/diary";
 
 const styles = StyleSheet.create({
   container: {
@@ -18,6 +20,19 @@ const styles = StyleSheet.create({
 });
 
 function Home() {
+  const diaryApi = useDiaryData();
+
+  /// Lazy load diary data to improve performance on startup
+  useEffect(() => {
+    if (diaryApi.notes === null) {
+      const timeout = setTimeout(() => {
+        void loadDiaryGroups();
+      }, 250);
+
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
   return (
     <>
       <ThemedView

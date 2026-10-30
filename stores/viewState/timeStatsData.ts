@@ -169,7 +169,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
     dateRange.shift();
 
     set({ viewRange: dateRange.reverse() });
-    set({ dataInTimeRange: data });
+    set({ dataInTimeRange: data.reverse() });
   },
 }));
 

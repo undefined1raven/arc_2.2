@@ -2,7 +2,7 @@ import { ColorValueHex, PageBackgroundColorArrayType } from "./CommonTypes";
 
 export const ANDROID_RIPPLE_TRANSPARENCY = 0.2;
 
-const layoutCardLikeBackgroundOpacity = "10";
+const layoutCardLikeBackgroundOpacity = "25";
 
 type ThemeColorsType = {
   dark: {

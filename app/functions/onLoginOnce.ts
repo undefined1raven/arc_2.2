@@ -1,6 +1,7 @@
 import {
   ArcTaskLogType,
   SIDGroupType,
+  SIDNoteType,
   TessDayLogType,
 } from "@/constants/CommonTypes";
 import { useActiveUser } from "@/stores/activeUser";
@@ -89,6 +90,20 @@ function loadDiaryGroups() {
     .catch((error) => {
       console.error("Error retrieving diary data:", error);
     });
+
+  dataRetrivalAPI
+    .getDataInTimeRange("personalDiaryChunks", null, null, null)
+    .then((data) => {
+      const notes = data.payload as any as SIDNoteType[];
+      //@ts-ignore
+      diaryApi.setNoteChunkMapping(
+        data.dataChunkMapping ? data.dataChunkMapping : {},
+      );
+      diaryApi.setNotes(notes);
+    })
+    .catch((error) => {
+      console.error("Error retrieving diary data:", error);
+    });
 }
 
 function loadLastWeekTimeTrackingData() {
@@ -96,7 +111,7 @@ function loadLastWeekTimeTrackingData() {
   const dataRetrivalAPI = dataRetrivalApi.getState();
   const habitDataApi = useHabitCardDataApi.getState();
   const timeConstants = {
-    aWeekAgo: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    aWeekAgo: Date.now() - 14 * 24 * 60 * 60 * 1000,
   };
   const activeUserId = useActiveUser.getState().activeUser?.userId;
   if (!activeUserId) return;
@@ -109,11 +124,11 @@ function loadLastWeekTimeTrackingData() {
     )
     .then(async (data) => {
       const timeTrackingData = data.payload as ArcTaskLogType[];
-      const timeTrackingApi = useTimeStatsData.getState();
-      const tt = useTimeTrackingDataExplorer.getState();
+      const timeTrackingStatsApi = useTimeStatsData.getState();
+      const timeTrackingExplorerApi = useTimeTrackingDataExplorer.getState();
       ///Set initial time tracking explorer data
-      timeTrackingApi.setDataInTimeRange(timeTrackingData || null);
-      tt.setDataInTimeRange(timeTrackingData || null);
+      timeTrackingStatsApi.setDataInTimeRange(timeTrackingData || null);
+      timeTrackingExplorerApi.setDataInTimeRange(timeTrackingData || null);
 
       ///Set raw data for habit
       habitDataApi.setRawData(timeTrackingData);
@@ -187,12 +202,12 @@ async function syncInit() {
 
 ///Called once after the user logs in and crypto keys are available
 async function onLoginOnce() {
-  syncInit();
-  loadRecentDayPlannerData();
-  loadLastWeekTimeTrackingData();
-  getDayPlannerActiveDay();
-  loadDiaryGroups();
-  retroBehaviorLogs();
+  void syncInit();
+  void loadRecentDayPlannerData();
+  void loadLastWeekTimeTrackingData();
+  void getDayPlannerActiveDay();
+  // void loadDiaryGroups();
+  void retroBehaviorLogs();
 }
 
-export { onLoginOnce };
+export { loadDiaryGroups, onLoginOnce };

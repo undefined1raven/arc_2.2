@@ -10,11 +10,6 @@ import { FlashList } from "@shopify/flash-list";
 import Button from "@/components/common/Button";
 import Text from "@/components/common/Text";
 import { router } from "expo-router";
-import DateTimePicker, {
-  DateTimePickerAndroid,
-} from "@react-native-community/datetimepicker";
-import CalendarDeco from "@/components/deco/CalendarDeco";
-import { BarChart } from "react-native-gifted-charts";
 import { BarChartDeco } from "@/components/deco/BarChartDeco";
 import {
   processDataInTimeRange,
@@ -24,10 +19,9 @@ import { DatePickerModal } from "react-native-paper-dates";
 import { getLocalCache } from "@/components/utils/localDb";
 function Home() {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
-
-  const hasTimeTrackingData = useTimeStatsData(
-    (s) => s.dataInTimeRange !== null,
-  );
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
+  const [isLoadingInitialData, setIsLoadingInitialData] =
+    useState<boolean>(false);
   const viewData = useTimeStatsData((s) => s.viewRange);
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const setActiveDayView = useTimeStatsData((s) => s.setActiveDayView);
@@ -36,18 +30,18 @@ function Home() {
 
   const getDataInTimeRange = useCallback(
     async (timeRangeStart: number, timeRangeEnd: number) => {
+      setIsLoadingData(true);
       const timeStatsApi = useTimeStatsData.getState();
       const timeExplorerApi = useTimeTrackingDataExplorer.getState();
       const dataRetrivalAPI = dataRetrivalApi.getState();
-      timeStatsApi.setIsFetchingData(true);
       const data = await dataRetrivalAPI.getDataInTimeRange(
         "timeTrackingChunks",
         timeRangeStart,
         timeRangeEnd,
         null,
       );
-
-      timeStatsApi.setIsFetchingData(false);
+      setIsLoadingData(false);
+      setIsLoadingInitialData(false);
       if (data.status !== "success" || !data.payload) {
         console.error("Failed to fetch time tracking data");
         return;
@@ -90,7 +84,7 @@ function Home() {
     }
 
     if (timeStatsApi.dataInTimeRange === null) {
-      console.log("EMPTY INIT TRIGGERED");
+      setIsLoadingInitialData(true);
       getDataInTimeRange(defaultStartTime.getTime(), Date.now());
     }
   }, []);
@@ -213,9 +207,6 @@ function Home() {
           alignItems: "flex-end",
         }}
       >
-        {hasTimeTrackingData === false && (
-          <ActivityIndicator color={globalStyle.color}></ActivityIndicator>
-        )}
         <View style={{ flex: 1, width: "100%", marginBottom: 5 }}>
           <FlashList
             estimatedItemSize={50}
@@ -295,18 +286,29 @@ function Home() {
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "row",
+              gap: 5,
             }}
             onClick={() => {
-              setIsDatePickerOpen(true);
+              if (isLoadingData === false) {
+                setIsDatePickerOpen(true);
+              }
             }}
           >
-            <Text
-              style={{ zIndex: -1 }}
-              fontSize={globalStyle.regularMobileFont}
-              label={`${getDisplayText(
-                viewData[viewData.length - 1],
-              )} - ${getDisplayText(viewData[0])}`}
-            ></Text>
+            {(isLoadingData || isLoadingInitialData) && (
+              <ActivityIndicator
+                color={globalStyle.color}
+                size={"small"}
+              ></ActivityIndicator>
+            )}
+            {isLoadingInitialData === false && (
+              <Text
+                style={{ zIndex: -1 }}
+                fontSize={globalStyle.regularMobileFont}
+                label={`${getDisplayText(
+                  viewData[viewData.length - 1],
+                )} - ${getDisplayText(viewData[0])}`}
+              ></Text>
+            )}
           </Button>
           <DatePickerModal
             locale="en"
