@@ -50,27 +50,14 @@ function getDayPlannerActiveDay() {
 }
 
 function loadRecentDayPlannerData() {
-  const dataRetriavalAPI = dataRetrivalApi.getState();
   const dayPlannerApi = useDayPlannerActiveDay.getState();
 
   ///Get the recent days data
   const lastMonthStart = new Date();
-  lastMonthStart.setDate(lastMonthStart.getDate() - 7);
+  lastMonthStart.setDate(lastMonthStart.getDate() - 14);
   lastMonthStart.setHours(0, 0, 0, 0);
-  const msInADay = 24 * 60 * 60 * 1000;
-  dataRetriavalAPI
-    .getDataInTimeRange(
-      "dayPlannerChunks",
-      lastMonthStart.getTime(),
-      Date.now() + msInADay,
-      null,
-    )
-    .then((res) => {
-      //@ts-ignore
-      let data: TessDayLogType[] = res.payload;
-      dayPlannerApi.setHasLoadedInitialData(true);
-      dayPlannerApi.setRecentDays(data || []);
-    });
+
+  dayPlannerApi.setDataTimeRange([lastMonthStart.getTime(), Date.now()]);
 }
 
 ///Get UI blocking data at login

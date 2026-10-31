@@ -23,33 +23,31 @@ function DayPlannerGraph() {
   );
 
   return (
-    <SafeAreaProvider>
-      <View style={{ justifyContent: "center", flex: 1, alignItems: "center" }}>
-        <Button
-          title="string"
-          onPress={() => setOpen(true)}
-          uppercase={false}
-          mode="outlined"
-        >
-          Pick range
-        </Button>
-        <DatePickerModal
-          locale="en"
-          mode="range"
-          onChange={(r) => {
-            console.log(r);
-          }}
-          visible={open}
-          onDismiss={onDismiss}
-          saveLabel="Save"
-          label="Pick data range"
-          startDate={new Date(2026, 8, 21)}
-          validRange={{ startDate: new Date(2026, 6, 28), endDate: new Date() }}
-          endDate={new Date()}
-          onConfirm={onConfirm}
-        />
-      </View>
-    </SafeAreaProvider>
+    <View style={{ justifyContent: "center", flex: 1, alignItems: "center" }}>
+      <Button
+        title="string"
+        onPress={() => setOpen(true)}
+        uppercase={false}
+        mode="outlined"
+      >
+        Pick range
+      </Button>
+      <DatePickerModal
+        locale="en"
+        mode="range"
+        onChange={(r) => {
+          console.log(r);
+        }}
+        visible={open}
+        onDismiss={onDismiss}
+        saveLabel="Save"
+        label="Pick data range"
+        startDate={new Date(2026, 8, 21)}
+        validRange={{ startDate: new Date(2026, 6, 28), endDate: new Date() }}
+        endDate={new Date()}
+        onConfirm={onConfirm}
+      />
+    </View>
   );
 }
 

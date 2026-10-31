@@ -32,6 +32,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PaperProvider, MD3DarkTheme } from "react-native-paper";
 import { CriticalSyncOverlay } from "./dataDownloadScreen/dataDownloadOverlay";
 import { onLoginOnce } from "./functions/onLoginOnce";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -135,206 +136,211 @@ export default function RootLayout() {
 
   return (
     <>
-      <PaperProvider theme={theme}>
-        <Host>
-          <SQLiteProvider databaseName="localCache">
-            <SafeAreaView style={{ flex: 1 }}>
-              <GestureHandlerRootView
-                style={{
-                  flex: 1,
-                  backgroundColor: globalStyle.pageBackgroundColors[0],
-                }}
-              >
-                <CriticalSyncOverlay></CriticalSyncOverlay>
-
-                <CreateNewAccountData></CreateNewAccountData>
-                <KeyboardVisible></KeyboardVisible>
-                <View style={{ width: 0, height: 0 }}>
-                  <CryptoWorkers></CryptoWorkers>
-                </View>
-                <LinearGradient
-                  colors={globalStyle.pageBackgroundColors}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.3, y: 0.7 }}
+      <SafeAreaProvider>
+        <PaperProvider theme={theme}>
+          <Host>
+            <SQLiteProvider databaseName="localCache">
+              <SafeAreaView style={{ flex: 1 }}>
+                <GestureHandlerRootView
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "120%",
-                    height: "120%",
+                    flex: 1,
+                    backgroundColor: globalStyle.pageBackgroundColors[0],
                   }}
-                ></LinearGradient>
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="NewAccountMain/page"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="downloadRecoveryCodes/page"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="setAccountPin/page"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="localAccountAuth/localAccountAuth"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="login/localLogin/localLogin"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="login/localLogin/passphrasePage"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="login/localLogin/pinPage"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="dayPlanner/dayPlanner"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="budget/settings/budgetSettings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="dayPlanner/statusEditor/statusEditor"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTrackingStats/statsHome/statsHome"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/diaryMain/diaryMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="budget/budgetMain/budgetMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/groupView/groupMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/diaryNoteView/diaryNoteView"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/diaryGroupConfig/diaryGroupConfig"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTracking/editActivity/editActivity"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTracking/editCategory/editCategory"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="home/home"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/settingsMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/accountSettings/accountSettingsMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/accountSettings/themeSettings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/accountSettings/backupSettings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/accountSettings/accountKeys"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/keyRegenerationFlow/newRecoveryCodes"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/keyRegenerationFlow/newPinPage"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTracking/timeTrackingSettingsMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTracking/editActivity/editActivitySelection"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTracking/editCategory/editCategorySelection"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTrackingStats/statsDayView/timeTrackingDayView"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/keyRegenerationFlow/newPassphrasePage"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="secretKey/page"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="settings/devInfo/devInfoMain"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="dayPlanner/historicDayView"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="dayPlanner/dayPlannerHistory"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/diaryFeatureConfig/diaryFeatureConfig"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="activeDayView/taskEditorView"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="diary/diaryFeatureConfig/diaryFeatureConfigEdit"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-                <StatusBar style="auto" />
-                <StatusIndicators></StatusIndicators>
+                >
+                  <CriticalSyncOverlay></CriticalSyncOverlay>
 
-                {navMenuApi.showMenu &&
-                  navMenuDisallowedPaths.includes(pathname) === false && (
-                    <NavMenuBar></NavMenuBar>
-                  )}
-              </GestureHandlerRootView>
-            </SafeAreaView>
-          </SQLiteProvider>
-        </Host>
-      </PaperProvider>
+                  <CreateNewAccountData></CreateNewAccountData>
+                  <KeyboardVisible></KeyboardVisible>
+                  <View style={{ width: 0, height: 0 }}>
+                    <CryptoWorkers></CryptoWorkers>
+                  </View>
+                  <LinearGradient
+                    colors={globalStyle.pageBackgroundColors}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0.3, y: 0.7 }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "120%",
+                      height: "120%",
+                    }}
+                  ></LinearGradient>
+                  <Stack>
+                    <Stack.Screen
+                      name="index"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="NewAccountMain/page"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="downloadRecoveryCodes/page"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="setAccountPin/page"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="localAccountAuth/localAccountAuth"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="login/localLogin/localLogin"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="login/localLogin/passphrasePage"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="login/localLogin/pinPage"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="dayPlanner/dayPlanner"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="budget/settings/budgetSettings"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="dayPlanner/statusEditor/statusEditor"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTrackingStats/statsHome/statsHome"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/diaryMain/diaryMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="budget/budgetMain/budgetMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/groupView/groupMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/diaryNoteView/diaryNoteView"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/diaryGroupConfig/diaryGroupConfig"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTracking/editActivity/editActivity"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTracking/editCategory/editCategory"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="home/home"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/settingsMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/accountSettings/accountSettingsMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/accountSettings/themeSettings"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/accountSettings/backupSettings"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/accountSettings/accountKeys"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/keyRegenerationFlow/newRecoveryCodes"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/keyRegenerationFlow/newPinPage"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTracking/timeTrackingSettingsMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTracking/editActivity/editActivitySelection"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTracking/editCategory/editCategorySelection"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTrackingStats/statsDayView/timeTrackingDayView"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="timeTrackingStats/dataExplorer/timeTrackingDataExplorer"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/keyRegenerationFlow/newPassphrasePage"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="secretKey/page"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="settings/devInfo/devInfoMain"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="dayPlanner/historicDayView"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="dayPlanner/dayPlannerHistory"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/diaryFeatureConfig/diaryFeatureConfig"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="activeDayView/taskEditorView"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="diary/diaryFeatureConfig/diaryFeatureConfigEdit"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                  <StatusBar style="auto" />
+                  <StatusIndicators></StatusIndicators>
+
+                  {navMenuApi.showMenu &&
+                    navMenuDisallowedPaths.includes(pathname) === false && (
+                      <NavMenuBar></NavMenuBar>
+                    )}
+                </GestureHandlerRootView>
+              </SafeAreaView>
+            </SQLiteProvider>
+          </Host>
+        </PaperProvider>
+      </SafeAreaProvider>
     </>
   );
 }

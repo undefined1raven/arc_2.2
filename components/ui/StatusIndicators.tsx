@@ -43,7 +43,7 @@ function StatusIndicators() {
           layout={LinearTransition}
           style={{
             height: "100%",
-            backgroundColor: globalStyle.color + "50",
+            backgroundColor: globalStyle.foregroundContrastColor + "50",
             borderRadius: 5,
             display: "flex",
             flexDirection: "row",
@@ -55,7 +55,10 @@ function StatusIndicators() {
           }}
         >
           <PadlockIcon height={15} width={15} />
-          <ActivityIndicator size="small" color={globalStyle.color} />
+          <ActivityIndicator
+            size="small"
+            color={globalStyle.foregroundContrastTextColor}
+          />
         </Animated.View>
       )}
       {(isUploadingToRemoteStorage || isDownloadingFromRemoteStorage) && (
@@ -65,7 +68,7 @@ function StatusIndicators() {
           layout={LinearTransition}
           style={{
             height: "100%",
-            backgroundColor: globalStyle.color + "50",
+            backgroundColor: globalStyle.foregroundContrastColor,
             borderRadius: 5,
             display: "flex",
             flexDirection: "row",
@@ -77,7 +80,11 @@ function StatusIndicators() {
             width: 50,
           }}
         >
-          <NetworkDeco color={globalStyle.color} height={20} width={20} />
+          <NetworkDeco
+            color={globalStyle.foregroundContrastTextColor}
+            height={20}
+            width={20}
+          />
         </Animated.View>
       )}
     </View>

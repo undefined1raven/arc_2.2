@@ -11,7 +11,14 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { DatePickerModal } from "react-native-paper-dates";
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  SlideInDown,
+  SlideInUp,
+} from "react-native-reanimated";
 
 function DayPlannerHistoryListView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -21,20 +28,38 @@ function DayPlannerHistoryListView() {
   );
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const recentDays = useDayPlannerActiveDay((r) => r.recentDays);
-
+  const timeRange = useDayPlannerActiveDay((r) => r.dataTimeRange);
   const onDismiss = useCallback(() => {
     setIsDatePickerOpen(false);
   }, []);
 
-  const onConfirmTimeRange = useCallback(() => {
-    setIsDatePickerOpen(false);
+  const getDisplayLabelFromDay = useCallback((unix: number) => {
+    const date = new Date(unix);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
   }, []);
+
+  const onConfirmTimeRange = useCallback(
+    (newRange: { endDate: string; startDate: string }) => {
+      const startDate = new Date(newRange.startDate).getTime();
+      const endDate = new Date(newRange.endDate).getTime();
+      const dayPlannerApi = useDayPlannerActiveDay.getState();
+      dayPlannerApi.setDataTimeRange([startDate, endDate]);
+      setIsDatePickerOpen(false);
+    },
+    [],
+  );
 
   const renderItem = useCallback(({ item }: { item: TessDayLogType }) => {
     const completionPercentage = computeDayPlannerCompletion(
       dayPlannerFeatureConfig,
       item,
     );
+
+    const isEmptyDay = item.tasks.length === 0;
+
     return (
       <View
         style={{
@@ -45,16 +70,21 @@ function DayPlannerHistoryListView() {
           height: 60,
           flexDirection: "row",
           borderColor: globalStyle.color,
-          borderWidth: 1,
+          borderWidth: isEmptyDay ? 0 : 1,
           borderTopWidth: 0,
           borderBottomWidth: 0,
-          paddingRight: 5,
-          paddingLeft: 5,
+          paddingRight: 10,
+          paddingLeft: 10,
           borderRadius: globalStyle.borderRadius,
+          backgroundColor: isEmptyDay
+            ? globalStyle.colorInactive + layoutCardLikeBackgroundOpacity
+            : undefined,
         }}
       >
         <Button
+          disabled={isEmptyDay}
           onClick={() => {
+            if (isEmptyDay) return;
             const dayPlannerAPI = useDayPlannerActiveDay.getState();
             dayPlannerAPI.setHistoricDayView(item);
             router.push("/dayPlanner/historicDayView");
@@ -62,9 +92,11 @@ function DayPlannerHistoryListView() {
           style={{
             zIndex: 3,
             position: "absolute",
-            width: "105%",
+            width: "100%",
             height: "100%",
             borderWidth: 0,
+            display: "flex",
+            justifyContent: "space-between",
           }}
         ></Button>
         <View
@@ -76,25 +108,48 @@ function DayPlannerHistoryListView() {
             zIndex: 1,
           }}
         >
-          <Text fontSize={globalStyle.mediumMobileFont} label={item.day}></Text>
           <Text
-            fontSize={globalStyle.smallMobileFont}
-            label={`${item.tasks.length > 0 ? item.tasks.length : "No"} tasks`}
+            color={
+              isEmptyDay ? globalStyle.textColorInactive : globalStyle.textColor
+            }
+            fontSize={globalStyle.mediumMobileFont}
+            label={item.day}
           ></Text>
+          {isEmptyDay === false && (
+            <Text
+              fontSize={globalStyle.smallMobileFont}
+              label={`${item.tasks.length} tasks`}
+            ></Text>
+          )}
         </View>
-        <View style={{ width: 30, height: 30 }}>
-          {item.tasks.length ? (
+        {isEmptyDay === false && (
+          <View style={{ width: 30, height: 30 }}>
             <SimpleDonutChart
               style={{ height: 30, width: 30 }}
-              thickness={2}
+              thickness={4}
               min={0}
               max={100}
-              backgroundColor={globalStyle.colorInactive + 25}
+              backgroundColor={globalStyle.colorAccent}
               color={globalStyle.color}
               value={parseFloat(completionPercentage)}
             ></SimpleDonutChart>
-          ) : null}
-        </View>
+          </View>
+        )}
+        {isEmptyDay === true && (
+          <View
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-end",
+            }}
+          >
+            <Text
+              color={globalStyle.textColorInactive}
+              label="No tasks"
+              fontSize={globalStyle.mediumMobileFont}
+            ></Text>
+          </View>
+        )}
       </View>
     );
   }, []);
@@ -108,14 +163,16 @@ function DayPlannerHistoryListView() {
   return (
     <View
       style={{
-        height: "100%",
-        width: "100%",
+        flex: 1,
         display: "flex",
+        width: "100%",
+        height: "100%",
         gap: 10,
         marginBottom: 5,
       }}
     >
-      <View
+      <Animated.View
+        entering={FadeInUp.duration(100)}
         style={{
           width: "100%",
           display: "flex",
@@ -123,14 +180,37 @@ function DayPlannerHistoryListView() {
         }}
       >
         <FlashList
+          ListEmptyComponent={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                label="No Data In Selected Period"
+                textAlign="center"
+                style={{
+                  width: "100%",
+                  transform: [{ rotate: "180deg" }],
+                  paddingVertical: 15,
+                  backgroundColor:
+                    globalStyle.color + layoutCardLikeBackgroundOpacity,
+                }}
+              ></Text>
+            </View>
+          }
+          contentContainerStyle={{ flexGrow: 1 }}
           estimatedItemSize={60}
           inverted={true}
           data={recentDays ?? []}
           renderItem={renderItem}
           ItemSeparatorComponent={separatorRenderItem}
         ></FlashList>
-      </View>
-      <View
+      </Animated.View>
+      <Animated.View
+        entering={FadeInDown.duration(100)}
         style={{
           height: 40,
           width: "100%",
@@ -169,7 +249,7 @@ function DayPlannerHistoryListView() {
           }}
         >
           <Text
-            label="21 Oct"
+            label={getDisplayLabelFromDay(timeRange[0])}
             style={{ flex: 2, zIndex: -1 }}
             fontSize={globalStyle.mediumMobileFont}
           ></Text>
@@ -182,12 +262,12 @@ function DayPlannerHistoryListView() {
             }}
           ></View>
           <Text
-            label="29 Oct"
+            label={getDisplayLabelFromDay(timeRange[1])}
             style={{ flex: 2, zIndex: -1 }}
             fontSize={globalStyle.mediumMobileFont}
           ></Text>
         </Button>
-      </View>
+      </Animated.View>
       <View
         style={{
           width: "100%",
@@ -202,9 +282,17 @@ function DayPlannerHistoryListView() {
         onDismiss={onDismiss}
         saveLabel="Save"
         label="Pick data range"
-        startDate={new Date(recentDayPlannerData[0].day)}
+        startDate={
+          recentDayPlannerData[0]?.day
+            ? new Date(recentDayPlannerData[0]?.day)
+            : new Date()
+        }
         endDate={
-          new Date(recentDayPlannerData[recentDayPlannerData.length - 1].day)
+          recentDayPlannerData[recentDayPlannerData.length - 1]?.day
+            ? new Date(
+                recentDayPlannerData[recentDayPlannerData.length - 1]?.day,
+              )
+            : new Date()
         }
         onConfirm={onConfirmTimeRange}
       />
