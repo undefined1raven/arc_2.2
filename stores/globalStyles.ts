@@ -40,6 +40,8 @@ interface GlobalStyleType {
   warningColor: ColorValueHex;
   warningTextColor: ColorValueHex;
   chartColorSet: ColorValueHex[];
+  foregroundContrastColor: ColorValueHex;
+  foregroundContrastTextColor: ColorValueHex;
 }
 
 interface GlobalStyleStore {

@@ -2,7 +2,6 @@ import Button from "@/components/common/Button";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
 import Text from "@/components/common/Text";
 import TextInput from "@/components/common/TextInput";
-import { AddIcon } from "@/components/deco/AddIcon";
 import { EditDeco } from "@/components/deco/EditDeco";
 import { TrashIcon } from "@/components/deco/TrashIcon";
 import { ThemedView } from "@/components/ThemedView";
@@ -28,7 +27,7 @@ function diaryFCStatusEditor() {
   const [isPickingStatus, setIsPickingStatus] = useState(true);
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const diaryFeatureConfig = useFeatureConfigs(
-    (r) => r.personalDiaryFeatureConfig
+    (r) => r.personalDiaryFeatureConfig,
   );
   const statusToEditApi = useDiaryStatusToEdit((r) => r.statusToEdit);
 
@@ -39,7 +38,7 @@ function diaryFCStatusEditor() {
   const [longSelectIndex, setLongSelectIndex] = useState<null | number>(null);
 
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
-    null
+    null,
   );
 
   const debouncedUpdate = useCallback(
@@ -52,7 +51,7 @@ function diaryFCStatusEditor() {
       }, 300);
       setDebounceTimeout(timeout);
     },
-    [debounceTimeout]
+    [debounceTimeout],
   );
 
   const handleStatusUpdate = useCallback(
@@ -63,7 +62,7 @@ function diaryFCStatusEditor() {
 
         const statusIndex = diaryFeatureConfig.findIndex(
           (status: FeatureConfigSIDType[number]) =>
-            status.id === statusToEdit?.id
+            status.id === statusToEdit?.id,
         );
         if (statusIndex === -1) {
           console.error("Status to edit not found in the list.");
@@ -81,7 +80,7 @@ function diaryFCStatusEditor() {
             ["id"],
             statusToEdit?.id || statusId || "",
             newStatus,
-            "replace"
+            "replace",
           )
           .then((result) => {
             console.log(`Status ${field} updated:`, result);
@@ -91,7 +90,7 @@ function diaryFCStatusEditor() {
           });
       });
     },
-    [debouncedUpdate, statusToEdit]
+    [debouncedUpdate, statusToEdit],
   );
 
   const getCurrentColors = useCallback(() => {
@@ -195,7 +194,7 @@ function diaryFCStatusEditor() {
       globalStyle.theme,
       getCurrentColors,
       handleStatusUpdate,
-    ]
+    ],
   );
 
   return (
@@ -221,7 +220,7 @@ function diaryFCStatusEditor() {
           }}
         >
           <TextInput
-            defaultValue={"Example Task"}
+            defaultValue={"Example"}
             onChange={(e) => {}}
             readOnly={true}
             textAlign="left"

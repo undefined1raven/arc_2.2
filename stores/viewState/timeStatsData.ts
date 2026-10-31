@@ -18,9 +18,15 @@ interface TimeStatsData {
   derivedActiveDayData: { categoryBreakdown: any[] } | null;
   isFetchingData: boolean;
   setIsFetchingData: (isFetching: boolean) => void;
+  setGlobalTimeRangeStart: (globalTimeRageStart: number) => void;
+  globalTimeRageStart: number | null;
 }
 
 const useTimeStatsData = create<TimeStatsData>((set, get) => ({
+  globalTimeRageStart: null,
+  setGlobalTimeRangeStart: (globalTimeRageStart: number) => {
+    set({ globalTimeRageStart });
+  },
   dataInTimeRange: null,
   derivedActiveDayData: null,
   viewRange: [],
@@ -143,6 +149,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
     if (data.length === 0) {
       return;
     }
+
     const dataStartDay = new Date(data[0]?.start).toISOString().split("T")[0];
     const dataEndDay = new Date(data[data.length - 1]?.start)
       .toISOString()
@@ -162,7 +169,7 @@ const useTimeStatsData = create<TimeStatsData>((set, get) => ({
     dateRange.shift();
 
     set({ viewRange: dateRange.reverse() });
-    set({ dataInTimeRange: data });
+    set({ dataInTimeRange: data.reverse() });
   },
 }));
 

@@ -9,11 +9,15 @@ import { router } from "expo-router";
 import { useTimeTrackingSelectedActivity } from "@/stores/viewState/timeTrackingSelectedActivity";
 import { v4 } from "uuid";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
+import { EditDeco } from "@/components/deco/EditDeco";
+import { useGlobalStyleStore } from "@/stores/globalStyles";
 
 function EditCategorySelection() {
   const timeTrackingFeatureConfig = useFeatureConfigs(
-    (s) => s.timeTrackingFeatureConfig
+    (s) => s.timeTrackingFeatureConfig,
   );
+
+  const globalStyle = useGlobalStyleStore().globalStyle;
 
   const createNewCategory = useCallback(() => {
     const newCategory: ARCCategoryType = {
@@ -58,9 +62,22 @@ function EditCategorySelection() {
           router.push("/timeTracking/editCategory/editCategory");
         }}
         textStyle={{ textAlign: "left", paddingLeft: 10 }}
-        style={{ width: "100%", height: 65 }}
+        style={{
+          width: "100%",
+          height: 65,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         label={category.itme?.name}
-      ></Button>
+      >
+        <EditDeco
+          color={globalStyle.color}
+          width={35}
+          height={35}
+          style={{ position: "absolute", right: 10, zIndex: -1 }}
+        ></EditDeco>
+      </Button>
     );
   }, []);
 
@@ -72,6 +89,7 @@ function EditCategorySelection() {
     <>
       <ThemedView style={{ ...styles.container, height: "100%" }}>
         <ReversedListWithControls
+          showBackButton={true}
           extraData={timeTrackingFeatureConfig.length}
           estimatedItemSize={65}
           showActionButton={true}
@@ -81,14 +99,12 @@ function EditCategorySelection() {
             return renderItem(item);
           }}
           showSearchBar={true}
-          onSearch={(query) => {}}
           searchKeys={["itme.name"]}
-          showBackButton={false}
           onBackButtonClick={() => {
             router.back();
           }}
           data={timeTrackingFeatureConfig.filter(
-            (r) => r.type === "taskCategory"
+            (r) => r.type === "taskCategory",
           )}
         ></ReversedListWithControls>
       </ThemedView>

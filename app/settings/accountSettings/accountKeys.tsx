@@ -13,7 +13,6 @@ import { useActiveKeys } from "@/stores/decryptedKeys";
 import { stringToCharCodeArray } from "@/components/utils/fn/charOps";
 import { useActiveUser } from "@/stores/activeUser";
 import { useSQLiteContext } from "expo-sqlite";
-import { getPrivateKey } from "@/components/utils/constants/secureStoreKeyNames";
 import * as SecureStore from "expo-secure-store";
 
 function AccountKeys() {

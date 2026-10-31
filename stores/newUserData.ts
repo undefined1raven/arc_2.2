@@ -1,4 +1,5 @@
 ////Used during the creation of a new account
+import { DeviceType } from "@/constants/CommonTypes";
 import { create } from "zustand";
 
 interface NewUserData {
@@ -10,8 +11,8 @@ interface NewUserData {
   setRecoveryCodes: (recoveryCodes: string[]) => void;
   secretKey: string | null;
   setSecretKey: (secretKey: string) => void;
-  setDevicePublicKey: (devicePublicKey: string) => void;
-  devicePublicKey: string | null;
+  deviceData: DeviceType | null;
+  setDeviceData: (deviceData: NewUserData["deviceData"]) => void;
   setUserData: (userData: Partial<NewUserData["userData"]>) => void;
   userData: {
     id: string;
@@ -23,6 +24,7 @@ interface NewUserData {
     diaryFeatureConfig: string;
     dayPlannerFeatureConfig: string;
     version: string;
+    publicKey: string;
   } | null;
   updateUserData: (newUserData: Partial<NewUserData["userData"]>) => void;
   isGeneratingKeysAndConfig: boolean;
@@ -34,9 +36,14 @@ const useNewUserData = create<NewUserData>((set, get) => ({
   setNewPIN: (newPIN) => {
     set({ newPIN });
   },
-  devicePublicKey: null,
-  setDevicePublicKey(devicePublicKey) {
-    set({ devicePublicKey });
+  deviceData: null,
+  setDeviceData: (deviceData: NewUserData["deviceData"]) => {
+    const currentDeviceData = get().deviceData;
+    if (currentDeviceData === null) {
+      set({ deviceData });
+    } else {
+      set({ deviceData: { ...currentDeviceData, ...deviceData } });
+    }
   },
   useBiometricAuth: false,
   setUseBiometricAuth: (useBiometricAuth) => {

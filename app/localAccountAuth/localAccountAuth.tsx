@@ -4,7 +4,7 @@ import { act, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import {
-  getPrivateKey,
+  getAccountEncryptedPrivateKey,
   getSymmetricKey,
   noBioSKName,
   secureStoreKeyNames,
@@ -22,6 +22,7 @@ import { decodeWrappedSymkey } from "@/components/utils/encoding/wrappedSymkey";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useActiveKeys } from "@/stores/decryptedKeys";
 import { charCodeArrayToString } from "@/components/utils/fn/charOps";
+import { getCurrentDeviceInfo } from "@/components/utils/auth/getDeviceId";
 
 function localAccountAuth() {
   const activeUserApi = useActiveUser();
@@ -116,18 +117,17 @@ function localAccountAuth() {
               const symKey = JSON.stringify(unwrappedKey.payload.key);
               activeKeyAPI.setActiveSymmetricKey(symKey);
 
-              const armoredPrivateKey = await SecureStore.getItemAsync(
-                getPrivateKey(userId),
-              );
+              const armoredDevicePrivateKey =
+                (await getCurrentDeviceInfo())?.private_key_backup || null;
 
-              if (typeof armoredPrivateKey !== "string") {
+              if (typeof armoredDevicePrivateKey !== "string") {
                 console.error("No private key found in secure store");
                 showError("Someting went wrong [KF-1]");
               } else {
                 try {
                   const privateKeyDecryptionRes =
                     await cryptoOpsApi.performOperation("decrypt", {
-                      charCodeData: armoredPrivateKey ?? "[]",
+                      charCodeData: armoredDevicePrivateKey ?? "[]",
                       key: symKey,
                       keyType: "symmetric",
                     });
@@ -148,7 +148,7 @@ function localAccountAuth() {
                     decryptedEncodedStringData,
                   ) as number[];
                   const decodedPrivateKey = charCodeArrayToString(encodedArray);
-                  activeKeyAPI.setActivePrivateKey(decodedPrivateKey);
+                  activeKeyAPI.setActiveDevicePrivateKey(decodedPrivateKey);
                 } catch (e) {
                   console.error("Error decoding private key", e);
                   showError("Someting went wrong [KF-3]");

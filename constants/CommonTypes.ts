@@ -57,6 +57,7 @@ type TessTaskType = {
 type DeviceType = {
   device_id: string;
   device_public_key: string;
+  private_key_backup: string;
   created_at: number;
   account_id: string;
   device_name: string;
@@ -64,10 +65,30 @@ type DeviceType = {
   revoked_at?: number;
 };
 
+type FeatureTableType =
+  | "timeTrackingChunks"
+  | "dayPlannerChunks"
+  | "featureConfigChunks"
+  | "personalDiaryChunks"
+  | "personalDiaryGroups";
+
+type FeatureConfigTypeNames = "timeTracking" | "dayPlanner" | "personalDiary";
+
 type TessDayLogType = {
   day: string;
   isActive?: boolean;
   tasks: TessTaskType[];
+};
+
+type LocalDeviceIdRow = {
+  device_id: string;
+  device_public_key: string;
+  private_key_backup: string;
+  created_at: number;
+  account_id: string;
+  device_name: string;
+  last_seen: number;
+  revoked_at?: number;
 };
 
 type ARCTasksType = {
@@ -297,4 +318,7 @@ export type {
   DayType,
   Budget_ChunksType,
   DeviceType,
+  LocalDeviceIdRow,
+  FeatureTableType,
+  FeatureConfigTypeNames,
 };

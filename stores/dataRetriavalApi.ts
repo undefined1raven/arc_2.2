@@ -21,6 +21,8 @@ import { getTimeRangeFromData } from "@/components/utils/chunking/getTimeRangeFr
 import { useActiveKeys } from "./decryptedKeys";
 import { featureConfigChunkSize } from "@/components/utils/constants/chunking";
 import { getLocalCache } from "@/components/utils/localDb";
+import { updatedChunkToOutboxItem } from "./sync/updatedChunkToOutboxItem";
+import { addToOutbox } from "./sync/outboxOps";
 
 type DataChunkIdMapping = { [key: string]: string[] };
 
@@ -167,8 +169,18 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       }
 
       return query
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = await updatedChunkToOutboxItem(
+            newChunk,
+            latestChunk,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return {
             status: "success",
             payload: result,
@@ -211,8 +223,18 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
       }
 
       return query
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = await updatedChunkToOutboxItem(
+            newChunk,
+            null,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return {
             status: "success",
             payload: result,
@@ -543,8 +565,10 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (valueToMatch === null || valueToMatch === undefined) {
       return { status: "error", error: "Invalid valueToMatch" };
     }
-    if (newValue === null || newValue === undefined) {
-      return { status: "error", error: "Invalid newValue" };
+    if (replaceOrAppend === "append" || replaceOrAppend === "replace") {
+      if (newValue === undefined || newValue === null) {
+        return { status: "error", error: "Invalid newValue" };
+      }
     }
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
@@ -673,7 +697,16 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         ],
       );
       return savePromise
-        .then((result) => {
+        .then(async (result) => {
+          const outboxItem = await updatedChunkToOutboxItem(
+            updatedChunk,
+            encryptedChunk,
+            tableName,
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           statusIndicatorApi.setIsSavingLocalData(false);
           return { status: "success" };
         })
@@ -712,8 +745,13 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
     if (valueToMatch === null || valueToMatch === undefined) {
       return { status: "error", error: "Invalid valueToMatch" };
     }
-    if (newValue === null || newValue === undefined) {
-      return { status: "error", error: "Invalid newValue" };
+    if (
+      replaceOrAppendValue === "replace" ||
+      replaceOrAppendValue === "append"
+    ) {
+      if (newValue === null || newValue === undefined) {
+        return { status: "error", error: "Invalid newValue" };
+      }
     }
     const activeUserId = useActiveUser.getState().activeUser.userId as
       | string
@@ -865,8 +903,18 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
         ],
       );
       return savePromise
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = await updatedChunkToOutboxItem(
+            updatedChunk,
+            dataMatchChunk,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return { status: "success" };
         })
         .catch((e) => {
@@ -944,8 +992,18 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             newChunk.id,
           ],
         )
-        .then((result) => {
+        .then(async (result) => {
           statusIndicatorApi.setIsSavingLocalData(false);
+
+          const outboxItem = await updatedChunkToOutboxItem(
+            newChunk,
+            latestChunk,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
+
           return { status: "success", payload: result };
         })
         .catch((e) => {
@@ -1011,6 +1069,15 @@ const dataRetrivalApi = create<DataRetrivalApi>((set, get) => ({
             version: "0.1.1",
             hash: hash,
           };
+
+          const outboxItem = await updatedChunkToOutboxItem(
+            newChunk,
+            null,
+            "featureConfigChunks",
+          );
+          if (outboxItem !== null) {
+            addToOutbox(outboxItem);
+          }
 
           return db
             .runAsync(

@@ -1,11 +1,6 @@
 import Text from "../common/Text";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import TextInput from "../common/TextInput";
-import { CheckBox } from "../common/CheckBox";
-import { StyleSheet, View } from "react-native";
-import { useCallback, useState } from "react";
-import { ColorInput } from "../common/ColorPicker";
-import Button from "../common/Button";
+import { View } from "react-native";
 import { ToggleSwitch } from "../common/ToggleSwitch";
 
 type Props = {

@@ -1,33 +1,48 @@
 import * as SecureStore from "expo-secure-store";
 import { deviceId } from "../constants/secureStoreKeyNames";
 import * as Crypto from "expo-crypto";
-function getDeviceId(): string | null {
-  const currentDeviceId = SecureStore.getItem(deviceId);
-  return currentDeviceId;
+import { useActiveUser } from "@/stores/activeUser";
+import { getLocalCache } from "../localDb";
+import { DeviceType, LocalDeviceIdRow } from "@/constants/CommonTypes";
+
+function generateNewDeviceId() {
+  const newDeviceId = "ADI-" + Crypto.randomUUID();
+  return newDeviceId;
 }
 
-async function checkAndSetDeviceId(): Promise<
-  string | { error: string; status: "error" }
-> {
-  const currentDeviceId = await SecureStore.getItemAsync(deviceId);
-
-  if (currentDeviceId === null || typeof currentDeviceId !== "string") {
-    const newDeviceId = Crypto.randomUUID();
-    console.log("Creating new device id");
-    return SecureStore.setItemAsync(deviceId, `ADI-${newDeviceId}`)
-      .then((r) => {
-        return newDeviceId;
-      })
-      .catch((e) => {
-        return { error: `Failed to save device ID: ${e}`, status: "error" };
-      });
-  } else {
-    return currentDeviceId;
+async function getCurrentDeviceInfo(): Promise<null | DeviceType> {
+  const activeUserId = useActiveUser.getState().activeUser.userId;
+  if (typeof activeUserId !== "string") {
+    console.error(
+      JSON.stringify({
+        status: "error",
+        error: "Active user id not found",
+      }),
+    );
+    return null;
   }
+  const db = await getLocalCache();
+
+  const deviceInfo: null | LocalDeviceIdRow = await db.getFirstAsync(
+    `SELECT * FROM deviceIds WHERE account_id = ?`,
+    [activeUserId],
+  );
+
+  if (deviceInfo === null) {
+    console.error(
+      JSON.stringify({
+        status: "error",
+        error: "Device id for active account not found",
+      }),
+    );
+    return null;
+  }
+
+  return deviceInfo;
 }
 
 async function deleteDeviceId() {
   await SecureStore.deleteItemAsync(deviceId);
 }
 
-export { getDeviceId, checkAndSetDeviceId, deleteDeviceId };
+export { getCurrentDeviceInfo, deleteDeviceId, generateNewDeviceId };

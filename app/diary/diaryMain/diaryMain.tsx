@@ -297,26 +297,6 @@ function DiaryMain() {
     [personalDiaryFeatureConfig, longSelectIndex, globalStyle],
   );
 
-  ////Data Retrievel
-  useEffect(() => {
-    const dataRetrivalAPI = dataRetrivalApi.getState();
-    if (diaryApi.notes === null) {
-      dataRetrivalAPI
-        .getDataInTimeRange("personalDiaryChunks", null, null, null)
-        .then((data) => {
-          const notes = data.payload as any as SIDNoteType[];
-          //@ts-ignore
-          diaryApi.setNoteChunkMapping(
-            data.dataChunkMapping ? data.dataChunkMapping : {},
-          );
-          diaryApi.setNotes(notes);
-        })
-        .catch((error) => {
-          console.error("Error retrieving diary data:", error);
-        });
-    }
-  }, [diaryApi.notes]);
-
   return (
     <>
       <ThemedView
@@ -384,10 +364,14 @@ function DiaryMain() {
                         width: "100%",
                         borderRadius: globalStyle.borderRadius,
                         height: "100%",
-                        backgroundColor: globalStyle.color + "20",
+                        backgroundColor: globalStyle.foregroundContrastColor,
                       }}
                     ></View>
-                    <AddIcon height={20} width={20}></AddIcon>
+                    <AddIcon
+                      color={globalStyle.foregroundContrastTextColor}
+                      height={20}
+                      width={20}
+                    ></AddIcon>
                   </Button>
                 </Animated.View>
               </View>

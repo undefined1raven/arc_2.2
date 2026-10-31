@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import ReversedListWithControls from "@/components/common/ReversedListWithControls";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Button from "@/components/common/Button";
 import { FeatureConfigSIDType } from "@/constants/CommonTypes";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
@@ -11,11 +11,15 @@ import { router } from "expo-router";
 import { dataRetrivalApi } from "@/stores/dataRetriavalApi";
 import { v4 } from "uuid";
 import { EditDeco } from "@/components/deco/EditDeco";
+import { TrashIcon } from "@/components/deco/TrashIcon";
+import Text from "@/components/common/Text";
+import { deleteDiaryFeatureConfig } from "../utils/deleteDiaryFeatureConfig";
 function DiaryFeatureConfig() {
   const diaryFeatureConfig = useFeatureConfigs(
-    (fc) => fc.personalDiaryFeatureConfig
+    (fc) => fc.personalDiaryFeatureConfig,
   );
   const globalStyle = useGlobalStyleStore((gs) => gs.globalStyle);
+  const [longSelectIndex, setLongSelectIndex] = useState<number | null>(null);
 
   const addNewStatus = useCallback(() => {
     const newStatus: FeatureConfigSIDType[number] = {
@@ -41,45 +45,85 @@ function DiaryFeatureConfig() {
       });
   }, [diaryFeatureConfig]);
 
-  const renderItem = useCallback(({ item }) => {
-    const typedItem = item as FeatureConfigSIDType[number];
-    return (
-      <View style={{ width: "100%", height: 60 }}>
+  const renderItem = useCallback(
+    ({ item, index }) => {
+      const typedItem = item as FeatureConfigSIDType[number];
+      const isSelected = longSelectIndex === index;
+      return (
         <Button
-          textStyle={{
-            display: "flex",
-            textAlign: "left",
-            flex: 1,
-            paddingLeft: 5,
-            fontSize: globalStyle.regularMobileFont,
+          onLongPress={() => {
+            setLongSelectIndex(index);
           }}
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-          }}
+          textStyle={{ textAlign: "left", paddingLeft: 10 }}
           onClick={() => {
+            if (isSelected) {
+              setLongSelectIndex(null);
+              return;
+            }
             const diaryStatusToEditApi = useDiaryStatusToEdit.getState();
             diaryStatusToEditApi.setStatusToEdit(typedItem);
-
             router.push("/diary/diaryFeatureConfig/diaryFeatureConfigEdit");
+          }}
+          style={{
+            height: 55,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
           }}
           label={typedItem.name}
         >
-          <EditDeco
-            style={{
-              position: "absolute",
-              right: 5,
-              width: 35,
-              height: 35,
-              zIndex: -1,
-            }}
-          ></EditDeco>
+          {isSelected ? (
+            <View
+              style={{
+                position: "absolute",
+                right: 0,
+                display: "flex",
+                flexDirection: "row",
+                height: "100%",
+              }}
+            >
+              <Text
+                style={{ marginRight: 12, zIndex: -1 }}
+                fontSize={globalStyle.regularMobileFont}
+                label="Cancel"
+              ></Text>
+              <Button
+                onClick={() => {
+                  setLongSelectIndex(null);
+                  deleteDiaryFeatureConfig(typedItem.id);
+                }}
+                style={{
+                  zIndex: 3,
+                  width: 80,
+                  borderRadius: 0,
+                  borderWidth: 0,
+                  borderLeftWidth: 1,
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <TrashIcon
+                  height={25}
+                  width={"100%"}
+                  color={globalStyle.errorColor}
+                ></TrashIcon>
+              </Button>
+            </View>
+          ) : (
+            <EditDeco
+              height={35}
+              width={35}
+              style={{ position: "absolute", right: 10, zIndex: -1 }}
+            ></EditDeco>
+          )}
         </Button>
-      </View>
-    );
-  }, []);
+      );
+    },
+    [longSelectIndex, globalStyle],
+  );
 
   return (
     <>
@@ -100,6 +144,7 @@ function DiaryFeatureConfig() {
           showActionButton={true}
           onActionButtonClick={addNewStatus}
           searchBarPlaceholder="Search status"
+          extraData={longSelectIndex}
           ItemSeparatorComponent={() => <View style={{ height: 5 }}></View>}
         ></ReversedListWithControls>
       </ThemedView>
