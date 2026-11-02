@@ -13,7 +13,7 @@ function DayPlannerChart() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
   const recentDayPlannerData = useDayPlannerActiveDay((s) => s.recentDays);
   const dayPlannerFeatureConfig = useFeatureConfigs(
-    (f) => f.dayPlannerFeatureConfig
+    (f) => f.dayPlannerFeatureConfig,
   );
 
   const screenWidth = useWindowDimensions().width;
@@ -50,20 +50,20 @@ function DayPlannerChart() {
       });
 
       const relevantData = sortedData.slice(
-        -numberOfDaysDisplayed * dataOffset
+        -numberOfDaysDisplayed * dataOffset,
       );
 
       ///Get the time range label
       const timeRangeStart = getLabelDate(relevantData[0].day);
       const timeRangeEnd = getLabelDate(
-        relevantData[relevantData.length - 1].day
+        relevantData[relevantData.length - 1].day,
       );
       setTimeRangeLabel(timeRangeStart + " - " + timeRangeEnd);
 
       const newData = relevantData.map((item) => {
         const dayCompletion = computeDayPlannerCompletion(
           dayPlannerFeatureConfig,
-          item
+          item,
         );
 
         const colorFromCompletion = getColorFromCompletion(dayCompletion);
@@ -103,50 +103,6 @@ function DayPlannerChart() {
         };
       });
 
-      ////get the comparison data
-      if (numberOfDaysDisplayed === 7 && sortedData.length > 14) {
-        const comparisonData = sortedData.slice(
-          -numberOfDaysDisplayed * dataOffset - 14,
-          -numberOfDaysDisplayed * dataOffset - 7
-        );
-        const comparisonDataMapped = comparisonData.map((item) => {
-          const dayCompletion = computeDayPlannerCompletion(
-            dayPlannerFeatureConfig,
-            item
-          );
-          return {
-            value: parseInt(dayCompletion),
-            barWidth: 5,
-            spacing: 2,
-            key: item.day,
-            frontColor: globalStyle.color + "30",
-            barBorderTopRightRadius: globalStyle.borderRadius,
-            barBorderTopLeftRadius: globalStyle.borderRadius,
-            labelTextStyle: {
-              color: globalStyle.colorInactive,
-              fontSize: 14,
-            },
-            capThickness: 2,
-            capColor: getColorFromCompletion(dayCompletion),
-          };
-        });
-
-        const interlacedData = [];
-        for (
-          let i = 0;
-          i < Math.max(comparisonDataMapped.length, newData.length);
-          i++
-        ) {
-          if (i < comparisonDataMapped.length) {
-            interlacedData.push(comparisonDataMapped[i]);
-          }
-          if (i < newData.length) {
-            interlacedData.push(newData[i]);
-          }
-        }
-
-        return interlacedData;
-      }
       return newData;
     }
 

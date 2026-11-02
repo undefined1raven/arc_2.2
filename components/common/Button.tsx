@@ -24,6 +24,7 @@ type ButtonProps = {
   onDoubleClick?: () => void;
   androidRippleColor?: string | null;
   onLongPress?: () => void; // Optional long press handler
+  selected?: boolean; // Optional selected state, default is true
 };
 
 function Button({
@@ -41,6 +42,7 @@ function Button({
   textStyle,
   androidRippleColor,
   disabled,
+  selected = true,
   onLongPress = () => {}, // Default to no-op if not provided
 }: ButtonProps) {
   const globalStyles = useGlobalStyleStore();
@@ -82,7 +84,9 @@ function Button({
           ? borderColor
           : disabled
             ? globalStyles.globalStyle.colorInactive
-            : globalStyles.globalStyle.color,
+            : selected
+              ? globalStyles.globalStyle.color
+              : globalStyles.globalStyle.colorAccent,
         ...style,
       }}
     >
@@ -98,7 +102,9 @@ function Button({
               ? color
               : disabled
                 ? globalStyles.globalStyle.textColorInactive
-                : globalStyles.globalStyle.textColor,
+                : selected
+                  ? globalStyles.globalStyle.textColor
+                  : globalStyles.globalStyle.textColorAccent,
             fontSize: fontSize
               ? fontSize
               : globalStyles.globalStyle.largeMobileFont,

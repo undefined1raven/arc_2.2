@@ -201,7 +201,6 @@ function DayPlannerHistoryListView() {
               ></Text>
             </View>
           }
-          contentContainerStyle={{ flexGrow: 1 }}
           estimatedItemSize={60}
           inverted={true}
           data={recentDays ?? []}

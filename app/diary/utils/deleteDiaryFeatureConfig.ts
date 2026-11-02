@@ -15,11 +15,9 @@ async function deleteDiaryFeatureConfig(featureId: string) {
   );
 
   if (deletionRes.status === "success") {
-    console.log("RR1", diaryFeatureConfig.length);
     const updatedFC = diaryFeatureConfig.filter(
       (featureConfigItem) => featureConfigItem.id !== featureId,
     );
-    console.log("RR2", updatedFC.length);
     useFeatureConfigs.getState().setPersonalDiaryFeatureConfig(updatedFC);
   }
 }

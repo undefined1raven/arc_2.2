@@ -1,6 +1,5 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { TimeTrackingCard } from "@/components/homeDashboardCards/TimeTracking/TimeTrackingCard";
 import { useSelectedDiaryGroup } from "@/stores/viewState/diarySelectedGroup";
 import FeatureConfigEmptySettingPage from "@/components/ui/FeatureConfigEmptySettingPage";
 import { router } from "expo-router";
@@ -17,14 +16,13 @@ import { debounce } from "lodash";
 import { FeatureConfigSelection } from "@/components/ui/FeatureConfigSelection";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { v4 } from "uuid";
-import { useData } from "@shopify/react-native-skia";
 import { FeatureConfigBooleanInput } from "@/components/ui/FeatureConfigBooleanInput copy";
 function DiaryGroupConfig() {
   const globalStyle = useGlobalStyleStore((state) => state.globalStyle);
   const selectedGroup = useSelectedDiaryGroup((s) => s.selectedGroup);
   const diaryApi = useDiaryData();
   const diaryFeatureConfig = useFeatureConfigs(
-    (r) => r.personalDiaryFeatureConfig
+    (r) => r.personalDiaryFeatureConfig,
   );
   const updateGroupPropertyInstant = useCallback(
     (updatedGroup: SIDGroupType) => {
@@ -54,7 +52,7 @@ function DiaryGroupConfig() {
       }
 
       const updatedGroups = diaryApi.groups?.map((g) =>
-        g.groupID === group.groupID ? updatedGroup : g
+        g.groupID === group.groupID ? updatedGroup : g,
       );
       diaryApi.setGroups(updatedGroups);
 
@@ -69,7 +67,7 @@ function DiaryGroupConfig() {
           group.groupID,
           updatedGroup,
           chunkId,
-          "replace"
+          "replace",
         )
         .then((data) => {})
         .catch((error) => {
@@ -81,7 +79,7 @@ function DiaryGroupConfig() {
       diaryApi.groups,
       selectedGroup,
       diaryApi.setGroups,
-    ]
+    ],
   );
 
   const addNewStatus = useCallback(() => {
@@ -106,7 +104,7 @@ function DiaryGroupConfig() {
 
   const updateGroupProperty = useCallback(
     debounce(updateGroupPropertyInstant, 300),
-    [updateGroupPropertyInstant]
+    [updateGroupPropertyInstant],
   );
 
   return (
@@ -152,7 +150,7 @@ function DiaryGroupConfig() {
                 label="Status"
                 value={
                   diaryFeatureConfig.find(
-                    (f) => f.id === selectedGroup.metadata.SID
+                    (f) => f.id === selectedGroup.metadata.SID,
                   )?.name || "Unknown"
                 }
                 values={diaryFeatureConfig}
