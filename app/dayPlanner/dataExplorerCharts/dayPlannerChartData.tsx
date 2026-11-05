@@ -5,6 +5,9 @@ type DayPlannerChartData = { day: string; completion: number }[];
 type TimeRange = { timeRangeStart: number; timeRangeEnd: number };
 
 interface DayPlannerChartDataState {
+  isLoadingData: boolean;
+  globalDataTimeStart: number | null;
+  setGlobalDataTimeStart: (time: number) => void;
   weekViewData: DayPlannerChartData | null;
   weekTimeRange: TimeRange;
   monthViewData: DayPlannerChartData | null;
@@ -32,6 +35,11 @@ const unixOneYearAgo = new Date().getTime() - 365 * 24 * 60 * 60 * 1000;
 const useDayPlannerChartDataState = create<DayPlannerChartDataState>(
   (set, get) => {
     return {
+      setGlobalDataTimeStart: (time: number) => {
+        set({ globalDataTimeStart: time });
+      },
+      globalDataTimeStart: null,
+      isLoadingData: false,
       weekViewData: null,
       weekTimeRange: {
         timeRangeStart: unixOneWeekAgo,
@@ -48,6 +56,7 @@ const useDayPlannerChartDataState = create<DayPlannerChartDataState>(
         timeRangeEnd: Date.now(),
       },
       setWeekTimeRange: async ({ timeRangeStart, timeRangeEnd }: TimeRange) => {
+        set({ isLoadingData: true });
         const data = await dayPlannerDataGetterHelper({
           timeRangeStart,
           timeRangeEnd,
@@ -55,12 +64,14 @@ const useDayPlannerChartDataState = create<DayPlannerChartDataState>(
         set({
           weekViewData: data,
           weekTimeRange: { timeRangeStart, timeRangeEnd },
+          isLoadingData: false,
         });
       },
       setMonthTimeRange: async ({
         timeRangeStart,
         timeRangeEnd,
       }: TimeRange) => {
+        set({ isLoadingData: true });
         const data = await dayPlannerDataGetterHelper({
           timeRangeStart,
           timeRangeEnd,
@@ -68,9 +79,11 @@ const useDayPlannerChartDataState = create<DayPlannerChartDataState>(
         set({
           monthViewData: data,
           monthTimeRange: { timeRangeStart, timeRangeEnd },
+          isLoadingData: false,
         });
       },
       setYearTimeRange: async ({ timeRangeStart, timeRangeEnd }: TimeRange) => {
+        set({ isLoadingData: true });
         const data = await dayPlannerDataGetterHelper({
           timeRangeStart,
           timeRangeEnd,
@@ -78,6 +91,7 @@ const useDayPlannerChartDataState = create<DayPlannerChartDataState>(
         set({
           yearViewData: data,
           yearTimeRange: { timeRangeStart, timeRangeEnd },
+          isLoadingData: false,
         });
       },
     };

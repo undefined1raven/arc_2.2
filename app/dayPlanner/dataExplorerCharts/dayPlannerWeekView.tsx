@@ -13,7 +13,7 @@ function DayPlannerWeekView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
 
   const weekData = useDayPlannerChartDataState((s) => s.weekViewData);
-
+  const timeRange = useDayPlannerChartDataState((s) => s.weekTimeRange);
   const dayPlannerFeatureConfig = useFeatureConfigs(
     (f) => f.dayPlannerFeatureConfig,
   );
@@ -21,14 +21,9 @@ function DayPlannerWeekView() {
   const screenWidth = useWindowDimensions().width;
   const screenHeight = useWindowDimensions().height;
 
-  const [dataOffset, setDataOffset] = useState(1);
-  const [numberOfDaysDisplayed, setNumberOfDaysDisplayed] = useState(7);
-
   const [parentHeight, setParentHeight] = useState(screenHeight * 0.5);
 
   const lineData = useMemo(() => {
-    const timeRange = useDayPlannerChartDataState.getState().weekTimeRange;
-
     if (!timeRange) return [];
 
     function getLabelDate(day: string) {
@@ -71,7 +66,7 @@ function DayPlannerWeekView() {
       const colorFromCompletion = getColorFromCompletion(dayCompletion);
 
       return {
-        value: Number(dayCompletion),
+        value: Number(dayCompletion ?? 0),
         label: getLabelDate(day),
         frontColor: colorFromCompletion,
         barBorderTopRightRadius: globalStyle.borderRadius,
@@ -95,7 +90,7 @@ function DayPlannerWeekView() {
         ),
       };
     });
-  }, [weekData, dayPlannerFeatureConfig, globalStyle]);
+  }, [timeRange, weekData, dayPlannerFeatureConfig, globalStyle]);
 
   return (
     <View
@@ -108,9 +103,10 @@ function DayPlannerWeekView() {
         alignItems: "center",
         marginRight: 10,
         marginLeft: 10,
+        position: "relative",
+        left: 16,
       }}
       onLayout={(event) => {
-        console.log("Parent height:", event.nativeEvent.layout.height);
         if (event.nativeEvent.layout.height < 50) {
           setParentHeight(event.nativeEvent.layout.height);
         }
@@ -127,14 +123,11 @@ function DayPlannerWeekView() {
         maxValue={100}
         rulesColor={globalStyle.foregroundContrastColor + "50"}
         hideYAxisText={true}
+        key={JSON.stringify(timeRange)}
         xAxisColor={globalStyle.color}
         yAxisIndicesWidth={0}
         cappedBars
-        isAnimated
         yAxisThickness={0}
-        onLongPress={(e) => {
-          console.log(e);
-        }}
         rulesType="dashed"
         showVerticalLines={false}
         verticalLinesColor={globalStyle.colorInactive}

@@ -98,7 +98,7 @@ function loadLastWeekTimeTrackingData() {
   const dataRetrivalAPI = dataRetrivalApi.getState();
   const habitDataApi = useHabitCardDataApi.getState();
   const timeConstants = {
-    aWeekAgo: Date.now() - 14 * 24 * 60 * 60 * 1000,
+    aWeekAgo: Date.now() - 7 * 24 * 60 * 60 * 1000,
   };
   const activeUserId = useActiveUser.getState().activeUser?.userId;
   if (!activeUserId) return;

@@ -211,6 +211,17 @@ function Home() {
           <FlashList
             estimatedItemSize={50}
             inverted={true}
+            ListEmptyComponent={
+              <Text
+                label="No Data"
+                style={{
+                  height: 50,
+                  transform: [{ rotate: "180deg" }],
+                  backgroundColor:
+                    globalStyle.color + layoutCardLikeBackgroundOpacity,
+                }}
+              />
+            }
             ItemSeparatorComponent={() => (
               <View
                 style={{
@@ -317,7 +328,7 @@ function Home() {
             onDismiss={onDismiss}
             saveLabel="Save"
             label="Pick data range"
-            startDate={new Date(viewData[0])}
+            startDate={viewData[0] ? new Date(viewData[0]) : new Date()}
             validRange={{
               startDate:
                 globalTimeRangeStart === null
@@ -325,7 +336,11 @@ function Home() {
                   : new Date(globalTimeRangeStart),
               endDate: new Date(),
             }}
-            endDate={new Date(viewData[viewData.length - 1])}
+            endDate={
+              viewData[viewData.length - 1]
+                ? new Date(viewData[viewData.length - 1])
+                : new Date()
+            }
             onConfirm={onConfirmTimeRange}
           />
         </Animated.View>
