@@ -11,6 +11,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { DayPlannerWeekView } from "./dataExplorerCharts/dayPlannerWeekView";
 import { useDayPlannerChartDataState } from "./dataExplorerCharts/dayPlannerChartData";
 import DayPlannerMonthlyView from "./dataExplorerCharts/dayPlannerMonthlyView";
+import DayPlannerYearlyView from "./dataExplorerCharts/dayPlannerYearlyView";
 
 function DayPlannerGraph() {
   const weekTimeRange = useDayPlannerChartDataState((s) => s.weekTimeRange);
@@ -135,7 +136,39 @@ function DayPlannerGraph() {
 
           break;
         }
+        case "1y": {
+          const dayPlannerChartDataState =
+            useDayPlannerChartDataState.getState();
 
+          const monthTimeRange = dayPlannerChartDataState.monthTimeRange;
+          if (!monthTimeRange) return;
+
+          const offset = nextRangeType === "next" ? 365 : -365;
+
+          const newStart = new Date(monthTimeRange.timeRangeStart);
+          newStart.setDate(newStart.getDate() + offset);
+
+          const newEnd = new Date(monthTimeRange.timeRangeEnd);
+          newEnd.setDate(newEnd.getDate() + offset);
+
+          if (nextRangeType === "next") {
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
+            if (newStart.getTime() > today.getTime()) return;
+
+            if (newEnd.getTime() > today.getTime()) {
+              newEnd.setTime(today.getTime());
+              newStart.setTime(today.getTime() - 365 * 24 * 60 * 60 * 1000);
+            }
+          }
+
+          dayPlannerChartDataState.setMonthTimeRange({
+            timeRangeStart: newStart.getTime(),
+            timeRangeEnd: newEnd.getTime(),
+          });
+          break;
+        }
         default:
           break;
       }
@@ -170,6 +203,18 @@ function DayPlannerGraph() {
           });
           break;
         }
+        case "1y": {
+          const dayPlannerChartDataState =
+            useDayPlannerChartDataState.getState();
+          const newStart = new Date(date);
+          const newEnd = new Date(newStart);
+          newEnd.setDate(newEnd.getDate() + 364);
+          dayPlannerChartDataState.setMonthTimeRange({
+            timeRangeStart: newStart.getTime(),
+            timeRangeEnd: newEnd.getTime(),
+          });
+          break;
+        }
         default:
           break;
       }
@@ -178,13 +223,31 @@ function DayPlannerGraph() {
     [setIsDatePickerOpen, timeRangeMode],
   );
 
-  const getDisplayLabelFromDay = useCallback((unix: number) => {
-    const date = new Date(unix);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  }, []);
+  const getDisplayLabelFromDay = useCallback(
+    (unix: number) => {
+      const date = new Date(unix);
+
+      switch (timeRangeMode) {
+        case "7d":
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+        case "4w":
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+        case "1y":
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
+      }
+    },
+    [timeRangeMode],
+  );
 
   return (
     <View
@@ -202,10 +265,9 @@ function DayPlannerGraph() {
     >
       {timeRangeMode === "7d" && <DayPlannerWeekView></DayPlannerWeekView>}
       {timeRangeMode === "4w" && (
-        <DayPlannerMonthlyView
-          month={new Date(new Date().setMonth(2))}
-        ></DayPlannerMonthlyView>
+        <DayPlannerMonthlyView></DayPlannerMonthlyView>
       )}
+      {timeRangeMode === "1y" && <DayPlannerYearlyView></DayPlannerYearlyView>}
       <Animated.View
         entering={FadeInDown.duration(100)}
         style={{
@@ -281,7 +343,7 @@ function DayPlannerGraph() {
           <Text
             label={getDisplayLabelFromDay(currentViewTimeRange.timeRangeStart)}
             style={{ flex: 2, zIndex: -1, paddingLeft: 5, paddingRight: 5 }}
-            fontSize={globalStyle.mediumMobileFont}
+            fontSize={globalStyle.smallMobileFont}
           ></Text>
           <View
             style={{
@@ -294,7 +356,7 @@ function DayPlannerGraph() {
           <Text
             label={getDisplayLabelFromDay(currentViewTimeRange.timeRangeEnd)}
             style={{ flex: 2, zIndex: -1, paddingLeft: 5, paddingRight: 5 }}
-            fontSize={globalStyle.mediumMobileFont}
+            fontSize={globalStyle.smallMobileFont}
           ></Text>
         </Button>
         <Button

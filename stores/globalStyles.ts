@@ -35,6 +35,9 @@ interface GlobalStyleType {
   successTextColor: ColorValueHex;
   errorColor: ColorValueHex;
   errorTextColor: ColorValueHex;
+  errorTextColorAlt: ColorValueHex;
+  successTextColorAlt: ColorValueHex;
+  warningTextColorAlt: ColorValueHex;
   colorScheme: AvailableThemes;
   colorAltLight: ColorValueHex;
   warningColor: ColorValueHex;

@@ -7,17 +7,13 @@ import Text from "@/components/common/Text";
 
 type DaySquareProps = {
   color: string;
-  value: string | null;
+  dayCompletion: number | null;
   textColor: string;
   day: string;
 };
 
-type DayPlannerMonthlyViewProps = {
-  month: Date;
-};
-
-function DaySquare({ color, value, day, textColor }: DaySquareProps) {
-  const unavailable = value === null;
+function DaySquare({ color, dayCompletion, day, textColor }: DaySquareProps) {
+  const unavailable = dayCompletion === null;
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
 
   return (
@@ -25,29 +21,39 @@ function DaySquare({ color, value, day, textColor }: DaySquareProps) {
       accessible
       accessibilityRole="image"
       accessibilityLabel={
-        unavailable ? `Day ${day}: no data` : `Day ${day}: ${value}%`
+        unavailable ? `Day ${day}: no data` : `Day ${day}: ${dayCompletion}%`
       }
       style={styles.dayCell}
     >
       <View
         style={[
           styles.daySquare,
-          { backgroundColor: unavailable ? globalStyle.colorInactive : color },
+          {
+            backgroundColor: unavailable
+              ? globalStyle.colorInactive + "88"
+              : color,
+          },
         ]}
       >
-        {unavailable && <View style={styles.unavailableLine} />}
-        <Text color={unavailable ? globalStyle.colorInactive : textColor}>
-          {unavailable ? day : `${day}\n${value}`}
-        </Text>
+        {unavailable && (
+          <View
+            style={{
+              ...styles.unavailableLine,
+              backgroundColor: globalStyle.colorInactive + "CC",
+            }}
+          />
+        )}
+        <Text
+          fontSize={globalStyle.smallMobileFont}
+          label={unavailable ? day : `${day}\n${dayCompletion}%`}
+          color={unavailable ? globalStyle.foregroundContrastColor : textColor}
+        ></Text>
       </View>
     </View>
   );
 }
 
-/** A compact, seven-column monthly graph. Mock values are used until real data is wired in. */
-export default function DayPlannerMonthlyView({
-  month,
-}: DayPlannerMonthlyViewProps) {
+export default function DayPlannerMonthlyView() {
   const { monthTimeRange, monthViewData } = useDayPlannerChartDataState(
     (s) => s,
   );
@@ -61,7 +67,7 @@ export default function DayPlannerMonthlyView({
   return (
     <View
       accessible
-      accessibilityLabel={`${month.toLocaleString(undefined, { month: "long", year: "numeric" })} daily graph`}
+      accessibilityLabel={`${new Date(monthTimeRange.timeRangeStart).toLocaleString(undefined, { month: "long", year: "numeric" })} daily graph`}
       style={styles.monthGrid}
     >
       {monthViewData !== null &&
@@ -71,7 +77,7 @@ export default function DayPlannerMonthlyView({
             <DaySquare
               textColor={
                 dayCompletion !== null
-                  ? getColorFromDayCompletion(dayCompletion).color
+                  ? getColorFromDayCompletion(dayCompletion).alt
                   : globalStyle.colorInactive
               }
               key={dayData.day}
@@ -83,7 +89,7 @@ export default function DayPlannerMonthlyView({
                   ? getColorFromDayCompletion(dayCompletion).color
                   : globalStyle.colorInactive
               }
-              value={dayCompletion ? dayCompletion + "%" : null}
+              dayCompletion={dayCompletion}
             />
           );
         })}
@@ -129,7 +135,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "140%",
     height: 1,
-    backgroundColor: "#9ca3af",
     transform: [{ rotate: "-45deg" }],
   },
 });

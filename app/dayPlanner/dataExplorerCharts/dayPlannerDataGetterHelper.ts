@@ -51,8 +51,10 @@ async function dayPlannerDataGetterHelper({
     }
 
     finalData.push({
-      ...dayData,
       completion: dayData ? completion : null,
+      day: day,
+      tasks: [],
+      ...dayData,
     });
   }
 

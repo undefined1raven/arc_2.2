@@ -1,7 +1,5 @@
-import Button from "@/components/common/Button";
 import Text from "@/components/common/Text";
 import { computeDayPlannerCompletion } from "@/components/utils/dataProcessing/computeDayPlannerCompletion";
-import { layoutCardLikeBackgroundOpacity } from "@/constants/colors";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 import { useCallback, useMemo, useState } from "react";

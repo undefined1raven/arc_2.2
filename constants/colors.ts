@@ -26,6 +26,9 @@ type ThemeColorsType = {
     chartColorSet?: ColorValueHex[];
     foregroundContrastColor: ColorValueHex;
     foregroundContrastTextColor: ColorValueHex;
+    warningTextColorAlt: ColorValueHex;
+    errorTextColorAlt: ColorValueHex;
+    successTextColorAlt: ColorValueHex;
   };
   light: {
     color: ColorValueHex;
@@ -48,6 +51,9 @@ type ThemeColorsType = {
     chartColorSet?: ColorValueHex[];
     foregroundContrastColor: ColorValueHex;
     foregroundContrastTextColor: ColorValueHex;
+    warningTextColorAlt: ColorValueHex;
+    errorTextColorAlt: ColorValueHex;
+    successTextColorAlt: ColorValueHex;
   };
 };
 
@@ -120,6 +126,9 @@ const themeColors: Themes = {
       warningTextColor: "#FF6BD2",
       foregroundContrastColor: "#ffd0b0",
       foregroundContrastTextColor: "#702900",
+      successTextColorAlt: "#e8ffed",
+      errorTextColorAlt: "#ffc7d3",
+      warningTextColorAlt: "#ffd8f3",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -161,6 +170,10 @@ const themeColors: Themes = {
       warningTextColor: "#FF6BD2",
       foregroundContrastColor: "#ffd0b0",
       foregroundContrastTextColor: "#702900",
+      successTextColorAlt: "#e8ffed",
+      errorTextColorAlt: "#ffc7d3",
+      warningTextColorAlt: "#ffd8f3",
+
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -204,6 +217,9 @@ const themeColors: Themes = {
       warningTextColor: "#340f4f",
       foregroundContrastColor: "#350323",
       foregroundContrastTextColor: "#ff9df2",
+      successTextColorAlt: "#bf3c3c",
+      errorTextColorAlt: "#c97cff",
+      warningTextColorAlt: "#b199c3",
       chartColorSet: [
         "#630a14",
         "#3c1328",
@@ -240,6 +256,9 @@ const themeColors: Themes = {
       warningTextColor: "#340f4f",
       foregroundContrastColor: "#350323",
       foregroundContrastTextColor: "#ff9df2",
+      successTextColorAlt: "#bf3c3c",
+      errorTextColorAlt: "#c97cff",
+      warningTextColorAlt: "#b199c3",
       chartColorSet: [
         "#630a14",
         "#3c1328",
@@ -278,6 +297,9 @@ const themeColors: Themes = {
       warningTextColor: "#FFCD43",
       foregroundContrastColor: "#c6acff",
       foregroundContrastTextColor: "#1A0337",
+      successTextColorAlt: "#ffc6c6",
+      errorTextColorAlt: "#ffe9ad",
+      warningTextColorAlt: "#c0ffef",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -319,6 +341,9 @@ const themeColors: Themes = {
       warningTextColor: "#FFCD43",
       foregroundContrastColor: "#c6acff",
       foregroundContrastTextColor: "#1A0337",
+      successTextColorAlt: "#ffc6c6",
+      errorTextColorAlt: "#ffe9ad",
+      warningTextColorAlt: "#c0ffef",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -442,6 +467,9 @@ const themeColors: Themes = {
       warningTextColor: "#4A4800",
       foregroundContrastColor: "#FF4F52",
       foregroundContrastTextColor: "#1A0000",
+      successTextColorAlt: "#ffd1dc",
+      errorTextColorAlt: "#ffd5a5",
+      warningTextColorAlt: "#fffb87",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -483,6 +511,9 @@ const themeColors: Themes = {
       warningTextColor: "#4A4800",
       foregroundContrastColor: "#FF4F52",
       foregroundContrastTextColor: "#1A0000",
+      successTextColorAlt: "#ffd1dc",
+      errorTextColorAlt: "#ffd5a5",
+      warningTextColorAlt: "#fffb87",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -526,6 +557,9 @@ const themeColors: Themes = {
       warningTextColor: "#CD9300",
       foregroundContrastColor: "#c7d0ff",
       foregroundContrastTextColor: "#070070",
+      successTextColorAlt: "#002f0d",
+      errorTextColorAlt: "#ffe8e8",
+      warningTextColorAlt: "#634a0e",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -567,6 +601,9 @@ const themeColors: Themes = {
       warningTextColor: "#CD9300",
       foregroundContrastColor: "#c7d0ff",
       foregroundContrastTextColor: "#070070",
+      successTextColorAlt: "#002f0d",
+      errorTextColorAlt: "#ffe8e8",
+      warningTextColorAlt: "#634a0e",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -935,6 +972,9 @@ const themeColors: Themes = {
       warningTextColor: "#4A4800",
       foregroundContrastColor: "#0b004f",
       foregroundContrastTextColor: "#BEB4FF",
+      errorTextColorAlt: "#ffa1a3",
+      warningTextColorAlt: "#fff1cf",
+      successTextColorAlt: "#aaffc0",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -976,6 +1016,9 @@ const themeColors: Themes = {
       warningTextColor: "#4A4800",
       foregroundContrastColor: "#9E8EFF",
       foregroundContrastTextColor: "#04030E",
+      errorTextColorAlt: "#ffa1a3",
+      warningTextColorAlt: "#fff1cf",
+      successTextColorAlt: "#aaffc0",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -1017,6 +1060,9 @@ const themeColors: Themes = {
       colorAltLight: "#AAAAAA",
       warningColor: "#4A4800",
       warningTextColor: "#4A4800",
+      errorTextColorAlt: "#ffa1a3",
+      warningTextColorAlt: "#fff1cf",
+      successTextColorAlt: "#aaffc0",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
@@ -1056,6 +1102,9 @@ const themeColors: Themes = {
       colorAltLight: "#AAAAAA",
       warningColor: "#4A4800",
       warningTextColor: "#4A4800",
+      errorTextColorAlt: "#ffa1a3",
+      warningTextColorAlt: "#fff1cf",
+      successTextColorAlt: "#aaffc0",
       chartColorSet: [
         "#E71D36",
         "#D66BA0",
