@@ -28,7 +28,7 @@ async function dayPlannerDataGetterHelper({
   const currentDate = new Date(timeRangeStart);
   const endDate = new Date(timeRangeEnd);
 
-  while (currentDate <= endDate) {
+  while (currentDate < endDate) {
     days.push(currentDate.toDateString());
     currentDate.setDate(currentDate.getDate() + 1);
   }

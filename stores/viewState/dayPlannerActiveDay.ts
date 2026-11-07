@@ -8,7 +8,7 @@ interface DayPlannerActiveDay {
   historicDayView: TessDayLogType | null | undefined;
   setHistoricDayView: (day: TessDayLogType | null) => void;
   setActiveDay: (day: TessDayLogType | null) => void;
-  recentDays: TessDayLogType[];
+  recentDays: (TessDayLogType & {isFilledIn?: true})[];
   setRecentDays: (days: TessDayLogType[]) => void;
   hasLoadedInitialData: boolean;
   setHasLoadedInitialData: (status: boolean) => void;
@@ -48,7 +48,7 @@ const useDayPlannerActiveDay = create<DayPlannerActiveDay>((set, get) => ({
     ///All days in the specified time range in the Sun Oct 25 2026 format even if we dont have any data for that day
     const allDaysInRange = getDaysInRange(newTimeRange[0], newTimeRange[1]);
 
-    const outputDays: TessDayLogType[] = [];
+    const outputDays: (TessDayLogType & { isFilledIn?: true })[] = [];
 
     if (dataInTimeRange?.length === 0) {
       for (let ix = 0; ix < allDaysInRange.length; ix++) {
@@ -61,7 +61,8 @@ const useDayPlannerActiveDay = create<DayPlannerActiveDay>((set, get) => ({
         if (dayData) {
           outputDays.push(dayData);
         } else {
-          outputDays.push({ day, tasks: [] });
+          ///Mark the days where data is missing as isFilledIn
+          outputDays.push({ day, tasks: [], isFilledIn: true });
         }
       }
     }

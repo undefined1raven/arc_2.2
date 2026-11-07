@@ -45,10 +45,9 @@ function DayPlannerCard() {
     const todayDate = new Date();
     const formattedTodayDate = todayDate.toDateString();
 
-    const todayPlanIndex = recentDays.findIndex(
-      (day) => day.day === formattedTodayDate,
-    );
-
+    const todayPlanIndex = recentDays
+      .filter((d) => !d.isFilledIn)
+      .findIndex((day) => day.day === formattedTodayDate);
     setHasPlanningDayToday(todayPlanIndex !== -1);
   }, [recentDays]);
 
@@ -58,9 +57,9 @@ function DayPlannerCard() {
     const newDate = new Date();
     const formattedDate = newDate.toDateString();
 
-    const todayDayIndex = recentDays.findIndex(
-      (day) => day.day === formattedDate,
-    );
+    const todayDayIndex = recentDays
+      .filter((d) => !d.isFilledIn)
+      .findIndex((day) => day.day === formattedDate);
 
     if (todayDayIndex !== -1) {
       const existingDay = recentDays[todayDayIndex];

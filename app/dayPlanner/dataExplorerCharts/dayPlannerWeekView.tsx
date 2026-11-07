@@ -2,10 +2,11 @@ import Text from "@/components/common/Text";
 import { computeDayPlannerCompletion } from "@/components/utils/dataProcessing/computeDayPlannerCompletion";
 import { useFeatureConfigs } from "@/stores/featureConfigs";
 import { useGlobalStyleStore } from "@/stores/globalStyles";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { useDayPlannerChartDataState } from "./dayPlannerChartData";
+import { getColorFromDayCompletion } from "@/components/utils/dataProcessing/getColorFromDayCompletion";
 
 function DayPlannerWeekView() {
   const globalStyle = useGlobalStyleStore((s) => s.globalStyle);
@@ -33,56 +34,34 @@ function DayPlannerWeekView() {
       );
     }
 
-    function getColorFromCompletion(completion: number | null) {
-      if (completion === null) return globalStyle.color;
-      if (completion >= 75) return globalStyle.successColor;
-      if (completion >= 25) return globalStyle.warningColor;
-      return globalStyle.errorTextColor;
+    if (weekData === null) {
+      return;
     }
 
-    // Index existing data by date
-    const dataByDate = new Map(
-      (weekData ?? []).map((item) => [item.day, item]),
-    );
-
-    // Generate 7 consecutive days
-    const startDate = new Date(timeRange.timeRangeStart);
-    startDate.setHours(0, 0, 0, 0);
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + index);
-
-      const day = date.toDateString();
-
-      const item = dataByDate.get(day);
-
-      const dayCompletion = item
-        ? computeDayPlannerCompletion(dayPlannerFeatureConfig, item)
-        : null;
-
-      const colorFromCompletion = getColorFromCompletion(dayCompletion);
+    return weekData.map((dayData) => {
+      const dayCompletion = dayData.completion;
+      const colorFromCompletion = getColorFromDayCompletion(dayCompletion);
 
       return {
         value: Number(dayCompletion ?? 0),
-        label: getLabelDate(day),
-        frontColor: colorFromCompletion,
+        label: getLabelDate(dayData.day),
+        frontColor: colorFromCompletion.color,
         barBorderTopRightRadius: globalStyle.borderRadius,
         barBorderTopLeftRadius: globalStyle.borderRadius,
-        key: day,
+        key: dayData.day,
         labelTextStyle: {
-          color: colorFromCompletion,
+          color: colorFromCompletion.textColor,
           fontSize: 14,
         },
         capThickness: 0,
-        capColor: colorFromCompletion,
+        capColor: colorFromCompletion.alt,
         topLabelComponent: () => (
           <Text
             fontSize={globalStyle.smallMobileFont}
             label={`${dayCompletion === null ? "No data" : dayCompletion + "%"}`}
             style={{
               width: 50,
-              color: colorFromCompletion,
+              color: colorFromCompletion.textColor,
             }}
           />
         ),

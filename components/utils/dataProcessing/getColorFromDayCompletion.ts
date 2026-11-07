@@ -1,11 +1,20 @@
 import { useGlobalStyleStore } from "@/stores/globalStyles";
 
-function getColorFromDayCompletion(dayCompletionPercentage: number): {
+function getColorFromDayCompletion(dayCompletionPercentage: number | null): {
   textColor: string;
   color: string;
   alt: string;
 } {
   const globalStyle = useGlobalStyleStore.getState().globalStyle;
+
+  if (dayCompletionPercentage === null) {
+    return {
+      textColor: globalStyle.textColorAccent,
+      color: globalStyle.colorInactive,
+      alt: globalStyle.colorInactive,
+    };
+  }
+
   if (dayCompletionPercentage < 25) {
     return {
       textColor: globalStyle.errorTextColor,
